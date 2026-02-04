@@ -6,11 +6,7 @@ let currentBookId = null;
 
 // UI Elements
 const appContainer = document.getElementById('app-container');
-const loginScreen = document.getElementById('loginScreen');
-const loadingOverlay = document.getElementById('loadingOverlay');
-
-function showLoading() { loadingOverlay.classList.add('active'); }
-function hideLoading() { loadingOverlay.classList.remove('active'); }
+const loginScreen = document.getElementById('login-screen');
 const loginForm = document.getElementById('loginForm');
 const sidebarNav = document.getElementById('sidebar-nav');
 const navUsername = document.getElementById('navUsername');
@@ -40,7 +36,6 @@ loginForm.addEventListener('submit', async (e) => {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     const errorEl = document.getElementById('loginError');
-    showLoading();
 
     try {
         const res = await fetch('/api/auth/login', {
@@ -64,8 +59,6 @@ loginForm.addEventListener('submit', async (e) => {
     } catch (err) {
         errorEl.textContent = 'Connection error';
         errorEl.style.display = 'block';
-    } finally {
-        hideLoading();
     }
 });
 
@@ -158,7 +151,6 @@ async function fetchAdminStats() {
 
 async function fetchUsers() {
     const userList = document.getElementById('userList');
-    showLoading();
     try {
         const res = await fetch('/api/admin/users', {
             headers: { 'Authorization': `Bearer ${currentToken}` }
@@ -180,7 +172,6 @@ async function fetchUsers() {
             userList.appendChild(row);
         });
     } catch (err) { console.error(err); }
-    finally { hideLoading(); }
 }
 
 async function deleteUser(id) {

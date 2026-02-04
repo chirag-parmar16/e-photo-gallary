@@ -174,12 +174,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const isLandscape = window.innerWidth > window.innerHeight;
                 const isMobile = window.innerWidth <= 932;
 
-                if (isMobile && isLandscape && !document.fullscreenElement && !document.webkitFullscreenElement) {
-                    const de = document.documentElement;
-                    if (de.requestFullscreen) de.requestFullscreen().catch(() => { });
-                    else if (de.webkitRequestFullscreen) de.webkitRequestFullscreen().catch(() => { });
-                }
-
                 if (isMobile && !isLandscape) {
                     handleMobileVerticalClick('next');
                     return;
