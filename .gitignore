@@ -22,5 +22,3 @@ public/uploads/videos/*
 
 # AutoFlow Configs (Optional, user might want to hide them)
 autoflow.config.json
-Dockerfile
-.dockerignore
