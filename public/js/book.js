@@ -28,6 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 originalPages = data.pages;
                 if (data.book) {
                     settings.cover_title = data.book.cover_title;
+                    settings.cover_subtitle = data.book.cover_subtitle;
+                    settings.instruction_text = data.book.instruction_text;
                     settings.end_title = data.book.end_title;
                     window.bookData = data.book;
                 }
