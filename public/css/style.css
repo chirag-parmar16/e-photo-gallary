@@ -259,33 +259,46 @@ body {
     color: white;
 }
 
-.cover.front {
-    background: var(--accent-color);
-    color: white;
-    z-index: 100;
+.cover-front, .cover-back {
+    background: var(--accent-color) !important;
+    color: white !important;
 }
 
-.cover.front h1 {
+.cover-front h1, .cover-back h1 {
     font-size: 3rem;
     margin-bottom: 15px;
     font-family: 'Playfair Display', serif;
+    color: white !important;
 }
 
-.cover.front p {
+.cover-front p, .cover-back p {
     font-size: 1.2rem;
     font-style: italic;
     opacity: 0.9;
     max-width: 80%;
     margin: 0 auto;
+    color: white !important;
 }
 
-.cover.front .instruction {
+.cover-front .instruction {
     margin-top: 50px;
     font-size: 1rem;
     letter-spacing: 2px;
     text-transform: uppercase;
     font-weight: 300;
-    opacity: 0.7;
+    opacity: 0.8;
+}
+
+/* Make buttons on covers readable */
+.cover-front .nav-btn, .cover-back .nav-btn {
+    background: white !important;
+    color: var(--accent-color) !important;
+    border: none !important;
+    padding: 10px 24px !important;
+    font-weight: 600 !important;
+    border-radius: 50px !important;
+    margin-top: 25px !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
 }
 
 /* Page depth effect */
@@ -445,18 +458,25 @@ body {
             flex-shrink: 0; /* Don't let it be squeezed by image */
         }
 
-        .cover-front h1 {
+        .cover-front h1, .cover-back h1 {
             font-size: 1.8rem !important;
             margin-bottom: 8px !important;
         }
 
-        .cover-front p {
+        .cover-front p, .cover-back p {
             font-size: 0.9rem !important;
         }
 
         .cover-front .instruction {
             margin-top: 30px !important;
             font-size: 0.8rem !important;
+        }
+
+        .cover-front .nav-btn, .cover-back .nav-btn {
+            padding: 8px 18px !important;
+            font-size: 0.85rem !important;
+            margin-top: 15px !important;
+            border-radius: 40px !important;
         }
 
         .book-nav {
