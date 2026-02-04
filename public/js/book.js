@@ -274,19 +274,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const fsBtn = document.getElementById('fullscreenBtn');
     if (fsBtn) {
         fsBtn.addEventListener('click', () => {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => {
-                    console.error(`Error enabling fullscreen: ${err.message}`);
-                });
+            const de = document.documentElement;
+            if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
+                if (de.requestFullscreen) de.requestFullscreen();
+                else if (de.webkitRequestFullscreen) de.webkitRequestFullscreen();
+                else if (de.mozRequestFullScreen) de.mozRequestFullScreen();
+                else if (de.msRequestFullscreen) de.msRequestFullscreen();
             } else {
-                document.exitFullscreen();
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+                else if (document.msExitFullscreen) document.msExitFullscreen();
             }
         });
     }
 
-    document.addEventListener('fullscreenchange', () => {
-        if (fsBtn) fsBtn.textContent = document.fullscreenElement ? '✖ Exit Fullscreen' : '⛶ Fullscreen';
-    });
+    const updateFsText = () => {
+        const isFS = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+        if (fsBtn) fsBtn.textContent = isFS ? '✖ Exit' : '⛶ Fullscreen';
+    };
+
+    document.addEventListener('fullscreenchange', updateFsText);
+    document.addEventListener('webkitfullscreenchange', updateFsText);
+    document.addEventListener('mozfullscreenchange', updateFsText);
+    document.addEventListener('MSFullscreenChange', updateFsText);
 
     // Nav buttons
     let hasAttemptedFullscreen = false;

@@ -4,6 +4,8 @@ const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
 const { initDb } = require('./database');
+const sharp = require('sharp');
+const fs = require('fs').promises;
 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -347,10 +349,27 @@ app.post('/api/books/:id/pages', authenticateToken, upload.array('media'), async
         // Handle Media
         if (req.files && req.files.length > 0) {
             for (const file of req.files) {
+                let finalPath = file.path;
+                const isImage = file.mimetype.startsWith('image/') && !file.mimetype.includes('gif');
                 const type = file.mimetype.startsWith('video/') ? 'video' : 'image';
+
+                if (isImage) {
+                    const webpPath = file.path.replace(path.extname(file.path), '.webp');
+                    await sharp(file.path)
+                        .webp({ quality: 80 })
+                        .toFile(webpPath);
+
+                    // Delete original
+                    await fs.unlink(file.path);
+                    finalPath = webpPath;
+                }
+
+                // Convert absolute path to relative for public serving
+                const relativePath = '/uploads/' + (type === 'video' ? 'videos/' : 'images/') + path.basename(finalPath);
+
                 await db.run(
                     'INSERT INTO page_media (page_id, type, media_path) VALUES (?, ?, ?)',
-                    [pageId, type, `/uploads/${type}s/${file.filename}`]
+                    [pageId, type, relativePath]
                 );
             }
         }
@@ -390,10 +409,25 @@ app.put('/api/pages/:id', authenticateToken, upload.array('media'), async (req, 
         // Add New Media
         if (req.files && req.files.length > 0) {
             for (const file of req.files) {
+                let finalPath = file.path;
+                const isImage = file.mimetype.startsWith('image/') && !file.mimetype.includes('gif');
                 const type = file.mimetype.startsWith('video/') ? 'video' : 'image';
+
+                if (isImage) {
+                    const webpPath = file.path.replace(path.extname(file.path), '.webp');
+                    await sharp(file.path)
+                        .webp({ quality: 80 })
+                        .toFile(webpPath);
+
+                    await fs.unlink(file.path);
+                    finalPath = webpPath;
+                }
+
+                const relativePath = '/uploads/' + (type === 'video' ? 'videos/' : 'images/') + path.basename(finalPath);
+
                 await db.run(
                     'INSERT INTO page_media (page_id, type, media_path) VALUES (?, ?, ?)',
-                    [pageId, type, `/uploads/${type}s/${file.filename}`]
+                    [pageId, type, relativePath]
                 );
             }
         }

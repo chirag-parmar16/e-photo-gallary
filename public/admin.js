@@ -434,8 +434,14 @@ function renderNewMediaPreview(file, index) {
         const item = document.createElement('div');
         item.style.cssText = 'position:relative; width:80px; height:80px;';
         item.dataset.newFileIndex = index;
+
+        const isVideo = file.type.startsWith('video/');
+        const mediaHtml = isVideo
+            ? `<video src="${ev.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:8px; border: 2px solid var(--accent-color);"></video>`
+            : `<img src="${ev.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:8px; border: 2px solid var(--accent-color);">`;
+
         item.innerHTML = `
-            <img src="${ev.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:8px; border: 2px solid var(--accent-color);">
+            ${mediaHtml}
             <button type="button" onclick="removeNewMedia(${index}, this)" style="position:absolute; top:-5px; right:-5px; background:#444; color:white; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer; font-size:12px;">&times;</button>
         `;
         previewGrid.appendChild(item);
@@ -463,6 +469,11 @@ document.getElementById('uploadForm').addEventListener('submit', async (e) => {
     const url = isEdit ? `/api/pages/${pageId}` : `/api/books/${currentBookId}/pages`;
     const method = isEdit ? 'PUT' : 'POST';
 
+    const submitBtn = document.getElementById('submitBtn');
+    const originalBtnText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Uploading...';
+
     try {
         const res = await fetch(url, {
             method: method,
@@ -472,8 +483,16 @@ document.getElementById('uploadForm').addEventListener('submit', async (e) => {
         if (res.ok) {
             document.getElementById('pageModal').classList.remove('active');
             fetchPages(currentBookId);
+        } else {
+            alert('Upload failed. Please try again.');
         }
-    } catch (err) { console.error(err); }
+    } catch (err) {
+        console.error(err);
+        alert('Network error during upload.');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
+    }
 });
 
 async function openEditPage(pageId) {
@@ -498,8 +517,13 @@ async function openEditPage(pageId) {
             page.media.forEach(m => {
                 const item = document.createElement('div');
                 item.style.cssText = 'position:relative; width:80px; height:80px;';
+
+                const mediaHtml = m.type === 'video'
+                    ? `<video src="${m.media_path}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;"></video>`
+                    : `<img src="${m.media_path}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">`;
+
                 item.innerHTML = `
-                    <img src="${m.media_path}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">
+                    ${mediaHtml}
                     <button type="button" onclick="markMediaForDelete(${m.id}, this)" style="position:absolute; top:-5px; right:-5px; background:red; color:white; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer; font-size:12px;">&times;</button>
                 `;
                 previewGrid.appendChild(item);
