@@ -191,6 +191,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isMobile) pages.forEach(p => animateContent(p, true));
         updatePageInfo();
 
+        // 4. Auto-Fullscreen on first interaction (Mobile Landscape Only)
+        const fsTrigger = () => {
+            if (isMobile && isLandscape && !document.fullscreenElement) {
+                const de = document.documentElement;
+                if (de.requestFullscreen) de.requestFullscreen().catch(() => { });
+                else if (de.webkitRequestFullscreen) de.webkitRequestFullscreen().catch(() => { });
+            }
+            window.removeEventListener('click', fsTrigger);
+        };
+        window.addEventListener('click', fsTrigger);
+
         // Fade out preloader
         setTimeout(() => {
             const preloader = document.getElementById('preloader');

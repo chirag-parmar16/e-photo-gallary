@@ -39,7 +39,8 @@ body {
 
 .book-container {
     width: 90vw;
-    height: calc(100vh - 90px); /* Increased height to use more screen real estate */
+    height: calc(100vh - 90px);
+    height: calc(100dvh - 90px); /* Use dynamic viewport for mobile */
     max-width: 1200px;
     max-height: 900px;
     perspective: 2500px;
@@ -302,6 +303,7 @@ body {
             left: 0;
             width: 100vw;
             height: 100vh;
+            height: 100dvh;
             background: var(--bg-color);
             z-index: 9999;
             flex-direction: column;
@@ -321,19 +323,22 @@ body {
         body {
             overflow: hidden;
             height: 100vh;
+            height: 100dvh;
         }
 
         #app {
-            padding: 5px 0;
+            padding: 0;
             height: 100vh;
+            height: 100dvh;
             display: flex;
             flex-direction: column;
             justify-content: center;
         }
 
         .book-container {
-            width: 90vw;
-            height: 75vh;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
             perspective: 2500px;
             margin: 0 auto;
         }
