@@ -6,7 +6,7 @@ const crypto = require('crypto');
 
 async function initDb() {
     const db = await open({
-        filename: path.join(__dirname, 'database.sqlite'),
+        filename: path.join(__dirname, '../database/database.sqlite'),
         driver: sqlite3.Database
     });
 
@@ -48,16 +48,6 @@ async function initDb() {
     `);
 
     // 3. Create/Update Pages Table
-    // Check if book_id column exists
-    const columns = await db.all(`PRAGMA table_info(pages);`);
-    const hasBookId = columns.some(col => col.name === 'book_id');
-
-    if (!hasBookId) {
-        // Add book_id column
-        await db.exec(`ALTER TABLE pages ADD COLUMN book_id INTEGER REFERENCES books(id) ON DELETE CASCADE;`);
-    }
-
-    // Ensure pages table exists (if fresh start)
     await db.exec(`
         CREATE TABLE IF NOT EXISTS pages (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,6 +58,12 @@ async function initDb() {
             FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
         );
     `);
+
+    const columns = await db.all(`PRAGMA table_info(pages);`);
+    const hasBookId = columns.some(col => col.name === 'book_id');
+    if (!hasBookId) {
+        await db.exec(`ALTER TABLE pages ADD COLUMN book_id INTEGER REFERENCES books(id) ON DELETE CASCADE;`);
+    }
 
     // 4. Create Page Media Table
     await db.exec(`
@@ -80,8 +76,6 @@ async function initDb() {
             FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE
         );
     `);
-
-    // 5. Deprecate Settings Table (Optional: Keep for system-wide flags if needed, but Books table handles titles now)
 
     // --- SEEDING & MIGRATION ---
 
@@ -118,17 +112,21 @@ async function initDb() {
 
         // Attempt to migrate settings from old 'settings' table to this book
         try {
-            const oldSettings = await db.all('SELECT * FROM settings');
-            const coverT = oldSettings.find(s => s.key === 'cover_title')?.value;
-            const endT = oldSettings.find(s => s.key === 'end_title')?.value;
+            // Check if settings table exists first
+            const tableCheck = await db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='settings'");
+            if (tableCheck) {
+                const oldSettings = await db.all('SELECT * FROM settings');
+                const coverT = oldSettings.find(s => s.key === 'cover_title')?.value;
+                const endT = oldSettings.find(s => s.key === 'end_title')?.value;
 
-            if (coverT || endT) {
-                await db.run('UPDATE books SET cover_title = ?, end_title = ? WHERE id = ?',
-                    [coverT || 'Our Timeless Journey', endT || 'THE END', defaultBookId]);
-                console.log('Migrated old titles to default book.');
+                if (coverT || endT) {
+                    await db.run('UPDATE books SET cover_title = ?, end_title = ? WHERE id = ?',
+                        [coverT || 'Our Timeless Journey', endT || 'THE END', defaultBookId]);
+                    console.log('Migrated old titles to default book.');
+                }
             }
         } catch (e) {
-            // Settings table might not exist or other error, ignore
+            console.log('Skipping settings migration (table might not exist).');
         }
 
     } else {
