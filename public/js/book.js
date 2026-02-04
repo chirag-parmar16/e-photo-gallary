@@ -1,165 +1,116 @@
 document.addEventListener('DOMContentLoaded', () => {
     const book = document.getElementById('book');
+    const pageNumbers = document.getElementById('pageNumbers');
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
-    const pageNumbers = document.getElementById('pageNumbers');
 
-    // Pagination and state
+    let pages = [];
     let currentPage = 0;
     let totalPages = 0;
-    let pages = [];
-    let isMobile = window.innerWidth <= 932;
-    let isLandscape = window.innerWidth > window.innerHeight;
+    let currentMobileView = 'front'; // 'front' or 'back'
 
-    // Get Book UUID from URL
     const urlParams = new URLSearchParams(window.location.search);
     const bookUuid = urlParams.get('id');
 
     async function loadBookData() {
+        if (!bookUuid) {
+            alert('No memory book specified.');
+            return;
+        }
+
         try {
-            const url = bookUuid ? `/api/public/books/${bookUuid}` : '/api/pages';
-            const response = await fetch(url);
-            const data = await response.json();
-
-            let originalPages = [];
-            let settings = { cover_title: 'Our Timeless Journey', end_title: 'THE END' };
-
-            if (data.pages) {
-                originalPages = data.pages;
-                if (data.book) {
-                    settings.cover_title = data.book.cover_title;
-                    settings.end_title = data.book.end_title;
-                    window.bookData = data.book;
-                }
-            } else {
-                originalPages = data;
-                // Fetch legacy settings if single book
-                const sRes = await fetch('/api/settings');
-                const sData = await sRes.json();
-                settings = { ...settings, ...sData };
-            }
-
-            initBook(originalPages, settings);
-        } catch (error) {
-            console.error('Error loading book:', error);
+            const res = await fetch(`/api/public/books/${bookUuid}`);
+            if (!res.ok) throw new Error('Failed to fetch book');
+            const data = await res.json();
+            renderBook(data.pages, data.cover_title, data.end_title);
+        } catch (err) {
+            console.error('Error loading book:', err);
+            alert('Story not found or private.');
         }
     }
 
-    function initBook(originalData, settings) {
-        isMobile = window.innerWidth <= 932;
-        isLandscape = window.innerWidth > window.innerHeight;
-
-        let processedData = [...originalData];
-
-        // LOGIC: Shift images to next page ONLY for Mobile Landscape (Splitting grid)
-        if (isMobile && isLandscape) {
-            let newData = [];
-            originalData.forEach((memory) => {
-                if (memory.media && memory.media.length > 2) {
-                    const chunks = [];
-                    for (let i = 0; i < memory.media.length; i += 2) {
-                        chunks.push(memory.media.slice(i, i + 2));
-                    }
-                    chunks.forEach((chunk, i) => {
-                        newData.push({
-                            ...memory,
-                            media: chunk,
-                            text_content: i === 0 ? memory.text_content : ''
-                        });
-                    });
-                } else {
-                    newData.push(memory);
-                }
-            });
-            processedData = newData;
-        }
-
-        setupBookUI(processedData, settings);
-    }
-
-    function createPageContent(pageData, side) {
-        if (!pageData) return `<div class="page-content ${side} empty"></div>`;
-
-        const isTextOnly = !pageData.media || pageData.media.length === 0;
-        const mediaItems = (pageData.media || []).map(m => `
-            <div class="media-item">
-                ${m.type === 'video'
-                ? `<video src="${m.media_path}" loop muted></video>`
-                : `<img src="${m.media_path}" alt="Memory">`
-            }
-            </div>
-        `).join('');
-
-        return `
-            <div class="page-content ${side} ${isTextOnly ? 'poem-page' : ''}">
-                ${!isTextOnly ? `
-                <div class="media-grid count-${pageData.media.length}">
-                    ${mediaItems}
-                </div>` : ''}
-                <div class="minimal-text">${pageData.text_content || ''}</div>
-            </div>
-        `;
-    }
-
-    let currentMobileView = 'front';
-
-    function setupBookUI(data, settings) {
+    function renderBook(pageData, coverTitle, endTitle) {
         book.innerHTML = '';
-        currentPage = 0;
-        const coverTitle = settings.cover_title || 'Our Timeless Journey';
-        const endTitle = settings.end_title || 'THE END';
 
-        // 1. Cover Sheet
+        // 1. Cover
         const coverSheet = document.createElement('div');
         coverSheet.className = 'page';
-        coverSheet.style.zIndex = data.length + 10;
+        coverSheet.style.zIndex = 100;
         coverSheet.innerHTML = `
             <div class="page-content front cover-front">
-                <h1>${coverTitle}</h1>
+                <h1>${coverTitle || 'Our Timeless Journey'}</h1>
                 <p>A collection of memories, frozen in time.</p>
                 <div class="instruction">Tap to open</div>
             </div>
-            ${createPageContent(data[0], 'back')}
+            <div class="page-content back empty"></div>
         `;
         book.appendChild(coverSheet);
 
-        // 2. Middle Sheets
-        for (let i = 1; i < data.length; i += 2) {
+        // 2. Inner Pages (2 per sheet)
+        for (let i = 0; i < pageData.length; i += 2) {
             const sheet = document.createElement('div');
             sheet.className = 'page';
-            sheet.style.zIndex = data.length - i;
+            sheet.style.zIndex = pageData.length - i;
+
+            const p1 = pageData[i];
+            const p2 = pageData[i + 1];
+
             sheet.innerHTML = `
-                ${createPageContent(data[i], 'front')}
-                ${createPageContent(data[i + 1], 'back')}
+                <div class="page-content front ${!p1 ? 'empty' : ''}">
+                    ${renderPageContent(p1)}
+                </div>
+                <div class="page-content back ${!p2 ? 'empty' : ''}">
+                    ${renderPageContent(p2)}
+                </div>
             `;
             book.appendChild(sheet);
+        }
+
+        function renderPageContent(p) {
+            if (!p) return '';
+            const mediaCount = p.media ? p.media.length : 0;
+            const gridClass = `media-grid count-${mediaCount}`;
+
+            let mediaHtml = '';
+            if (p.media) {
+                p.media.forEach(m => {
+                    if (m.type === 'video') {
+                        mediaHtml += `<div class="media-item"><video src="${m.media_path}" loop muted playsinline></video></div>`;
+                    } else {
+                        mediaHtml += `<div class="media-item"><img src="${m.media_path}"></div>`;
+                    }
+                });
+            }
+
+            return `
+                <div class="${gridClass}">${mediaHtml}</div>
+                <div class="minimal-text">${p.text_content || ''}</div>
+            `;
         }
 
         // 3. End Cover
         const allSheets = book.querySelectorAll('.page');
         const lastSheet = allSheets[allSheets.length - 1];
 
-        // If last sheet's back is empty, we turn it into the end cover
         if (lastSheet && !lastSheet.querySelector('.page-content.back:not(.empty)')) {
             const backSide = lastSheet.querySelector('.page-content.back');
             backSide.innerHTML = `
-                <h1>${endTitle}</h1>
+                <h1>${endTitle || 'THE END'}</h1>
                 <p>Thank you for being part of this story.</p>
-                <button onclick="window.location.href='book.html${bookUuid ? '?id=' + bookUuid : ''}'" class="nav-btn secondary" style="margin-top: 20px;">Replay Story</button>
+                <button onclick="location.reload()" class="nav-btn secondary" style="margin-top: 20px;">Replay Story</button>
             `;
             backSide.classList.remove('empty');
             backSide.classList.add('cover-back');
         } else {
-            // Otherwise add a dedicated end sheet
             const endSheet = document.createElement('div');
             endSheet.className = 'page';
             endSheet.style.zIndex = 0;
             endSheet.innerHTML = `
                 <div class="page-content front empty"></div>
                 <div class="page-content back cover-back">
-                    <h1>${endTitle}</h1>
+                    <h1>${endTitle || 'THE END'}</h1>
                     <p>Thank you for being part of this story.</p>
-                    <button onclick="window.location.href='book.html${bookUuid ? '?id=' + bookUuid : ''}'" class="nav-btn secondary" style="margin-top: 20px;">Replay Story</button>
+                    <button onclick="location.reload()" class="nav-btn secondary" style="margin-top: 20px;">Replay Story</button>
                 </div>
             `;
             book.appendChild(endSheet);
@@ -168,28 +119,43 @@ document.addEventListener('DOMContentLoaded', () => {
         pages = document.querySelectorAll('.page');
         totalPages = pages.length;
 
-        // Click interaction
+        // Interaction
         pages.forEach((page, index) => {
             page.addEventListener('click', () => {
                 const isLandscape = window.innerWidth > window.innerHeight;
                 const isMobile = window.innerWidth <= 932;
-
                 if (isMobile && !isLandscape) {
                     handleMobileVerticalClick('next');
                     return;
                 }
-
-                if (index === currentPage) {
-                    flipPage(currentPage, 'next');
-                } else if (index === currentPage - 1) {
-                    flipPage(currentPage - 1, 'prev');
-                }
+                if (index === currentPage) flipPage(currentPage, 'next');
+                else if (index === currentPage - 1) flipPage(currentPage - 1, 'prev');
             });
         });
 
         animateContent(pages[0], true);
+        const isMobile = window.innerWidth <= 932;
         if (isMobile) pages.forEach(p => animateContent(p, true));
         updatePageInfo();
+
+        // Final Loader Reveal
+        setTimeout(() => {
+            const preloader = document.getElementById('preloader');
+            if (preloader) preloader.classList.add('fade-out');
+
+            // Auto-FS hint
+            const landscapeFirstHint = () => {
+                const isLandscape = window.innerWidth > window.innerHeight;
+                const isMobile = window.innerWidth <= 932;
+                if (isMobile && isLandscape && !document.fullscreenElement) {
+                    const de = document.documentElement;
+                    if (de.requestFullscreen) de.requestFullscreen().catch(() => { });
+                    else if (de.webkitRequestFullscreen) de.webkitRequestFullscreen().catch(() => { });
+                }
+                window.removeEventListener('click', landscapeFirstHint);
+            };
+            window.addEventListener('click', landscapeFirstHint);
+        }, 1000);
     }
 
     function handleMobileVerticalClick(direction) {
@@ -239,10 +205,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!page) return;
         const mediaItems = page.querySelectorAll('.page-content img, .page-content video');
         const texts = page.querySelectorAll('.minimal-text');
-
         gsap.to(mediaItems, { opacity: 1, scale: 1, duration: 1.2, ease: "power2.out", stagger: 0.2, delay: 0.2 });
         gsap.to(texts, { opacity: 1, y: 0, duration: 1, ease: "power2.out", delay: 0.4 });
-
         mediaItems.forEach(m => {
             if (m.tagName === 'VIDEO' && isVisible) m.play().catch(() => { });
             else if (m.tagName === 'VIDEO') m.pause();
@@ -252,12 +216,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function updatePageInfo() {
         const isLandscape = window.innerWidth > window.innerHeight;
         const isMobileBoundary = window.innerWidth <= 932;
-
         if (isMobileBoundary && !isLandscape) {
             pageNumbers.textContent = `Part ${currentPage * 2 + (currentMobileView === 'back' ? 1 : 0)}`;
             return;
         }
-
         if (currentPage === 0) {
             pageNumbers.textContent = 'Cover';
             book.style.transform = 'translateX(-25%)';
@@ -270,7 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Fullscreen buttons
+    // Fullscreen
     const fsBtn = document.getElementById('fullscreenBtn');
     if (fsBtn) {
         fsBtn.addEventListener('click', () => {
@@ -293,23 +255,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const isFS = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
         if (fsBtn) fsBtn.textContent = isFS ? '✖ Exit' : '⛶ Fullscreen';
     };
+    ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(evt => document.addEventListener(evt, updateFsText));
 
-    document.addEventListener('fullscreenchange', updateFsText);
-    document.addEventListener('webkitfullscreenchange', updateFsText);
-    document.addEventListener('mozfullscreenchange', updateFsText);
-    document.addEventListener('MSFullscreenChange', updateFsText);
-
-    // Nav buttons
-    let hasAttemptedFullscreen = false;
+    // Nav
     nextBtn.addEventListener('click', () => {
         const isLandscape = window.innerWidth > window.innerHeight;
         const isMobile = window.innerWidth <= 932;
-
-        if (isMobile && isLandscape && !hasAttemptedFullscreen && !document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(() => { });
-            hasAttemptedFullscreen = true;
-        }
-
         if (isMobile && !isLandscape) handleMobileVerticalClick('next');
         else if (currentPage < totalPages) flipPage(currentPage, 'next');
     });
@@ -321,15 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (currentPage > 0) flipPage(currentPage - 1, 'prev');
     });
 
-    // Resize handler
-    let lastOrientation = window.innerWidth > window.innerHeight;
-    window.addEventListener('resize', () => {
-        const currentOrientation = window.innerWidth > window.innerHeight;
-        if (currentOrientation !== lastOrientation) {
-            lastOrientation = currentOrientation;
-            loadBookData(); // Re-fetch or re-init based on orientation
-        }
-    });
+    window.addEventListener('resize', updatePageInfo);
 
     // Petals
     function createPetals() {
@@ -340,7 +283,6 @@ document.addEventListener('DOMContentLoaded', () => {
             container.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0;';
             document.body.prepend(container);
         }
-
         container.innerHTML = '';
         for (let i = 0; i < 30; i++) {
             const petal = document.createElement('div');
