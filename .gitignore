@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Environment Variables
+.env
+.env.local
+
+# Database
+*.db
+*.sqlite
+database/
+
+# Memory/Temporary files
+.DS_Store
+Thumbs.db
+
+# User Uploads (Ignore images/videos but keep folders)
+public/uploads/images/*
+!public/uploads/images/.gitkeep
+public/uploads/videos/*
+!public/uploads/videos/.gitkeep
+
+# AutoFlow Configs (Optional, user might want to hide them)
+autoflow.config.json
+Dockerfile
+.dockerignore

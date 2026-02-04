@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Timeless Memories</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin.css">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Quill Rich Text Editor -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fdf2f2; z-index: 10000; display: flex; justify-content: center; align-items: center; padding: 20px;">
+        <div style="background: white; padding: 40px; border-radius: 24px; box-shadow: 0 20px 50px rgba(192,0,0,0.08); width: 100%; max-width: 480px; text-align: center;">
+            <h1 style="font-family: 'Playfair Display', serif; color: var(--accent-color); margin-bottom: 20px; font-size: 2.5rem;">Memoria</h1>
+            <p style="color: #666; margin-bottom: 35px; font-size: 1.1rem;">Sign in to your dashboard</p>
+            <form id="loginForm">
+                <div style="margin-bottom: 20px; text-align: left;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 8px;">Email Address</label>
+                    <input type="email" id="loginEmail" required placeholder="name@example.com">
+                </div>
+                <div style="margin-bottom: 30px; text-align: left;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 8px;">Password</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; height: 52px; font-size: 1.1rem;">Sign In</button>
+                <p id="loginError" style="color: red; margin-top: 15px; display: none; font-weight: 500;"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App (Hidden by default) -->
+    <div id="app-container" style="display: none;">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <i class="fas fa-heart"></i> Memoria
+            </div>
+            <nav>
+                <ul class="nav-links" id="sidebar-nav">
+                    <!-- Links injected via JS based on Role -->
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-wrapper">
+            <nav class="navbar">
+                <button id="mobileMenuToggle" class="mobile-toggle"><i class="fas fa-bars"></i></button>
+                <div class="user-profile">
+                    <span id="navUsername">User</span>
+                    <button id="openPasswordModal" style="margin-left: 15px; padding: 5px 10px; border: 1px solid var(--accent-color); color: var(--accent-color); border-radius: 6px; background: white; cursor: pointer; font-size: 0.85rem;"><i class="fas fa-key"></i> Pass</button>
+                    <button id="logoutBtn" style="margin-left: 10px; padding: 5px 10px; border: 1px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-size: 0.85rem;">Logout</button>
+                </div>
+            </nav>
+
+            <!-- SUPER ADMIN DASHBOARD (Manage Users) -->
+            <div id="super-admin-dashboard" class="view-container">
+                <div class="view-header">
+                    <h2>System Overview</h2>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-users"></i></div>
+                        <div class="stat-info">
+                            <h4>Total Users</h4>
+                            <p id="sa-total-users">--</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-book"></i></div>
+                        <div class="stat-info">
+                            <h4>Total Books</h4>
+                            <p id="sa-total-books">--</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="view-header" style="margin-top: 2rem;">
+                    <h3>Users</h3>
+                    <button class="btn-primary" id="openAddUserModal">+ Create User</button>
+                </div>
+                <div class="data-table">
+                    <div class="table-row table-header user-row">
+                        <div>ID</div>
+                        <div>Email</div>
+                        <div>Role</div>
+                        <div>Joined</div>
+                        <div>Actions</div>
+                    </div>
+                    <div id="userList"></div>
+                </div>
+            </div>
+
+            <!-- USER DASHBOARD (My Books) -->
+            <div id="user-dashboard" class="view-container">
+                <div class="view-header">
+                    <h2>My Dashboard</h2>
+                </div>
+                <div class="stats-grid">
+                     <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-book-open"></i></div>
+                        <div class="stat-info">
+                            <h4>My Books</h4>
+                            <p id="user-total-books">--</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="view-header" style="margin-top: 2rem;">
+                    <h3>My Albums</h3>
+                    <button class="btn-primary" id="openCreateBookModal">+ Create New Album</button>
+                </div>
+                <div class="books-grid" id="booksList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+                    <!-- Books injected here -->
+                </div>
+            </div>
+
+            <!-- BOOK EDITOR (Pages & Settings) -->
+            <div id="book-editor" class="view-container">
+                <div class="view-header">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <button id="backToDashBtn" class="btn-secondary" style="padding: 8px 15px;"><i class="fas fa-arrow-left"></i> Back</button>
+                        <h2 id="editorBookTitle">Album Name</h2>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        <a id="publicLinkBtn" href="#" target="_blank" class="text-link">View Live <i class="fas fa-external-link-alt"></i></a>
+                        <button class="btn-primary" id="openAddModal"><i class="fas fa-plus"></i> Add Page</button>
+                    </div>
+                </div>
+                
+                <!-- Book Settings Mini-Panel -->
+                <div style="background: white; padding: 1.5rem; border-radius: 20px; box-shadow: var(--shadow); margin-bottom: 2rem; border: 1px solid var(--border-color);">
+                    <h4 style="margin-bottom: 1rem; color: #888; font-size: 0.9rem;">Album Settings</h4>
+                    <form id="bookSettingsForm" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
+                        <div style="flex: 1; min-width: 200px;">
+                            <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; color: #aaa;">Album Title</label>
+                            <input type="text" id="editBookTitle" required>
+                        </div>
+                        <div style="flex: 1; min-width: 200px;">
+                            <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; color: #aaa;">Cover Title</label>
+                            <input type="text" id="editCoverTitle" required>
+                        </div>
+                        <div style="flex: 1; min-width: 200px;">
+                            <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; color: #aaa;">End Title</label>
+                            <input type="text" id="editEndTitle" required>
+                        </div>
+                        <button type="submit" class="btn-outline" style="height: 48px;">Update Titles</button>
+                    </form>
+                </div>
+
+                <div class="data-table">
+                    <div class="table-row table-header page-row">
+                        <div>Order</div>
+                        <div>Content</div>
+                        <div>Media</div>
+                        <div>Actions</div>
+                    </div>
+                    <div id="pageList"></div>
+                </div>
+            </div>
+
+            <footer>
+                <p>&copy; 2026 Timeless Memories. Built with ❤️</p>
+            </footer>
+        </main>
+    </div>
+
+    <!-- MODALS for Admin/User actions -->
+    <!-- Create User Modal -->
+    <div id="createUserModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" data-modal="createUserModal">&times;</span>
+            <h3 style="margin-bottom: 1.5rem;">Create New User</h3>
+            <form id="createUserForm">
+                <div style="margin-bottom: 15px;">
+                    <label>Email</label>
+                    <input type="email" id="newEmail" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label>Password</label>
+                    <input type="password" id="newPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label>Role</label>
+                    <select id="newRole" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                        <option value="user">User</option>
+                        <option value="admin">Super Admin</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%;">Create User</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Book Modal -->
+     <div id="createBookModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" data-modal="createBookModal">&times;</span>
+            <h3 style="margin-bottom: 1.5rem;">Create New Album</h3>
+            <form id="createBookForm">
+                <div style="margin-bottom: 15px;">
+                    <label>Album Name (Internal)</label>
+                    <input type="text" id="newBookTitle" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" placeholder="e.g. Wedding 2024">
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%;">Create Album</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Existing Page Modal (Reused) -->
+    <div id="pageModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" data-modal="pageModal">&times;</span>
+            <h3 id="modalTitle" style="margin-bottom: 1.5rem;">Add New Memory</h3>
+            <form id="uploadForm">
+                <input type="hidden" id="editPageId">
+                <div id="mediaUploadField" style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 600;">Album Media</label>
+                    <label for="mediaFile" class="custom-file-upload">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span>Click to Upload Photos or Videos</span>
+                        <small>You can select up to 4 files</small>
+                    </label>
+                    <input type="file" id="mediaFile" accept="image/*,video/*" multiple>
+                    <div id="previewGrid" class="media-stack" style="margin-top: 15px; gap: 12px; flex-wrap: wrap;"></div>
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Poem / Description</label>
+                    <div id="editor-container" style="height: 200px; background: white; border-radius: 12px;"></div>
+                </div>
+                <button type="submit" id="submitBtn" class="btn-primary" style="width: 100%;">Save Memory</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Change Password</h3>
+                <button class="close-modal" data-modal="passwordModal">&times;</button>
+            </div>
+            <form id="passwordForm">
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Current Password</label>
+                    <input type="password" id="currentPass" required style="width: 100%; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px;">
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">New Password</label>
+                    <input type="password" id="newPass" required style="width: 100%; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px;">
+                </div>
+                <div style="margin-bottom: 2rem;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Confirm New Password</label>
+                    <input type="password" id="confirmPass" required style="width: 100%; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px;">
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; height: 50px;">Update Password</button>
+                <p id="passwordError" style="color: red; margin-top: 15px; display: none; font-weight: 500; text-align: center;"></p>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>

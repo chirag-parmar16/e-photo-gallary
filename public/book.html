@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeless Memories | Digital Photo Album</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/petals.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <div class="book-container">
+            <div id="book" class="book">
+                <!-- Pages will be dynamically loaded here -->
+                <div class="page cover front">
+                    <div class="page-content">
+                        <h1>Our Timeless Journey</h1>
+                        <p>A collection of memories, frozen in time.</p>
+                        <div class="instruction">Tap to open</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <nav class="book-nav">
+            <button id="prevBtn" class="nav-btn">←</button>
+            <span id="pageNumbers">Cover</span>
+            <button id="nextBtn" class="nav-btn">→</button>
+            <button id="fullscreenBtn" class="nav-btn secondary" title="Fullscreen">⛶ Fullscreen</button>
+        </nav>
+    </div>
+
+    <!-- Rotation Overlay -->
+    <div id="rotation-overlay">
+        <div class="overlay-content">
+            <div class="rotate-icon">
+                <svg viewBox="0 0 24 24" width="60" height="60" fill="currentColor">
+                    <path d="M16.48 2.52c3.27 1.55 5.61 4.72 5.97 8.48h2C24.44 4.82 20.03 0 14.5 0c-3.12 0-5.93 1.4-7.84 3.61L3.5 0V7h7L8.11 4.61c1.51-1.31 3.49-2.11 5.61-2.11c1 0 1.95.18 2.84.52zM7.52 21.48C4.25 19.93 1.91 16.76 1.55 13h-2C-.44 19.18 3.97 24 9.5 24c3.12 0 5.93-1.4 7.84-3.61L20.5 24v-7h-7l2.39 2.39c-1.51 1.31-3.49 2.11-5.61 2.11-1 0-1.95-.18-2.84-.52z"/>
+                </svg>
+            </div>
+            <h2>Please Rotate Your Device</h2>
+            <p>This memory book is best experienced in landscape mode.</p>
+        </div>
+    </div>
+
+    <script src="js/book.js"></script>
+</body>
+</html>

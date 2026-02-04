@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Timeless Memories</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin.css">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Quill Rich Text Editor -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <i class="fas fa-heart"></i> Memoria Admin
+        </div>
+        <nav>
+            <ul class="nav-links">
+                <li class="active"><a href="#" data-view="dashboard"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+                <li><a href="#" data-view="pages"><i class="fas fa-book-open"></i> Manage Pages</a></li>
+                <li><a href="#" data-view="settings"><i class="fas fa-cog"></i> Settings</a></li>
+                <li style="margin-top: 2rem;"><a href="../index.html" target="_blank"><i class="fas fa-external-link-alt"></i> View Album</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-wrapper">
+        <nav class="navbar">
+            <button id="mobileMenuToggle" class="mobile-toggle"><i class="fas fa-bars"></i></button>
+            <div class="user-profile">
+                <span>Administrator</span>
+                <div style="width: 35px; height: 35px; border-radius: 50%; background: #fce1e5; display: flex; align-items: center; justify-content: center;">A</div>
+            </div>
+        </nav>
+
+        <!-- Dashboard View -->
+        <div id="dashboard" class="view-container active">
+            <div class="view-header">
+                <h2>Overview</h2>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
+                    <div class="stat-info">
+                        <h4>Total Pages</h4>
+                        <p id="stat-pages">--</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-photo-video"></i></div>
+                    <div class="stat-info">
+                        <h4>Total Media</h4>
+                        <p id="stat-media">--</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pages View -->
+        <div id="pages" class="view-container">
+            <div class="view-header">
+                <h2>Memory Pages</h2>
+                <button class="btn-primary" id="openAddModal">+ Add New Memory</button>
+            </div>
+            <div class="data-table">
+                <div class="table-row table-header">
+                    <div>Order</div>
+                    <div>Content Preview</div>
+                    <div>Media</div>
+                    <div>Actions</div>
+                </div>
+                <div id="pageList">
+                    <!-- Pages will be injected here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings View -->
+        <div id="settings" class="view-container">
+            <div class="view-header">
+                <h2>Album Settings</h2>
+            </div>
+            <div style="max-width: 600px; background: white; padding: 2.5rem; border-radius: 24px; box-shadow: var(--shadow);">
+                <form id="settingsForm">
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Front Cover Title</label>
+                        <input type="text" id="coverTitle" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); outline: none;" placeholder="e.g., Our Timeless Journey">
+                    </div>
+                    <div style="margin-bottom: 2rem;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Back Cover Title</label>
+                        <input type="text" id="endTitle" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); outline: none;" placeholder="e.g., THE END">
+                    </div>
+                    <button type="submit" class="btn-primary">Save Settings</button>
+                </form>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2026 Timeless Memories Digital Photo Album. Built with ❤️</p>
+        </footer>
+    </main>
+
+    <!-- Modals -->
+    <div id="pageModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3 id="modalTitle" style="margin-bottom: 1.5rem;">Add New Memory</h3>
+            <form id="uploadForm">
+                <input type="hidden" id="editPageId">
+                <div id="mediaUploadField" style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Select Photos/Videos (Max 4)</label>
+                    <input type="file" id="mediaFile" accept="image/*,video/*" multiple style="width: 100%; padding: 10px; border: 1px dashed var(--accent-color); border-radius: 12px;">
+                    <div id="previewGrid" class="media-stack" style="margin-top: 10px; gap: 10px; flex-wrap: wrap;"></div>
+                    <small id="mediaNote" style="color: #888; display: block; margin-top: 5px;">Leave empty to keep existing media when editing.</small>
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Poem / Description</label>
+                    <div id="editor-container" style="height: 200px; background: white; border-radius: 12px;"></div>
+                </div>
+                <button type="submit" id="submitBtn" class="btn-primary" style="width: 100%;">Create Memory</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
