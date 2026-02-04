@@ -1,26 +1,28 @@
 :root {
-    --accent-color: #ff4d6d;
-    --warm-accent: #ff758f;
-    --text-color: #2b2d42;
-    --shadow-color: rgba(0,0,0,0.1);
-    --border-color: #ffccd5;
-    --bg-color: #fff5f6;
+    --bg-color: #FFDEE3;
+    --primary-color: #C00000;
+    --text-color: #C00000;
+    --accent-color: #FF3334;
+    --soft-accent: #FF6F77;
+    --light-accent: #FFBBC1;
+    --warm-accent: #FF8896;
+    --paper-color: #ffffff;
+    --shadow-color: rgba(192, 0, 0, 0.15);
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
 }
 
 body {
-    font-family: 'Inter', sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
-    overflow: hidden;
+    font-family: 'Inter', sans-serif;
     height: 100vh;
     height: 100dvh;
+    overflow: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -496,6 +498,7 @@ body {
     color: var(--text-color);
     font-size: 1.1rem;
 }
+
 /* --- LOADER --- */
 #preloader {
     position: fixed;
