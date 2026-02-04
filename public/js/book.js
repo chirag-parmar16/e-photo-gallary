@@ -107,6 +107,8 @@ document.addEventListener('DOMContentLoaded', () => {
         book.innerHTML = '';
         currentPage = 0;
         const coverTitle = settings.cover_title || 'Our Timeless Journey';
+        const coverSubtitle = settings.cover_subtitle || 'A collection of memories, frozen in time.';
+        const instructionText = settings.instruction_text || 'Tap to open';
         const endTitle = settings.end_title || 'THE END';
 
         // 1. Cover Sheet
@@ -116,8 +118,8 @@ document.addEventListener('DOMContentLoaded', () => {
         coverSheet.innerHTML = `
             <div class="page-content front cover-front">
                 <h1>${coverTitle}</h1>
-                <p>A collection of memories, frozen in time.</p>
-                <div class="instruction">Tap to open</div>
+                <p>${coverSubtitle}</p>
+                <div class="instruction">${instructionText}</div>
             </div>
             ${createPageContent(data[0], 'back')}
         `;

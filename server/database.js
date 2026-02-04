@@ -33,6 +33,15 @@ async function initDb() {
         await db.exec(`ALTER TABLE users RENAME COLUMN username TO email;`);
     }
 
+    // Migration: Add cover_subtitle and instruction_text to books if they don't exist
+    const bookColumns = await db.all(`PRAGMA table_info(books);`);
+    if (!bookColumns.some(col => col.name === 'cover_subtitle')) {
+        await db.exec(`ALTER TABLE books ADD COLUMN cover_subtitle TEXT DEFAULT 'A collection of memories, frozen in time.';`);
+    }
+    if (!bookColumns.some(col => col.name === 'instruction_text')) {
+        await db.exec(`ALTER TABLE books ADD COLUMN instruction_text TEXT DEFAULT 'Tap to open';`);
+    }
+
     // 2. Create Books Table
     await db.exec(`
         CREATE TABLE IF NOT EXISTS books (
@@ -40,6 +49,8 @@ async function initDb() {
             user_id INTEGER NOT NULL,
             title TEXT DEFAULT 'Untitled Album',
             cover_title TEXT DEFAULT 'Our Timeless Journey',
+            cover_subtitle TEXT DEFAULT 'A collection of memories, frozen in time.',
+            instruction_text TEXT DEFAULT 'Tap to open',
             end_title TEXT DEFAULT 'THE END',
             uuid TEXT UNIQUE NOT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,

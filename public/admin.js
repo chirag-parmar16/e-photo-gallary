@@ -323,6 +323,8 @@ async function openEditor(bookId) {
         document.getElementById('editorBookTitle').textContent = book.title;
         document.getElementById('editBookTitle').value = book.title;
         document.getElementById('editCoverTitle').value = book.cover_title;
+        document.getElementById('editCoverSubtitle').value = book.cover_subtitle || '';
+        document.getElementById('editInstructionText').value = book.instruction_text || '';
         document.getElementById('editEndTitle').value = book.end_title;
         document.getElementById('publicLinkBtn').href = `book.html?id=${book.uuid}`;
 
@@ -379,6 +381,8 @@ document.getElementById('bookSettingsForm').addEventListener('submit', async (e)
     const data = {
         title: document.getElementById('editBookTitle').value,
         cover_title: document.getElementById('editCoverTitle').value,
+        cover_subtitle: document.getElementById('editCoverSubtitle').value,
+        instruction_text: document.getElementById('editInstructionText').value,
         end_title: document.getElementById('editEndTitle').value
     };
 

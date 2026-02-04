@@ -235,13 +235,21 @@ app.get('/api/books', authenticateToken, async (req, res) => {
 // Create new book
 app.post('/api/books', authenticateToken, async (req, res) => {
     try {
-        const { title, cover_title, end_title } = req.body;
+        const { title, cover_title, cover_subtitle, instruction_text, end_title } = req.body;
         const uuid = crypto.randomUUID();
 
         const result = await db.run(
-            `INSERT INTO books (user_id, title, cover_title, end_title, uuid) 
-             VALUES (?, ?, ?, ?, ?)`,
-            [req.user.id, title || 'Untitled Album', cover_title || 'Our Journey', end_title || 'The End', uuid]
+            `INSERT INTO books (user_id, title, cover_title, cover_subtitle, instruction_text, end_title, uuid) 
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+                req.user.id,
+                title || 'Untitled Album',
+                cover_title || 'Our Journey',
+                cover_subtitle || 'A collection of memories, frozen in time.',
+                instruction_text || 'Tap to open',
+                end_title || 'The End',
+                uuid
+            ]
         );
         res.json({ success: true, id: result.lastID, uuid });
     } catch (err) {
@@ -263,11 +271,16 @@ app.get('/api/books/:id', authenticateToken, async (req, res) => {
 // Update book settings
 app.put('/api/books/:id', authenticateToken, async (req, res) => {
     try {
-        const { title, cover_title, end_title } = req.body;
+        const { title, cover_title, cover_subtitle, instruction_text, end_title } = req.body;
         const result = await db.run(
-            `UPDATE books SET title = COALESCE(?, title), cover_title = COALESCE(?, cover_title), end_title = COALESCE(?, end_title)
+            `UPDATE books SET 
+                title = COALESCE(?, title), 
+                cover_title = COALESCE(?, cover_title),
+                cover_subtitle = COALESCE(?, cover_subtitle),
+                instruction_text = COALESCE(?, instruction_text),
+                end_title = COALESCE(?, end_title)
              WHERE id = ? AND user_id = ?`,
-            [title, cover_title, end_title, req.params.id, req.user.id]
+            [title, cover_title, cover_subtitle, instruction_text, end_title, req.params.id, req.user.id]
         );
         if (result.changes === 0) return res.status(404).json({ error: 'Book not found' });
         res.json({ success: true });

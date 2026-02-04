@@ -324,10 +324,11 @@ body {
             overflow: hidden;
             height: 100vh;
             height: 100dvh;
+            background-color: var(--bg-color);
         }
 
         #app {
-            padding: 0;
+            padding: 20px 0 0 0; /* Add top spacing to prevent sticking */
             height: 100vh;
             height: 100dvh;
             display: flex;
@@ -410,10 +411,11 @@ body {
         }
 
         .media-grid img, .media-grid video {
-            max-height: 180px !important; /* Increased for better visibility */
+            max-height: 250px !important; /* Increased height for taller aspect ratio */
             width: 100%;
+            height: 100%;
             object-fit: cover !important;
-            border-radius: 6px;
+            border-radius: 8px;
         }
 
         .media-grid.count-1 img, .media-grid.count-1 video {
@@ -462,6 +464,10 @@ body {
 
         #fullscreenBtn {
             display: inline-flex;
+        }
+
+        .nav-buttons {
+            display: none !important; /* Hide navigation buttons on mobile */
         }
     }
 }
