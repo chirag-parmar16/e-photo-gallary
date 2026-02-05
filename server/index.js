@@ -20,19 +20,8 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Storage setup
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const type = file.mimetype.startsWith('video/') ? 'videos' : 'images';
-        cb(null, path.join(__dirname, `../public/uploads/${type}`));
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
-});
-
-const upload = multer({ storage });
+// Storage setup (Moved to S3)
+const { upload, deleteObjectFromS3 } = require('./s3-config');
 
 // Database connection
 let db;
@@ -363,27 +352,13 @@ app.post('/api/books/:id/pages', authenticateToken, upload.array('media'), async
         // Handle Media
         if (req.files && req.files.length > 0) {
             for (const file of req.files) {
-                let finalPath = file.path;
-                const isImage = file.mimetype.startsWith('image/') && !file.mimetype.includes('gif');
+                // file.location is the public URL provided by multer-s3
                 const type = file.mimetype.startsWith('video/') ? 'video' : 'image';
-
-                if (isImage) {
-                    const webpPath = file.path.replace(path.extname(file.path), '.webp');
-                    await sharp(file.path)
-                        .webp({ quality: 80 })
-                        .toFile(webpPath);
-
-                    // Delete original
-                    await fs.unlink(file.path);
-                    finalPath = webpPath;
-                }
-
-                // Convert absolute path to relative for public serving
-                const relativePath = '/uploads/' + (type === 'video' ? 'videos/' : 'images/') + path.basename(finalPath);
+                const s3Url = file.location;
 
                 await db.run(
                     'INSERT INTO page_media (page_id, type, media_path) VALUES (?, ?, ?)',
-                    [pageId, type, relativePath]
+                    [pageId, type, s3Url]
                 );
             }
         }
@@ -411,11 +386,17 @@ app.put('/api/pages/:id', authenticateToken, upload.array('media'), async (req, 
         // Update text
         await db.run('UPDATE pages SET text_content = ? WHERE id = ?', [text_content, pageId]);
 
-        // Remove marked media
+        // Remove marked media from S3 and DB
         if (delete_media_ids) {
             const ids = JSON.parse(delete_media_ids);
             if (Array.isArray(ids) && ids.length > 0) {
                 const placeholders = ids.map(() => '?').join(',');
+                const mediaToDelete = await db.all(`SELECT media_path FROM page_media WHERE id IN (${placeholders}) AND page_id = ?`, [...ids, pageId]);
+
+                for (const m of mediaToDelete) {
+                    await deleteObjectFromS3(m.media_path);
+                }
+
                 await db.run(`DELETE FROM page_media WHERE id IN (${placeholders}) AND page_id = ?`, [...ids, pageId]);
             }
         }
@@ -423,25 +404,12 @@ app.put('/api/pages/:id', authenticateToken, upload.array('media'), async (req, 
         // Add New Media
         if (req.files && req.files.length > 0) {
             for (const file of req.files) {
-                let finalPath = file.path;
-                const isImage = file.mimetype.startsWith('image/') && !file.mimetype.includes('gif');
                 const type = file.mimetype.startsWith('video/') ? 'video' : 'image';
-
-                if (isImage) {
-                    const webpPath = file.path.replace(path.extname(file.path), '.webp');
-                    await sharp(file.path)
-                        .webp({ quality: 80 })
-                        .toFile(webpPath);
-
-                    await fs.unlink(file.path);
-                    finalPath = webpPath;
-                }
-
-                const relativePath = '/uploads/' + (type === 'video' ? 'videos/' : 'images/') + path.basename(finalPath);
+                const s3Url = file.location;
 
                 await db.run(
                     'INSERT INTO page_media (page_id, type, media_path) VALUES (?, ?, ?)',
-                    [pageId, type, relativePath]
+                    [pageId, type, s3Url]
                 );
             }
         }
@@ -460,7 +428,11 @@ app.delete('/api/pages/:id', authenticateToken, async (req, res) => {
             JOIN books b ON p.book_id = b.id 
             WHERE p.id = ?`, req.params.id);
 
-        if (!page || page.user_id !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
+        // Delete S3 files associated with this page
+        const media = await db.all('SELECT media_path FROM page_media WHERE page_id = ?', req.params.id);
+        for (const m of media) {
+            await deleteObjectFromS3(m.media_path);
+        }
 
         await db.run('DELETE FROM pages WHERE id = ?', req.params.id);
         res.json({ success: true });
@@ -481,6 +453,7 @@ app.delete('/api/media/:id', authenticateToken, async (req, res) => {
 
         if (!media || media.user_id !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
 
+        await deleteObjectFromS3(media.media_path);
         await db.run('DELETE FROM page_media WHERE id = ?', req.params.id);
         res.json({ success: true });
     } catch (err) {
