@@ -4,7 +4,6 @@ const multer = require('multer');
 const multerS3 = require('multer-s3');
 const path = require('path');
 
-console.log('S3-CONFIG: Initializing S3 Client...');
 const s3 = new S3Client({
     region: process.env.AWS_REGION || 'us-east-1'
 });
@@ -12,7 +11,6 @@ const s3 = new S3Client({
 let upload;
 try {
     const bucket = process.env.AWS_S3_BUCKET_NAME || 'chirag-photo-memories';
-    console.log('S3-CONFIG: Using bucket:', bucket);
 
     upload = multer({
         storage: multerS3({
@@ -29,21 +27,19 @@ try {
         })
     });
 } catch (err) {
-    console.error('S3-CONFIG CRITICAL ERROR DURING UPLOAD SETUP:');
-    console.error(err);
-    // Fallback to memory storage so app doesn't crash on start
+    console.error('S3 Initialization Error:', err);
     upload = multer({ storage: multer.memoryStorage() });
 }
 
 async function deleteObjectFromS3(url) {
     if (!url || !url.includes('.amazonaws.com/')) return;
     try {
-        // Extract key from URL
         const urlParts = new URL(url);
-        const key = urlParts.pathname.substring(1); // Remove leading slash
+        const key = urlParts.pathname.substring(1);
+        const bucket = process.env.AWS_S3_BUCKET_NAME || 'chirag-photo-memories';
 
         await s3.send(new DeleteObjectCommand({
-            Bucket: process.env.AWS_S3_BUCKET_NAME,
+            Bucket: bucket,
             Key: key
         }));
     } catch (err) {
