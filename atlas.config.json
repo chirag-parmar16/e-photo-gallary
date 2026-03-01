@@ -1,0 +1,7 @@
+{
+  "projectType": "node-express",
+  "targetDomain": "e-book.chirag-dev.online",
+  "startupTimeout": 30000,
+  "recordingEnabled": true,
+  "debugMode": false
+}

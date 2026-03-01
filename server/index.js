@@ -13,6 +13,12 @@ const bcrypt = require('bcryptjs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this';
+const LEGACY_SETTINGS_DEFAULTS = {
+    cover_title: 'Our Timeless Journey',
+    cover_subtitle: 'A collection of memories, frozen in time.',
+    instruction_text: 'Tap to open',
+    end_title: 'THE END'
+};
 
 // Middleware
 app.use(cors());
@@ -32,9 +38,36 @@ initDb().then(database => {
 
 // --- AUTH MIDDLEWARE ---
 
-const authenticateToken = (req, res, next) => {
+function parseCookies(cookieHeader) {
+    if (!cookieHeader) return {};
+    return cookieHeader.split(';').reduce((acc, part) => {
+        const idx = part.indexOf('=');
+        if (idx === -1) return acc;
+        const key = part.slice(0, idx).trim();
+        const value = part.slice(idx + 1).trim();
+        acc[key] = decodeURIComponent(value);
+        return acc;
+    }, {});
+}
+
+function getTokenFromRequest(req) {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+    const bearerToken = authHeader && authHeader.split(' ')[1];
+    if (bearerToken) return bearerToken;
+
+    const cookies = parseCookies(req.headers.cookie);
+    return cookies.session || null;
+}
+
+function maskEmail(email) {
+    if (!email || !email.includes('@')) return 'hidden';
+    const [local, domain] = email.split('@');
+    const localMasked = local.length <= 2 ? `${local[0] || '*'}*` : `${local.slice(0, 2)}${'*'.repeat(Math.max(local.length - 2, 1))}`;
+    return `${localMasked}@${domain}`;
+}
+
+const authenticateToken = (req, res, next) => {
+    const token = getTokenFromRequest(req);
 
     if (!token) return res.sendStatus(401);
 
@@ -52,6 +85,24 @@ const requireAdmin = (req, res, next) => {
         res.status(403).json({ error: 'Admin access required' });
     }
 };
+
+async function tableExists(tableName) {
+    const row = await db.get(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name = ?",
+        [tableName]
+    );
+    return Boolean(row);
+}
+
+async function getLegacySettingsFromBooks() {
+    const book = await db.get(`
+        SELECT cover_title, cover_subtitle, instruction_text, end_title
+        FROM books
+        ORDER BY id ASC
+        LIMIT 1
+    `);
+    return book || {};
+}
 
 // --- AUTH ROUTES ---
 
@@ -76,10 +127,48 @@ app.post('/api/auth/login', async (req, res) => {
             { expiresIn: '24h' }
         );
 
-        res.json({ token, role: user.role, email: user.email });
+        res.cookie('session', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 24 * 60 * 60 * 1000
+        });
+
+        res.json({ role: user.role });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
+});
+
+app.get('/api/auth/me', async (req, res) => {
+    try {
+        const token = getTokenFromRequest(req);
+        if (!token) return res.json({ authenticated: false });
+
+        jwt.verify(token, JWT_SECRET, async (err, payload) => {
+            if (err || !payload?.id) return res.json({ authenticated: false });
+
+            const user = await db.get('SELECT id, email, role FROM users WHERE id = ?', payload.id);
+            if (!user) return res.json({ authenticated: false });
+
+            res.json({
+                authenticated: true,
+                id: user.id,
+                role: user.role
+            });
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/auth/logout', (req, res) => {
+    res.clearCookie('session', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
+    });
+    res.json({ success: true });
 });
 
 app.post('/api/auth/change-password', authenticateToken, async (req, res) => {
@@ -114,10 +203,21 @@ const adminAuth = [authenticateToken, requireAdmin];
 // Get all settings
 app.get('/api/settings', async (req, res) => {
     try {
-        const settingsArr = await db.all('SELECT * FROM settings');
         const settings = {};
-        settingsArr.forEach(s => settings[s.key] = s.value);
-        res.json(settings);
+
+        if (await tableExists('settings')) {
+            const settingsArr = await db.all('SELECT * FROM settings');
+            settingsArr.forEach(s => {
+                settings[s.key] = s.value;
+            });
+        }
+
+        const bookSettings = await getLegacySettingsFromBooks();
+        res.json({
+            ...LEGACY_SETTINGS_DEFAULTS,
+            ...bookSettings,
+            ...settings
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -129,7 +229,13 @@ app.get('/api/settings', async (req, res) => {
 app.get('/api/admin/users', [authenticateToken, requireAdmin], async (req, res) => {
     try {
         const users = await db.all('SELECT id, email, role, created_at FROM users');
-        res.json(users);
+        const safeUsers = users.map(u => ({
+            id: u.id,
+            role: u.role,
+            created_at: u.created_at,
+            email_masked: maskEmail(u.email)
+        }));
+        res.json(safeUsers);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -197,12 +303,31 @@ app.get('/api/admin/stats', [authenticateToken, requireAdmin], async (req, res) 
 app.put('/api/admin/settings', adminAuth, async (req, res) => {
     try {
         const { cover_title, end_title } = req.body;
-        if (cover_title !== undefined) {
-            await db.run('INSERT OR REPLACE INTO settings (key, value) VALUES ("cover_title", ?)', [cover_title]);
+
+        if (await tableExists('settings')) {
+            if (cover_title !== undefined) {
+                await db.run('INSERT OR REPLACE INTO settings (key, value) VALUES ("cover_title", ?)', [cover_title]);
+            }
+            if (end_title !== undefined) {
+                await db.run('INSERT OR REPLACE INTO settings (key, value) VALUES ("end_title", ?)', [end_title]);
+            }
         }
-        if (end_title !== undefined) {
-            await db.run('INSERT OR REPLACE INTO settings (key, value) VALUES ("end_title", ?)', [end_title]);
+
+        const adminBook = await db.get(
+            'SELECT id FROM books WHERE user_id = ? ORDER BY id ASC LIMIT 1',
+            [req.user.id]
+        );
+
+        if (adminBook && (cover_title !== undefined || end_title !== undefined)) {
+            await db.run(
+                `UPDATE books SET
+                    cover_title = COALESCE(?, cover_title),
+                    end_title = COALESCE(?, end_title)
+                 WHERE id = ?`,
+                [cover_title, end_title, adminBook.id]
+            );
         }
+
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });

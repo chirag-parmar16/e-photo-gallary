@@ -1,6 +1,5 @@
 // State Management
 let currentUser = null;
-let currentToken = localStorage.getItem('token');
 let currentRole = localStorage.getItem('role');
 let currentBookId = null;
 
@@ -19,15 +18,23 @@ const bookEditor = document.getElementById('book-editor');
 // --- AUTHENTICATION ---
 
 async function checkAuth() {
-    if (currentToken) {
-        // Show app, hide login
+    try {
+        const res = await fetch('/api/auth/me', { credentials: 'same-origin' });
+        const me = await res.json();
+        if (!me.authenticated) throw new Error('Unauthorized');
+        currentUser = me;
+        currentRole = me.role;
+        localStorage.setItem('role', me.role);
         loginScreen.style.display = 'none';
         appContainer.style.display = 'flex';
-        navUsername.textContent = localStorage.getItem('email') || 'User';
+        navUsername.textContent = me.role === 'admin' ? 'Admin' : 'User';
         setupDashboard();
-    } else {
+    } catch (err) {
         loginScreen.style.display = 'flex';
         appContainer.style.display = 'none';
+        currentUser = null;
+        currentRole = null;
+        localStorage.removeItem('role');
     }
 }
 
@@ -40,16 +47,14 @@ loginForm.addEventListener('submit', async (e) => {
     try {
         const res = await fetch('/api/auth/login', {
             method: 'POST',
+            credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
         });
 
         const data = await res.json();
         if (res.ok) {
-            localStorage.setItem('token', data.token);
             localStorage.setItem('role', data.role);
-            localStorage.setItem('email', data.email);
-            currentToken = data.token;
             currentRole = data.role;
             checkAuth();
         } else {
@@ -62,9 +67,15 @@ loginForm.addEventListener('submit', async (e) => {
     }
 });
 
-document.getElementById('logoutBtn').addEventListener('click', () => {
-    localStorage.clear();
-    location.reload();
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+    try {
+        await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+    } catch (err) {
+        console.error(err);
+    } finally {
+        localStorage.clear();
+        location.reload();
+    }
 });
 
 // --- DASHBOARD SETUP ---
@@ -140,9 +151,7 @@ function showView(viewId) {
 
 async function fetchAdminStats() {
     try {
-        const res = await fetch('/api/admin/stats', {
-            headers: { 'Authorization': `Bearer ${currentToken}` }
-        });
+        const res = await fetch('/api/admin/stats', { credentials: 'same-origin' });
         const data = await res.json();
         document.getElementById('sa-total-users').textContent = data.totalUsers;
         document.getElementById('sa-total-books').textContent = data.totalBooks;
@@ -152,9 +161,7 @@ async function fetchAdminStats() {
 async function fetchUsers() {
     const userList = document.getElementById('userList');
     try {
-        const res = await fetch('/api/admin/users', {
-            headers: { 'Authorization': `Bearer ${currentToken}` }
-        });
+        const res = await fetch('/api/admin/users', { credentials: 'same-origin' });
         const users = await res.json();
         userList.innerHTML = '';
         users.forEach(user => {
@@ -162,7 +169,7 @@ async function fetchUsers() {
             row.className = 'table-row user-row';
             row.innerHTML = `
                 <div>${user.id}</div>
-                <div style="font-weight:600;">${user.email}</div>
+                <div style="font-weight:600;">${user.email_masked || 'hidden'}</div>
                 <div><span class="badge ${user.role}">${user.role}</span></div>
                 <div style="color:#888;">${new Date(user.created_at).toLocaleDateString()}</div>
                 <div class="action-btns">
@@ -179,7 +186,7 @@ async function deleteUser(id) {
         try {
             const res = await fetch(`/api/admin/users/${id}`, {
                 method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${currentToken}` }
+                credentials: 'same-origin'
             });
             if (res.ok) {
                 fetchUsers();
@@ -205,9 +212,9 @@ document.getElementById('createUserForm').addEventListener('submit', async (e) =
     try {
         const res = await fetch('/api/admin/users', {
             method: 'POST',
+            credentials: 'same-origin',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${currentToken}`
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({ email, password, role })
         });
@@ -227,9 +234,7 @@ document.getElementById('createUserForm').addEventListener('submit', async (e) =
 
 async function fetchUserBooks() {
     try {
-        const res = await fetch('/api/books', {
-            headers: { 'Authorization': `Bearer ${currentToken}` }
-        });
+        const res = await fetch('/api/books', { credentials: 'same-origin' });
         const books = await res.json();
         document.getElementById('user-total-books').textContent = books.length;
         renderBooks(books);
@@ -260,7 +265,7 @@ async function deleteBook(id) {
         try {
             const res = await fetch(`/api/books/${id}`, {
                 method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${currentToken}` }
+                credentials: 'same-origin'
             });
             if (res.ok) {
                 fetchUserBooks();
@@ -288,9 +293,9 @@ document.getElementById('createBookForm').addEventListener('submit', async (e) =
     try {
         const res = await fetch('/api/books', {
             method: 'POST',
+            credentials: 'same-origin',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${currentToken}`
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({ title })
         });
@@ -317,7 +322,7 @@ async function openEditor(bookId) {
     try {
         // Fetch book details for settings
         const bRes = await fetch(`/api/books/${bookId}`, {
-            headers: { 'Authorization': `Bearer ${currentToken}` }
+            credentials: 'same-origin'
         });
         const book = await bRes.json();
         document.getElementById('editorBookTitle').textContent = book.title;
@@ -335,7 +340,7 @@ async function openEditor(bookId) {
 async function fetchPages(bookId) {
     try {
         const res = await fetch(`/api/books/${bookId}/pages`, {
-            headers: { 'Authorization': `Bearer ${currentToken}` }
+            credentials: 'same-origin'
         });
         const pages = await res.json();
         renderPages(pages);
@@ -389,9 +394,9 @@ document.getElementById('bookSettingsForm').addEventListener('submit', async (e)
     try {
         const res = await fetch(`/api/books/${currentBookId}`, {
             method: 'PUT',
+            credentials: 'same-origin',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${currentToken}`
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(data)
         });
@@ -481,7 +486,7 @@ document.getElementById('uploadForm').addEventListener('submit', async (e) => {
     try {
         const res = await fetch(url, {
             method: method,
-            headers: { 'Authorization': `Bearer ${currentToken}` },
+            credentials: 'same-origin',
             body: formData
         });
         if (res.ok) {
@@ -509,7 +514,7 @@ async function openEditPage(pageId) {
     try {
         // Fetch current page data
         const res = await fetch(`/api/books/${currentBookId}/pages`, {
-            headers: { 'Authorization': `Bearer ${currentToken}` }
+            credentials: 'same-origin'
         });
         const pages = await res.json();
         const page = pages.find(p => p.id === pageId);
@@ -546,7 +551,7 @@ async function deletePage(pageId) {
     if (confirm('Delete this page?')) {
         await fetch(`/api/pages/${pageId}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${currentToken}` }
+            credentials: 'same-origin'
         });
         fetchPages(currentBookId);
     }
@@ -590,9 +595,9 @@ document.getElementById('passwordForm').addEventListener('submit', async (e) => 
     try {
         const res = await fetch('/api/auth/change-password', {
             method: 'POST',
+            credentials: 'same-origin',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${currentToken}`
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({ currentPassword: currentPass, newPassword: newPass })
         });
