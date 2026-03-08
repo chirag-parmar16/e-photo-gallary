@@ -353,6 +353,7 @@ function renderPages(pages) {
     pages.forEach((page, index) => {
         const row = document.createElement('div');
         row.className = 'table-row page-row';
+        row.dataset.id = page.id;
 
         const mediaHtml = page.media.map(m =>
             m.type === 'video' ? `<video src="${m.media_path}" muted style="width:40px;height:40px;object-fit:cover;border-radius:4px;"></video>` : `<img src="${m.media_path}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;">`
@@ -363,7 +364,7 @@ function renderPages(pages) {
         const previewText = temp.textContent.substring(0, 50) + '...';
 
         row.innerHTML = `
-            <div>#${index + 1}</div>
+            <div style="cursor: grab;" class="drag-handle"><i class="fas fa-grip-vertical" style="color: #bbb; margin-right: 5px;"></i> #${index + 1}</div>
             <div style="font-size:0.9rem; color:#666;">${previewText}</div>
             <div style="display:flex; gap:5px;">${mediaHtml}</div>
             <div class="action-btns">
@@ -373,6 +374,42 @@ function renderPages(pages) {
         `;
         list.appendChild(row);
     });
+
+    // Initialize Sortable
+    if (window.pageSortable) {
+        window.pageSortable.destroy();
+    }
+    if (typeof Sortable !== 'undefined') {
+        window.pageSortable = new Sortable(list, {
+            handle: '.drag-handle',
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            onEnd: async function (evt) {
+                if (evt.oldIndex === evt.newIndex) return;
+                const itemEls = list.querySelectorAll('.page-row');
+                const orderedPageIds = Array.from(itemEls).map(el => parseInt(el.dataset.id));
+
+                try {
+                    const res = await fetch(`/api/books/${currentBookId}/reorder`, {
+                        method: 'PUT',
+                        credentials: 'same-origin',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderedPageIds })
+                    });
+                    if (res.ok) {
+                        itemEls.forEach((el, idx) => {
+                            el.querySelector('.drag-handle').innerHTML = '<i class="fas fa-grip-vertical" style="color: #bbb; margin-right: 5px;"></i> #' + (idx + 1);
+                        });
+                    } else {
+                        fetchPages(currentBookId);
+                    }
+                } catch (err) {
+                    console.error(err);
+                    fetchPages(currentBookId);
+                }
+            }
+        });
+    }
 }
 
 document.getElementById('backToDashBtn').addEventListener('click', () => {
@@ -423,11 +460,13 @@ document.getElementById('mediaFile').addEventListener('change', (e) => {
     const files = Array.from(e.target.files);
 
     // Count current media (existing + already selected)
-    const existingCount = previewGrid.children.length;
+    const existingCount = previewGrid.querySelectorAll('div[data-existing="true"]').length;
+    let currentSelectedValidCount = selectedFiles.filter(f => f !== null).length;
 
     files.forEach(file => {
-        if (selectedFiles.length + existingCount < 4) {
+        if (currentSelectedValidCount + existingCount < 4) {
             selectedFiles.push(file);
+            currentSelectedValidCount++;
             renderNewMediaPreview(file, selectedFiles.length - 1);
         } else {
             alert('Maximum 4 media items allowed per page.');
@@ -451,7 +490,13 @@ function renderNewMediaPreview(file, index) {
 
         item.innerHTML = `
             ${mediaHtml}
-            <button type="button" onclick="removeNewMedia(${index}, this)" style="position:absolute; top:-5px; right:-5px; background:#444; color:white; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer; font-size:12px;">&times;</button>
+            <button type="button" onclick="removeNewMedia(${index}, this)" style="position:absolute; top:-5px; right:-5px; background:#444; color:white; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer; font-size:12px; z-index:10;">&times;</button>
+            <select class="media-frame-style" style="position:absolute; bottom:0; left:0; width:100%; font-size:10px; padding:2px; background:rgba(255,255,255,0.9); border:none; border-radius:0 0 8px 8px;">
+                <option value="square">Square</option>
+                <option value="rounded">Rounded</option>
+                <option value="circle">Circle</option>
+                <option value="polaroid">Polaroid</option>
+            </select>
         `;
         previewGrid.appendChild(item);
     };
@@ -473,7 +518,36 @@ document.getElementById('uploadForm').addEventListener('submit', async (e) => {
     const formData = new FormData();
     formData.append('text_content', quill.root.innerHTML);
     formData.append('delete_media_ids', JSON.stringify(deletedMediaIds));
-    selectedFiles.filter(f => f !== null).forEach(file => formData.append('media', file));
+
+    // Collect new media frames
+    const newMediaFrames = [];
+    selectedFiles.forEach((file, index) => {
+        if (file !== null) {
+            formData.append('media', file);
+            const item = previewGrid.querySelector(`div[data-new-file-index="${index}"]`);
+            if (item) {
+                const select = item.querySelector('.media-frame-style');
+                newMediaFrames.push(select ? select.value : 'square');
+            } else {
+                newMediaFrames.push('square');
+            }
+        }
+    });
+    formData.append('media_frames', JSON.stringify(newMediaFrames));
+
+    // Collect existing media frames
+    const existingFrames = {};
+    const existingItems = previewGrid.querySelectorAll('div[data-existing="true"]');
+    existingItems.forEach(item => {
+        const id = item.dataset.mediaId;
+        const select = item.querySelector('.media-frame-style');
+        if (id && select) {
+            existingFrames[id] = select.value;
+        }
+    });
+    if (Object.keys(existingFrames).length > 0) {
+        formData.append('existing_media_frames', JSON.stringify(existingFrames));
+    }
 
     const url = isEdit ? `/api/pages/${pageId}` : `/api/books/${currentBookId}/pages`;
     const method = isEdit ? 'PUT' : 'POST';
@@ -526,6 +600,8 @@ async function openEditPage(pageId) {
             page.media.forEach(m => {
                 const item = document.createElement('div');
                 item.style.cssText = 'position:relative; width:80px; height:80px;';
+                item.dataset.existing = 'true';
+                item.dataset.mediaId = m.id;
 
                 const mediaHtml = m.type === 'video'
                     ? `<video src="${m.media_path}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;"></video>`
@@ -533,7 +609,13 @@ async function openEditPage(pageId) {
 
                 item.innerHTML = `
                     ${mediaHtml}
-                    <button type="button" onclick="markMediaForDelete(${m.id}, this)" style="position:absolute; top:-5px; right:-5px; background:red; color:white; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer; font-size:12px;">&times;</button>
+                    <button type="button" onclick="markMediaForDelete(${m.id}, this)" style="position:absolute; top:-5px; right:-5px; background:red; color:white; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer; font-size:12px; z-index:10;">&times;</button>
+                    <select class="media-frame-style" style="position:absolute; bottom:0; left:0; width:100%; font-size:10px; padding:2px; background:rgba(255,255,255,0.9); border:none; border-radius:0 0 8px 8px;">
+                        <option value="square" ${m.frame_style === 'square' ? 'selected' : ''}>Square</option>
+                        <option value="rounded" ${m.frame_style === 'rounded' ? 'selected' : ''}>Rounded</option>
+                        <option value="circle" ${m.frame_style === 'circle' ? 'selected' : ''}>Circle</option>
+                        <option value="polaroid" ${m.frame_style === 'polaroid' ? 'selected' : ''}>Polaroid</option>
+                    </select>
                 `;
                 previewGrid.appendChild(item);
             });

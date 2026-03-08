@@ -102,10 +102,20 @@ async function initDb() {
             book_id      INT,
             text_content TEXT,
             page_order   INT DEFAULT 0,
+            frame_style  VARCHAR(50) DEFAULT 'square',
             created_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
         )
     `);
+
+    try {
+        await db.exec('ALTER TABLE pages ADD COLUMN frame_style VARCHAR(50) DEFAULT "square"');
+        console.log('Added frame_style column to pages table');
+    } catch (err) {
+        if (!err.message.includes('Duplicate column name')) {
+            console.error('Error adding frame_style column:', err.message);
+        }
+    }
 
     // 4. Page Media
     await db.exec(`
@@ -114,10 +124,20 @@ async function initDb() {
             page_id    INT,
             type       VARCHAR(20) NOT NULL,
             media_path TEXT NOT NULL,
+            frame_style VARCHAR(50) DEFAULT 'square',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE
         )
     `);
+
+    try {
+        await db.exec('ALTER TABLE page_media ADD COLUMN frame_style VARCHAR(50) DEFAULT "square"');
+        console.log('Added frame_style column to page_media table');
+    } catch (err) {
+        if (!err.message.includes('Duplicate column name')) {
+            console.error('Error adding frame_style column to page_media:', err.message);
+        }
+    }
 
     // ── Seed: Default Admin ───────────────────────────────────────────────────
     const adminEmail = 'admin@gmail.com';

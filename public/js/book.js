@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const isTextOnly = !pageData.media || pageData.media.length === 0;
         const mediaItems = (pageData.media || []).map(m => `
-            <div class="media-item">
+            <div class="media-item frame-${m.frame_style || 'square'}">
                 ${m.type === 'video'
                 ? `<video src="${m.media_path}" loop muted></video>`
                 : `<img src="${m.media_path}" alt="Memory">`

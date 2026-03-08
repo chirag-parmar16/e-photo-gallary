@@ -7,6 +7,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const sharp = require('sharp');
 const { initDb } = require('./database');
 
 const app = express();
@@ -30,16 +31,7 @@ const UPLOAD_DIR = path.join(__dirname, '../public/uploads');
 fs.mkdirSync(path.join(UPLOAD_DIR, 'images'), { recursive: true });
 fs.mkdirSync(path.join(UPLOAD_DIR, 'videos'), { recursive: true });
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        const isVideo = file.mimetype.startsWith('video/');
-        cb(null, path.join(UPLOAD_DIR, isVideo ? 'videos' : 'images'));
-    },
-    filename: function (req, file, cb) {
-        const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        cb(null, unique + path.extname(file.originalname));
-    }
-});
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 async function deleteFile(filePath) {
@@ -415,7 +407,7 @@ app.post('/api/books/:id/pages', authenticateToken, upload.array('media'), async
         const book = await db.get('SELECT id FROM books WHERE id = ? AND user_id = ?', [bookId, req.user.id]);
         if (!book) return res.status(403).json({ error: 'Unauthorized' });
 
-        const { text_content } = req.body;
+        const { text_content, media_frames } = req.body;
         const lastPage = await db.get('SELECT MAX(page_order) as maxOrder FROM pages WHERE book_id = ?', bookId);
         const newOrder = (lastPage && lastPage.maxOrder !== null) ? lastPage.maxOrder + 1 : 1;
 
@@ -426,12 +418,29 @@ app.post('/api/books/:id/pages', authenticateToken, upload.array('media'), async
         const pageId = result.lastID;
 
         if (req.files && req.files.length > 0) {
-            for (const file of req.files) {
+            const framesArray = media_frames ? JSON.parse(media_frames) : [];
+            for (let i = 0; i < req.files.length; i++) {
+                const file = req.files[i];
+                const frameStyle = framesArray[i] || 'square';
                 const type = file.mimetype.startsWith('video/') ? 'video' : 'image';
-                const relativePath = '/uploads/' + (type === 'video' ? 'videos/' : 'images/') + path.basename(file.path);
+                const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+                const filename = unique + (type === 'video' ? path.extname(file.originalname) : '.webp');
+                const relativePath = '/uploads/' + (type === 'video' ? 'videos/' : 'images/') + filename;
+                const fullPath = path.join(__dirname, '../public', relativePath);
+
+                if (type === 'image') {
+                    await sharp(file.buffer)
+                        .resize({ width: 1920, height: 1920, fit: 'inside', withoutEnlargement: true })
+                        .webp({ quality: 80 })
+                        .toFile(fullPath);
+                } else {
+                    fs.writeFileSync(fullPath, file.buffer);
+                }
+
                 await db.run(
-                    'INSERT INTO page_media (page_id, type, media_path) VALUES (?, ?, ?)',
-                    [pageId, type, relativePath]
+                    // insert with frame_style
+                    'INSERT INTO page_media (page_id, type, media_path, frame_style) VALUES (?, ?, ?, ?)',
+                    [pageId, type, relativePath, frameStyle]
                 );
             }
         }
@@ -453,8 +462,15 @@ app.put('/api/pages/:id', authenticateToken, upload.array('media'), async (req, 
 
         if (!page || page.user_id !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
 
-        const { text_content, delete_media_ids } = req.body;
+        const { text_content, delete_media_ids, media_frames, existing_media_frames } = req.body;
         await db.run('UPDATE pages SET text_content = ? WHERE id = ?', [text_content, pageId]);
+
+        if (existing_media_frames) {
+            const parsedFrames = JSON.parse(existing_media_frames);
+            for (const mediaId in parsedFrames) {
+                await db.run('UPDATE page_media SET frame_style = ? WHERE id = ? AND page_id = ?', [parsedFrames[mediaId], mediaId, pageId]);
+            }
+        }
 
         if (delete_media_ids) {
             const ids = JSON.parse(delete_media_ids);
@@ -467,12 +483,29 @@ app.put('/api/pages/:id', authenticateToken, upload.array('media'), async (req, 
         }
 
         if (req.files && req.files.length > 0) {
-            for (const file of req.files) {
+            const framesArray = media_frames ? JSON.parse(media_frames) : [];
+            for (let i = 0; i < req.files.length; i++) {
+                const file = req.files[i];
+                const frameStyle = framesArray[i] || 'square';
                 const type = file.mimetype.startsWith('video/') ? 'video' : 'image';
-                const relativePath = '/uploads/' + (type === 'video' ? 'videos/' : 'images/') + path.basename(file.path);
+                const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+                const filename = unique + (type === 'video' ? path.extname(file.originalname) : '.webp');
+                const relativePath = '/uploads/' + (type === 'video' ? 'videos/' : 'images/') + filename;
+                const fullPath = path.join(__dirname, '../public', relativePath);
+
+                if (type === 'image') {
+                    await sharp(file.buffer)
+                        .resize({ width: 1920, height: 1920, fit: 'inside', withoutEnlargement: true })
+                        .webp({ quality: 80 })
+                        .toFile(fullPath);
+                } else {
+                    fs.writeFileSync(fullPath, file.buffer);
+                }
+
                 await db.run(
-                    'INSERT INTO page_media (page_id, type, media_path) VALUES (?, ?, ?)',
-                    [pageId, type, relativePath]
+                    // insert with frame_style mapping
+                    'INSERT INTO page_media (page_id, type, media_path, frame_style) VALUES (?, ?, ?, ?)',
+                    [pageId, type, relativePath, frameStyle]
                 );
             }
         }
@@ -487,6 +520,28 @@ app.delete('/api/pages/:id', authenticateToken, async (req, res) => {
         const media = await db.all('SELECT media_path FROM page_media WHERE page_id = ?', req.params.id);
         for (const m of media) { await deleteFile(m.media_path); }
         await db.run('DELETE FROM pages WHERE id = ?', req.params.id);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/books/:id/reorder', authenticateToken, async (req, res) => {
+    try {
+        const bookId = req.params.id;
+        const { orderedPageIds } = req.body; // array of page ids in new order
+
+        const book = await db.get('SELECT id FROM books WHERE id = ? AND user_id = ?', [bookId, req.user.id]);
+        if (!book) return res.status(403).json({ error: 'Unauthorized' });
+
+        if (!Array.isArray(orderedPageIds)) {
+            return res.status(400).json({ error: 'orderedPageIds must be an array' });
+        }
+
+        for (let i = 0; i < orderedPageIds.length; i++) {
+            await db.run('UPDATE pages SET page_order = ? WHERE id = ? AND book_id = ?', [i + 1, orderedPageIds[i], bookId]);
+        }
+
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
