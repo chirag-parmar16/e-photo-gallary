@@ -1,0 +1,67 @@
+<div id="super-admin-dashboard" class="view-container" style="display: none;">
+    <div class="view-header">
+        <h2>System Overview</h2>
+    </div>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-users"></i></div>
+            <div class="stat-info">
+                <h4>Total Users</h4>
+                <p id="sa-total-users">--</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-book"></i></div>
+            <div class="stat-info">
+                <h4>Total Books</h4>
+                <p id="sa-total-books">--</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="view-header" style="margin-top: 2rem;">
+        <h3>Users</h3>
+        <button class="btn-primary" id="openAddUserModal">+ Create User</button>
+    </div>
+    <div class="data-table">
+        <div class="table-row table-header user-row">
+            <div>ID</div>
+            <div>Email</div>
+            <div>Role</div>
+            <div>Joined</div>
+            <div>Subscription</div>
+            <div>Actions</div>
+        </div>
+        <div id="userList"></div>
+    </div>
+</div>
+
+<div id="user-dashboard" class="view-container" style="display: none;">
+    <div class="view-header">
+        <h2>My Dashboard</h2>
+    </div>
+    <div class="stats-grid">
+            <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-book-open"></i></div>
+            <div class="stat-info">
+                <h4>My Books</h4>
+                <p id="user-total-books">--</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+            <div class="stat-info">
+                <h4>Subscription Valid Until</h4>
+                <p id="user-subscription-end">--</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="view-header" style="margin-top: 2rem;">
+        <h3>My Recent Activity</h3>
+        <button class="btn-outline" onclick="navigateTo('/albums')" style="padding: 5px 15px; font-size: 0.85rem;">View All Albums</button>
+    </div>
+    <div id="recentActivityList" style="display: flex; flex-direction: column; gap: 10px;">
+        <p style="color: #888;">No recent albums found.</p>
+    </div>
+</div>

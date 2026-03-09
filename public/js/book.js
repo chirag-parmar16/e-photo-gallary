@@ -30,7 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     settings.cover_title = data.book.cover_title;
                     settings.cover_subtitle = data.book.cover_subtitle;
                     settings.instruction_text = data.book.instruction_text;
-                    settings.end_title = data.book.end_title;
+                    settings.template_type = data.book.template_type;
+                    settings.color_schema = data.book.color_schema;
                     window.bookData = data.book;
                 }
             } else {
@@ -76,11 +77,16 @@ document.addEventListener('DOMContentLoaded', () => {
             processedData = newData;
         }
 
+        setTimeout(() => createThemeParticles(settings.template_type || 'default'), 100);
         setupBookUI(processedData, settings);
     }
 
-    function createPageContent(pageData, side) {
+    function createPageContent(pageData, side, settings) {
         if (!pageData) return `<div class="page-content ${side} empty"></div>`;
+        const pageBorder = pageData.border_style && pageData.border_style !== 'none' ? pageData.border_style : null;
+        const globalBorder = settings && settings.border_style && settings.border_style !== 'none' ? settings.border_style : null;
+        const finalBorder = pageBorder || globalBorder;
+        const borderClass = finalBorder ? `border-style-${finalBorder}` : '';
 
         const isTextOnly = !pageData.media || pageData.media.length === 0;
         const mediaItems = (pageData.media || []).map(m => `
@@ -93,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
 
         return `
-            <div class="page-content ${side} ${isTextOnly ? 'poem-page' : ''}">
+            <div class="page-content ${side} ${isTextOnly ? 'poem-page' : ''} ${borderClass}">
                 ${!isTextOnly ? `
                 <div class="media-grid count-${pageData.media.length}">
                     ${mediaItems}
@@ -108,6 +114,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupBookUI(data, settings) {
         book.innerHTML = '';
         currentPage = 0;
+
+        // Apply Global Themes
+        if (settings.color_schema) {
+            document.documentElement.style.setProperty('--primary-color', settings.color_schema);
+            document.documentElement.style.setProperty('--accent-color', settings.color_schema);
+        }
+        document.body.className = 'template-' + (settings.template_type || 'default');
+
         const coverTitle = settings.cover_title || 'Our Timeless Journey';
         const coverSubtitle = settings.cover_subtitle || 'A collection of memories, frozen in time.';
         const instructionText = settings.instruction_text || 'Tap to open';
@@ -123,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p>${coverSubtitle}</p>
                 <div class="instruction">${instructionText}</div>
             </div>
-            ${createPageContent(data[0], 'back')}
+            ${createPageContent(data[0], 'back', settings)}
         `;
         book.appendChild(coverSheet);
 
@@ -133,8 +147,8 @@ document.addEventListener('DOMContentLoaded', () => {
             sheet.className = 'page';
             sheet.style.zIndex = data.length - i;
             sheet.innerHTML = `
-                ${createPageContent(data[i], 'front')}
-                ${createPageContent(data[i + 1], 'back')}
+                ${createPageContent(data[i], 'front', settings)}
+                ${createPageContent(data[i + 1], 'back', settings)}
             `;
             book.appendChild(sheet);
         }
@@ -352,8 +366,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Petals
-    function createPetals() {
+    // Particles (Petals/Confetti)
+    function createThemeParticles(templateType) {
         let container = document.getElementById('petal-container');
         if (!container) {
             container = document.createElement('div');
@@ -363,18 +377,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         container.innerHTML = '';
-        for (let i = 0; i < 30; i++) {
-            const petal = document.createElement('div');
-            petal.classList.add('petal', Math.random() > 0.5 ? 'rose' : 'cherry');
-            petal.style.left = `${Math.random() * 100}%`;
-            petal.style.transform = `scale(${Math.random() * 0.5 + 0.8})`;
-            petal.style.animationDuration = `${Math.random() * 5 + 5}s, ${Math.random() * 3 + 2}s`;
-            petal.style.animationDelay = `${Math.random() * 5}s`;
-            petal.style.opacity = Math.random() * 0.5 + 0.3;
-            container.appendChild(petal);
+
+        let count = 30;
+        let classes = ['petal'];
+
+        if (templateType === 'birthday') {
+            count = 60;
+            classes = ['particle', 'confetti'];
+        } else if (templateType === 'wedding') {
+            count = 40;
+            classes = ['petal', 'cherry', 'white'];
+        } else if (templateType === 'anniversary') {
+            count = 35;
+            classes = ['petal', 'heart'];
+        } else {
+            // Default
+            classes = ['petal', 'rose'];
+            count = 20;
+        }
+
+        for (let i = 0; i < count; i++) {
+            const particle = document.createElement('div');
+            particle.classList.add(...classes);
+
+            if (templateType === 'birthday') {
+                const colors = ['#ff4d4d', '#4dff4d', '#4d4dff', '#ffff4d', '#ff4dff'];
+                particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.width = `${Math.random() * 10 + 10}px`;
+                particle.style.height = `${Math.random() * 5 + 5}px`;
+                particle.style.animationDuration = `${Math.random() * 3 + 3}s`;
+            } else {
+                if (classes.includes('white')) {
+                    particle.style.filter = 'grayscale(100%) brightness(200%)';
+                }
+                particle.style.transform = `scale(${Math.random() * 0.5 + 0.8})`;
+                particle.style.animationDuration = `${Math.random() * 5 + 5}s, ${Math.random() * 3 + 2}s`;
+            }
+
+            particle.style.left = `${Math.random() * 100}%`;
+            particle.style.animationDelay = `${Math.random() * 5}s`;
+            particle.style.opacity = Math.random() * 0.5 + 0.5;
+            container.appendChild(particle);
         }
     }
-
-    createPetals();
     loadBookData();
 });

@@ -23,7 +23,7 @@ The project uses advanced animation logic to create a sense of resistance and mo
 To maintain the fluidity of the Page-Flip animation, the **Sharp Engine** acts as an automated curator. It optimizes every photo during ingestion so that high-resolution memories can "flip" without a single frame of lag.
 
 ### 3. Hybrid Persistence Layer
--   **Metadata Presence (SQLite):** The "Brain" that knows the order and story of every page.
+-   **Metadata Presence (MySQL):** The "Brain" that knows the order and story of every page.
 -   **Binary Immortality (AWS S3):** Ensuring the "Book" is stored in the global cloud, safe from hardware failure.
 
 ---

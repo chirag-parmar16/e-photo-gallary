@@ -7,7 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="/admin.css?v=3">
+    <link rel="stylesheet" href="/css/style.css?v=4">
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Quill Rich Text Editor -->
@@ -15,24 +16,43 @@
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <!-- SortableJS -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <!-- iziToast -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"></script>
 </head>
 <body>
     <!-- Login Screen -->
     <div id="login-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fdf2f2; z-index: 10000; display: flex; justify-content: center; align-items: center; padding: 20px;">
         <div style="background: white; padding: 40px; border-radius: 24px; box-shadow: 0 20px 50px rgba(192,0,0,0.08); width: 100%; max-width: 480px; text-align: center;">
             <h1 style="font-family: 'Playfair Display', serif; color: var(--accent-color); margin-bottom: 20px; font-size: 2.5rem;">Memoria - A Digital Photo Album</h1>
-            <p style="color: #666; margin-bottom: 35px; font-size: 1.1rem;">Sign in to your dashboard</p>
+            <p style="color: #666; margin-bottom: 25px; font-size: 1.1rem;">Welcome to your dashboard</p>
+            <div id="authTabs" style="display: flex; justify-content: center; gap: 20px; margin-bottom: 25px;">
+                <button type="button" id="tabLogin" style="background: none; border: none; font-size: 1.2rem; font-weight: 600; cursor: pointer; color: var(--accent-color); border-bottom: 2px solid var(--accent-color); padding-bottom: 5px;">Sign In</button>
+                <button type="button" id="tabRegister" style="background: none; border: none; font-size: 1.2rem; font-weight: 600; cursor: pointer; color: #999; padding-bottom: 5px;">Register</button>
+            </div>
             <form id="loginForm">
                 <div style="margin-bottom: 20px; text-align: left;">
                     <label style="display: block; font-weight: 600; margin-bottom: 8px;">Email Address</label>
-                    <input type="email" id="loginEmail" required placeholder="name@example.com">
+                    <input type="email" id="loginEmail" required placeholder="name@example.com" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
                 </div>
                 <div style="margin-bottom: 30px; text-align: left;">
                     <label style="display: block; font-weight: 600; margin-bottom: 8px;">Password</label>
-                    <input type="password" id="loginPassword" required placeholder="••••••••">
+                    <input type="password" id="loginPassword" required placeholder="••••••••" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
                 </div>
                 <button type="submit" class="btn-primary" style="width: 100%; height: 52px; font-size: 1.1rem;">Sign In</button>
                 <p id="loginError" style="color: red; margin-top: 15px; display: none; font-weight: 500;"></p>
+            </form>
+            <form id="registerForm" style="display: none;">
+                <div style="margin-bottom: 20px; text-align: left;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 8px;">Email Address</label>
+                    <input type="email" id="registerEmail" required placeholder="name@example.com" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                </div>
+                <div style="margin-bottom: 30px; text-align: left;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 8px;">Password</label>
+                    <input type="password" id="registerPassword" required placeholder="••••••••" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; height: 52px; font-size: 1.1rem;">Create Account</button>
+                <p id="registerError" style="color: red; margin-top: 15px; display: none; font-weight: 500;"></p>
             </form>
         </div>
     </div>
@@ -62,119 +82,8 @@
                 </div>
             </nav>
 
-            <!-- SUPER ADMIN DASHBOARD (Manage Users) -->
-            <div id="super-admin-dashboard" class="view-container">
-                <div class="view-header">
-                    <h2>System Overview</h2>
-                </div>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-users"></i></div>
-                        <div class="stat-info">
-                            <h4>Total Users</h4>
-                            <p id="sa-total-users">--</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-book"></i></div>
-                        <div class="stat-info">
-                            <h4>Total Books</h4>
-                            <p id="sa-total-books">--</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="view-header" style="margin-top: 2rem;">
-                    <h3>Users</h3>
-                    <button class="btn-primary" id="openAddUserModal">+ Create User</button>
-                </div>
-                <div class="data-table">
-                    <div class="table-row table-header user-row">
-                        <div>ID</div>
-                        <div>Email</div>
-                        <div>Role</div>
-                        <div>Joined</div>
-                        <div>Actions</div>
-                    </div>
-                    <div id="userList"></div>
-                </div>
-            </div>
-
-            <!-- USER DASHBOARD (My Books) -->
-            <div id="user-dashboard" class="view-container">
-                <div class="view-header">
-                    <h2>My Dashboard</h2>
-                </div>
-                <div class="stats-grid">
-                     <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-book-open"></i></div>
-                        <div class="stat-info">
-                            <h4>My Books</h4>
-                            <p id="user-total-books">--</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="view-header" style="margin-top: 2rem;">
-                    <h3>My Albums</h3>
-                    <button class="btn-primary" id="openCreateBookModal">+ Create New Album</button>
-                </div>
-                <div class="books-grid" id="booksList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
-                    <!-- Books injected here -->
-                </div>
-            </div>
-
-            <!-- BOOK EDITOR (Pages & Settings) -->
-            <div id="book-editor" class="view-container">
-                <div class="view-header">
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <button id="backToDashBtn" class="btn-secondary" style="padding: 8px 15px;"><i class="fas fa-arrow-left"></i> Back</button>
-                        <h2 id="editorBookTitle">Album Name</h2>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 20px;">
-                        <a id="publicLinkBtn" href="#" target="_blank" class="text-link">View Live <i class="fas fa-external-link-alt"></i></a>
-                        <button class="btn-primary" id="openAddModal"><i class="fas fa-plus"></i> Add Page</button>
-                    </div>
-                </div>
-                
-                <!-- Book Settings Mini-Panel -->
-                <div style="background: white; padding: 1.5rem; border-radius: 20px; box-shadow: var(--shadow); margin-bottom: 2rem; border: 1px solid var(--border-color);">
-                    <h4 style="margin-bottom: 1rem; color: #888; font-size: 0.9rem;">Album Settings</h4>
-                    <form id="bookSettingsForm" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
-                        <div style="flex: 1; min-width: 200px;">
-                            <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; color: #aaa;">Album Title</label>
-                            <input type="text" id="editBookTitle" required>
-                        </div>
-                        <div style="flex: 1; min-width: 200px;">
-                            <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; color: #aaa;">Cover Title</label>
-                            <input type="text" id="editCoverTitle" required>
-                        </div>
-                        <div style="flex: 1; min-width: 200px;">
-                            <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; color: #aaa;">Cover Subtitle</label>
-                            <input type="text" id="editCoverSubtitle" required>
-                        </div>
-                        <div style="flex: 1; min-width: 200px;">
-                            <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; color: #aaa;">Tap Instruction</label>
-                            <input type="text" id="editInstructionText" required>
-                        </div>
-                        <div style="flex: 1; min-width: 200px;">
-                            <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; color: #aaa;">End Title</label>
-                            <input type="text" id="editEndTitle" required>
-                        </div>
-                        <button type="submit" class="btn-outline" style="height: 48px;">Update Settings</button>
-                    </form>
-                </div>
-
-                <div class="data-table">
-                    <div class="table-row table-header page-row">
-                        <div>Order</div>
-                        <div>Content</div>
-                        <div>Media</div>
-                        <div>Actions</div>
-                    </div>
-                    <div id="pageList"></div>
-                </div>
-            </div>
+            <!-- Dynamic View Routing Target -->
+            <div id="main-view"></div>
 
             <footer>
                 <p>&copy; 2026 Timeless Memories. Built with ❤️</p>
@@ -219,37 +128,20 @@
                     <label>Album Name (Internal)</label>
                     <input type="text" id="newBookTitle" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" placeholder="e.g. Wedding 2024">
                 </div>
+                <div style="margin-bottom: 20px;">
+                    <label>Theme Template</label>
+                    <select id="newBookTemplate" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                        <option value="default">Default</option>
+                        <option value="birthday">Birthday 🎂</option>
+                        <option value="wedding">Wedding 💍</option>
+                        <option value="anniversary">Anniversary 🥂</option>
+                    </select>
+                </div>
                 <button type="submit" class="btn-primary" style="width: 100%;">Create Album</button>
             </form>
         </div>
     </div>
 
-    <!-- Existing Page Modal (Reused) -->
-    <div id="pageModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" data-modal="pageModal">&times;</span>
-            <h3 id="modalTitle" style="margin-bottom: 1.5rem;">Add New Memory</h3>
-            <form id="uploadForm">
-                <input type="hidden" id="editPageId">
-                <div id="mediaUploadField" style="margin-bottom: 1.5rem;">
-                    <label style="display: block; margin-bottom: 10px; font-weight: 600;">Album Media</label>
-                    <label for="mediaFile" class="custom-file-upload">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <span>Click to Upload Photos or Videos</span>
-                        <small>You can select up to 4 files</small>
-                    </label>
-                    <input type="file" id="mediaFile" accept="image/*,video/*" multiple>
-                    <div id="previewGrid" class="media-stack" style="margin-top: 15px; gap: 12px; flex-wrap: wrap;"></div>
-                </div>
-
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Poem / Description</label>
-                    <div id="editor-container" style="height: 200px; background: white; border-radius: 12px;"></div>
-                </div>
-                <button type="submit" id="submitBtn" class="btn-primary" style="width: 100%;">Save Memory</button>
-            </form>
-        </div>
-    </div>
 
     <!-- Change Password Modal -->
     <div id="passwordModal" class="modal">
@@ -277,6 +169,6 @@
         </div>
     </div>
 
-    <script src="admin.js"></script>
+    <script src="/admin.js?v=4"></script>
 </body>
 </html>
