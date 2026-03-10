@@ -7,8 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/admin.css?v=3">
-    <link rel="stylesheet" href="/css/style.css?v=4">
+    <link rel="stylesheet" href="/admin.css?v=4">
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Quill Rich Text Editor -->
@@ -98,17 +97,17 @@
             <span class="close-modal" data-modal="createUserModal">&times;</span>
             <h3 style="margin-bottom: 1.5rem;">Create New User</h3>
             <form id="createUserForm">
-                <div style="margin-bottom: 15px;">
+                <div class="form-group">
                     <label>Email</label>
-                    <input type="email" id="newEmail" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                    <input type="email" id="newEmail" class="form-control" required>
                 </div>
-                <div style="margin-bottom: 15px;">
+                <div class="form-group">
                     <label>Password</label>
-                    <input type="password" id="newPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                    <input type="password" id="newPassword" class="form-control" required>
                 </div>
-                <div style="margin-bottom: 20px;">
+                <div class="form-group">
                     <label>Role</label>
-                    <select id="newRole" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                    <select id="newRole" class="form-control">
                         <option value="user">User</option>
                         <option value="admin">Super Admin</option>
                     </select>
@@ -124,17 +123,26 @@
             <span class="close-modal" data-modal="createBookModal">&times;</span>
             <h3 style="margin-bottom: 1.5rem;">Create New Album</h3>
             <form id="createBookForm">
-                <div style="margin-bottom: 15px;">
+                <div class="form-group">
                     <label>Album Name (Internal)</label>
-                    <input type="text" id="newBookTitle" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" placeholder="e.g. Wedding 2024">
+                    <input type="text" id="newBookTitle" class="form-control" required placeholder="e.g. Wedding 2024">
                 </div>
-                <div style="margin-bottom: 20px;">
+                <div class="form-group">
                     <label>Theme Template</label>
-                    <select id="newBookTemplate" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                    <select id="newBookTemplate" class="form-control">
                         <option value="default">Default</option>
                         <option value="birthday">Birthday 🎂</option>
                         <option value="wedding">Wedding 💍</option>
                         <option value="anniversary">Anniversary 🥂</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Album Border Layout</label>
+                    <select id="newBookBorder" class="form-control">
+                        <option value="none">No Border (Clean)</option>
+                        <option value="floral">Floral Decoration 🌸</option>
+                        <option value="classic">Classic Frame 🖼️</option>
+                        <option value="modern">Modern Minimalist</option>
                     </select>
                 </div>
                 <button type="submit" class="btn-primary" style="width: 100%;">Create Album</button>
@@ -151,17 +159,17 @@
                 <button class="close-modal" data-modal="passwordModal">&times;</button>
             </div>
             <form id="passwordForm">
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Current Password</label>
-                    <input type="password" id="currentPass" required style="width: 100%; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px;">
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <input type="password" id="currentPass" class="form-control" required>
                 </div>
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">New Password</label>
-                    <input type="password" id="newPass" required style="width: 100%; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px;">
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" id="newPass" class="form-control" required>
                 </div>
-                <div style="margin-bottom: 2rem;">
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Confirm New Password</label>
-                    <input type="password" id="confirmPass" required style="width: 100%; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px;">
+                <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <input type="password" id="confirmPass" class="form-control" required>
                 </div>
                 <button type="submit" class="btn-primary" style="width: 100%; height: 50px;">Update Password</button>
                 <p id="passwordError" style="color: red; margin-top: 15px; display: none; font-weight: 500; text-align: center;"></p>

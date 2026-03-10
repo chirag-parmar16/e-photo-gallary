@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     settings.instruction_text = data.book.instruction_text;
                     settings.template_type = data.book.template_type;
                     settings.color_schema = data.book.color_schema;
+                    settings.border_style = data.book.border_style;
                     window.bookData = data.book;
                 }
             } else {
@@ -83,10 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function createPageContent(pageData, side, settings) {
         if (!pageData) return `<div class="page-content ${side} empty"></div>`;
-        const pageBorder = pageData.border_style && pageData.border_style !== 'none' ? pageData.border_style : null;
-        const globalBorder = settings && settings.border_style && settings.border_style !== 'none' ? settings.border_style : null;
-        const finalBorder = pageBorder || globalBorder;
-        const borderClass = finalBorder ? `border-style-${finalBorder}` : '';
+        const borderStyle = settings && settings.border_style && settings.border_style !== 'none' ? settings.border_style : null;
+        const borderClass = borderStyle ? `border-style-${borderStyle}` : '';
 
         const isTextOnly = !pageData.media || pageData.media.length === 0;
         const mediaItems = (pageData.media || []).map(m => `
@@ -275,8 +274,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const mediaItems = page.querySelectorAll('.page-content img, .page-content video');
         const texts = page.querySelectorAll('.minimal-text');
 
-        gsap.to(mediaItems, { opacity: 1, scale: 1, duration: 1.2, ease: "power2.out", stagger: 0.2, delay: 0.2 });
-        gsap.to(texts, { opacity: 1, y: 0, duration: 1, ease: "power2.out", delay: 0.4 });
+        if (mediaItems.length > 0) {
+            gsap.to(mediaItems, { opacity: 1, scale: 1, duration: 1.2, ease: "power2.out", stagger: 0.2, delay: 0.2 });
+        }
+        if (texts.length > 0) {
+            gsap.to(texts, { opacity: 1, y: 0, duration: 1, ease: "power2.out", delay: 0.4 });
+        }
 
         mediaItems.forEach(m => {
             if (m.tagName === 'VIDEO' && isVisible) m.play().catch(() => { });

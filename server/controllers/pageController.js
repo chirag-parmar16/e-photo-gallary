@@ -26,13 +26,13 @@ const createPage = async (req, res, db) => {
 
         const internalId = book.id;
 
-        const { text_content, media_frames, border_style } = req.body;
+        const { text_content, media_frames } = req.body;
         const lastPage = await db.get('SELECT MAX(page_order) as maxOrder FROM pages WHERE book_id = ?', internalId);
         const newOrder = (lastPage && lastPage.maxOrder !== null) ? lastPage.maxOrder + 1 : 1;
 
         const result = await db.run(
-            'INSERT INTO pages (book_id, text_content, page_order, border_style) VALUES (?, ?, ?, ?)',
-            [internalId, text_content || '', newOrder, border_style || 'none']
+            'INSERT INTO pages (book_id, text_content, page_order) VALUES (?, ?, ?)',
+            [internalId, text_content || '', newOrder]
         );
         const pageId = result.lastID;
 
@@ -77,11 +77,11 @@ const updatePage = async (req, res, db) => {
 
         if (!page || page.user_id !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
 
-        const { text_content, delete_media_ids, media_frames, existing_media_frames, border_style } = req.body;
+        const { text_content, delete_media_ids, media_frames, existing_media_frames } = req.body;
 
         await db.run(
-            'UPDATE pages SET text_content = ?, border_style = COALESCE(?, border_style) WHERE id = ?',
-            [text_content, border_style, pageId]
+            'UPDATE pages SET text_content = ? WHERE id = ?',
+            [text_content, pageId]
         );
 
         if (existing_media_frames) {

@@ -424,13 +424,13 @@ async function fetchUsers() {
             const row = document.createElement('div');
             row.className = 'table-row user-row';
             row.innerHTML = `
-                <div>${user.id}</div>
-                <div style="font-weight:600;">${user.email || 'hidden'}</div>
+                <div style="font-weight: 600; color: #94a3b8;">#${user.id}</div>
+                <div style="font-weight: 600; color: var(--adm-text-color);">${user.email || 'hidden'}</div>
                 <div><span class="badge ${user.role}">${user.role}</span></div>
-                <div style="color:#888;">${new Date(user.created_at).toLocaleDateString()}</div>
-                <div style="font-size:12px; color:#555;">${user.subscription_end ? new Date(user.subscription_end).toLocaleDateString() : 'N/A'}</div>
+                <div style="color: #94a3b8; font-size: 0.9rem;">${new Date(user.created_at).toLocaleDateString()}</div>
+                <div style="font-size: 0.9rem; color: #94a3b8;">${user.subscription_end ? new Date(user.subscription_end).toLocaleDateString() : 'N/A'}</div>
                 <div class="action-btns">
-                    <button class="action-btn" onclick="extendSubscription(${user.id})" title="Add 1 Month"><i class="fas fa-calendar-plus" style="color:var(--primary);"></i></button>
+                    <button class="action-btn" onclick="extendSubscription(${user.id})" title="Add 1 Month"><i class="fas fa-calendar-plus" style="color: var(--adm-accent-color);"></i></button>
                     ${user.role !== 'admin' ? `<button class="action-btn delete-btn" onclick="deleteUser(${user.id})" title="Delete User"><i class="fas fa-trash"></i></button>` : ''}
                 </div>
             `;
@@ -648,6 +648,7 @@ function bindUserDashboardEvents() {
             e.preventDefault();
             const title = document.getElementById('newBookTitle').value;
             const template_type = document.getElementById('newBookTemplate').value;
+            const border_style = document.getElementById('newBookBorder').value;
 
             const btn = e.submitter || e.target.querySelector('button[type="submit"]');
             window.toggleButtonLoader(btn, true);
@@ -660,7 +661,7 @@ function bindUserDashboardEvents() {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
                     },
-                    body: JSON.stringify({ title, template_type })
+                    body: JSON.stringify({ title, template_type, border_style })
                 });
                 if (res.ok) {
                     const data = await res.json();
@@ -742,9 +743,14 @@ function initEditorView() {
     const openAddModal = document.getElementById('openAddModal');
     if (openAddModal) {
         openAddModal.addEventListener('click', () => {
+            const titleEl = document.getElementById('pageModalTitle');
+            if (titleEl) titleEl.textContent = 'Add New Page';
+
             document.getElementById('editPageId').value = '';
             document.getElementById('submitBtn').textContent = 'Create Page';
-            document.getElementById('editPageBorderStyle').value = 'none';
+            if (document.getElementById('editPageBorderStyle')) {
+                document.getElementById('editPageBorderStyle').value = 'none';
+            }
             quill.root.innerHTML = '';
             selectedFiles = [];
             deletedMediaIds = [];
@@ -900,7 +906,8 @@ async function savePage() {
 
     const formData = new FormData();
     formData.append('text_content', quill.root.innerHTML);
-    formData.append('border_style', document.getElementById('editPageBorderStyle').value);
+    // border_style is global now, but we keep this hidden input for safety
+    formData.append('border_style', document.getElementById('editPageBorderStyle')?.value || 'none');
     formData.append('delete_media_ids', JSON.stringify(deletedMediaIds));
 
     // Collect new media frames
@@ -998,6 +1005,9 @@ function removeNewMedia(index, btn) {
 }
 
 async function openEditPage(pageId) {
+    const titleEl = document.getElementById('pageModalTitle');
+    if (titleEl) titleEl.textContent = 'Edit Page Content';
+
     document.getElementById('editPageId').value = pageId;
     document.getElementById('submitBtn').textContent = 'Save Changes';
     selectedFiles = [];
@@ -1014,7 +1024,9 @@ async function openEditPage(pageId) {
 
         if (page) {
             quill.root.innerHTML = page.text_content || '';
-            document.getElementById('editPageBorderStyle').value = page.border_style || 'none';
+            if (document.getElementById('editPageBorderStyle')) {
+                document.getElementById('editPageBorderStyle').value = page.border_style || 'none';
+            }
 
             // Show existing media
             page.media.forEach(m => {

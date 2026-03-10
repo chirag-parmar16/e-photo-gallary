@@ -1,9 +1,9 @@
 :root {
     --bg-color: #FFDEE3;
-    --primary-color: #C00000;
-    --text-color: #C00000;
-    --accent-color: #FF3334;
-    --soft-accent: #FF6F77;
+    --primary-color: #ff4d6d;
+    --text-color: #334155;
+    --accent-color: #ff758f;
+    --soft-accent: #fce1e5;
     --light-accent: #FFBBC1;
     --warm-accent: #FF8896;
     --paper-color: #ffffff;
@@ -669,21 +669,14 @@ body {
     border-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30"><circle cx="15" cy="15" r="10" fill="%23ff4d6d" opacity="0.5"/></svg>') 10 round !important;
     box-sizing: border-box; margin: 15px; height: calc(100% - 30px); width: calc(100% - 30px);
 }
-
-/* Page Border Styles */
-.page-content.border-style-solid-page {
-    border: 4px solid var(--primary-color) !important;
+.page-content.border-style-classic {
+    border: 12px double #8a6d3b !important;
+    outline: 2px solid #8a6d3b !important;
+    outline-offset: -20px;
     box-sizing: border-box; margin: 15px; height: calc(100% - 30px); width: calc(100% - 30px);
 }
-.page-content.border-style-dashed-page {
-    border: 4px dashed var(--accent-color) !important;
-    box-sizing: border-box; margin: 15px; height: calc(100% - 30px); width: calc(100% - 30px);
-}
-.page-content.border-style-double-page {
-    border: 8px double #ccc !important;
-    box-sizing: border-box; margin: 15px; height: calc(100% - 30px); width: calc(100% - 30px);
-}
-.page-content.border-style-groove-page {
-    border: 10px groove gold !important;
-    box-sizing: border-box; margin: 15px; height: calc(100% - 30px); width: calc(100% - 30px);
+.page-content.border-style-modern {
+    border: 1px solid rgba(0,0,0,0.1) !important;
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.02) !important;
+    box-sizing: border-box; margin: 20px; height: calc(100% - 40px); width: calc(100% - 40px);
 }

@@ -11,53 +11,52 @@
     </div>
     
     <!-- Book Settings Mini-Panel -->
-    <div style="background: white; padding: 1.5rem; border-radius: 20px; box-shadow: var(--shadow); margin-bottom: 2rem; border: 1px solid var(--border-color);">
-        <h4 style="margin-bottom: 1rem; color: #888; font-size: 0.9rem;">Album Settings</h4>
-        <form id="bookSettingsForm" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
-            <div style="flex: 1; min-width: 200px;">
-                <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; color: #aaa;">Album Title</label>
-                <input type="text" id="editBookTitle" required>
+    <div class="stat-card" style="padding: 2rem; display: block; margin-bottom: 2rem;">
+        <h4 style="margin-bottom: 1.5rem; color: #64748b; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">Album Settings</h4>
+        <form id="bookSettingsForm" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.5rem; align-items: end;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Album Name</label>
+                <input type="text" id="editBookTitle" class="form-control" required>
             </div>
-            <div style="flex: 1; min-width: 200px;">
-                <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; color: #aaa;">Cover Title</label>
-                <input type="text" id="editCoverTitle" required>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Cover Title</label>
+                <input type="text" id="editCoverTitle" class="form-control" required>
             </div>
-            <div style="flex: 1; min-width: 200px;">
-                <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; color: #aaa;">Cover Subtitle</label>
-                <input type="text" id="editCoverSubtitle" required>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Cover Subtitle</label>
+                <input type="text" id="editCoverSubtitle" class="form-control" required>
             </div>
-            <div style="flex: 1; min-width: 200px;">
-                <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; color: #aaa;">Tap Instruction</label>
-                <input type="text" id="editInstructionText" required>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Tap Instruction</label>
+                <input type="text" id="editInstructionText" class="form-control" required>
             </div>
-            <div style="flex: 1; min-width: 200px;">
-                <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; color: #aaa;">End Title</label>
-                <input type="text" id="editEndTitle" required>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>End Title</label>
+                <input type="text" id="editEndTitle" class="form-control" required>
             </div>
-            <div style="flex: 1; min-width: 200px;">
-                <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; color: #aaa;">Theme Template</label>
-                <select id="editTemplateType" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Theme Template</label>
+                <select id="editTemplateType" class="form-control">
                     <option value="default">Default</option>
                     <option value="birthday">Birthday 🎂</option>
                     <option value="wedding">Wedding 💍</option>
                     <option value="anniversary">Anniversary 🥂</option>
                 </select>
             </div>
-            <div style="flex: 1; min-width: 200px;">
-                <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; color: #aaa;">Primary Color</label>
-                <input type="color" id="editColorSchema" style="width: 100%; height: 44px; border: none; cursor: pointer; background: none;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Primary Color</label>
+                <input type="color" id="editColorSchema" class="form-control" style="height: 44px; padding: 5px;">
             </div>
-            <div style="flex: 1; min-width: 200px;">
-                <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; color: #aaa;">Global Border Style</label>
-                <select id="editBorderStyle" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
-                    <option value="none">None</option>
-                    <option value="solid-primary">Solid (Primary Color)</option>
-                    <option value="dashed-primary">Dashed (Primary Color)</option>
-                    <option value="double-primary">Double (Primary Color)</option>
-                    <option value="floral">Floral Pattern 🌸</option>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Global Border</label>
+                <select id="editBorderStyle" class="form-control">
+                    <option value="none">No Border (Clean)</option>
+                    <option value="floral">Floral Decoration 🌸</option>
+                    <option value="classic">Classic Frame 🖼️</option>
+                    <option value="modern">Modern Minimalist</option>
                 </select>
             </div>
-            <button type="submit" class="btn-outline" style="height: 48px; min-width: 150px;">Update Settings</button>
+            <button type="submit" class="btn-primary" style="height: 48px;">Update Album</button>
         </form>
     </div>
 
@@ -75,41 +74,33 @@
 <!-- Page Editor Modal (Moved from index.html during refactor) -->
 <div class="modal" id="pageModal">
     <div class="modal-content" style="max-width: 800px;">
-        <h3 style="margin-bottom: 20px;">Edit Page</h3>
+        <h3 id="pageModalTitle" style="margin-bottom: 20px;">Edit Page</h3>
         <form id="pageForm">
             <input type="hidden" id="editPageId">
             
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Content / Text</label>
-                <div id="editor-container" style="height: 200px; background: white; border-radius: 0 0 10px 10px;"></div>
+            <div class="form-group">
+                <label>Content / Text</label>
+                <div id="editor-container"></div>
             </div>
 
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Media Upload (Max 4)</label>
-                <div style="padding: 15px; border: 2px dashed #ddd; border-radius: 10px; text-align: center; background: #fdfdfd;">
+            <div class="form-group">
+                <label>Media Upload (Max 4)</label>
+                <div class="custom-file-upload">
                     <input type="file" id="mediaFile" multiple accept="image/*,video/*" style="display: none;">
                     <button type="button" class="btn-outline" onclick="document.getElementById('mediaFile').click()">
                         <i class="fas fa-cloud-upload-alt"></i> Select Files
                     </button>
-                    <p style="font-size: 0.8rem; color: #888; margin-top: 10px;">Supported: JPG, PNG, GIF, MP4, WebM (Auto-compressed)</p>
+                    <p style="font-size: 0.8rem; color: #888; margin-top: 10px;">Supported: JPG, PNG, GIF, MP4 (Max 5MB each)</p>
                 </div>
             </div>
 
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Page Border Style</label>
-                <select id="editPageBorderStyle" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
-                    <option value="none">None</option>
-                    <option value="solid-page">Solid Primary Color</option>
-                    <option value="dashed-page">Dashed Accent Color</option>
-                    <option value="double-page">Double Gray Frame</option>
-                    <option value="groove-page">Gold Groove Frame</option>
-                </select>
-            </div>
+            <!-- Global border is used now -->
+            <input type="hidden" id="editPageBorderStyle" value="none">
 
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Media Layout Preview</label>
-                <div id="previewGrid" style="display: flex; gap: 10px; flex-wrap: wrap; padding: 10px; background: #f5f5f5; border-radius: 10px; min-height: 100px;">
-                    <!-- Previews generated dynamically by browser subagent -->
+            <div class="form-group">
+                <label>Media Layout Preview</label>
+                <div id="previewGrid" style="display: flex; gap: 10px; flex-wrap: wrap; padding: 1rem; background: #f8fafc; border-radius: 12px; min-height: 100px; border: 1px solid #e2e8f0;">
+                    <!-- Previews generated dynamically -->
                 </div>
             </div>
 
