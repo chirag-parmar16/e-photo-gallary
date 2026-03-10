@@ -1,0 +1,26 @@
+<nav class="navbar" style="justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 20px;">
+        <button id="mobileMenuToggle" class="mobile-toggle"><i class="fas fa-bars"></i></button>
+        <div class="nav-context" style="display: flex; align-items: center; gap: 10px; padding-left: 10px; border-left: 1px solid var(--adm-border-color);">
+            <span id="current-view-title" style="font-family: inherit; font-weight: 600; font-size: 1.1rem; color: var(--adm-text-color);">Dashboard</span>
+            <span style="width: 6px; height: 6px; background: #10b981; border-radius: 50%; box-shadow: 0 0 8px #10b981;"></span>
+        </div>
+    </div>
+    <div style="flex: 1; max-width: 400px; margin: 0 2rem;">
+        <div class="global-search-container" style="position: relative;">
+            <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--adm-text-muted); font-size: 0.9rem;"></i>
+            <input type="text" id="globalSearch" placeholder="Search..." class="form-control" style="padding-left: 35px; height: 38px; border-radius: 8px; background: var(--adm-main-bg); border-color: transparent;">
+            <div style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 0.7rem; color: var(--adm-text-muted); border: 1px solid var(--adm-border-color); padding: 2px 6px; border-radius: 4px; background: var(--adm-card-bg);">⌘K</div>
+        </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <button class="circle-btn" onclick="toggleTheme()" title="Toggle Appearance">
+            <i class="fas fa-moon"></i>
+            <i class="fas fa-sun"></i>
+        </button>
+        <div class="user-profile" style="padding: 5px 15px; background: var(--adm-pink-pale); border-radius: 12px; border: 1px solid rgba(255, 77, 109, 0.1);">
+            <i class="fas fa-user-circle" style="font-size: 1.2rem; color: var(--adm-accent-color);"></i>
+            <span id="navUsername" style="font-size: 0.9rem; font-weight: 700;">User</span>
+        </div>
+    </div>
+</nav>

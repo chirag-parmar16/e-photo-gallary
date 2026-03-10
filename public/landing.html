@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memoria — Digital Photo Albums That Tell Your Story</title>
+    <meta name="description" content="Create stunning digital flip-book photo albums with Memoria. Preserve your memories forever.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ===== VARIABLES ===== */
+        :root {
+            --pink: #ff4d6d;
+            --pink-light: #ff758f;
+            --pink-pale: #fff0f3;
+            --pink-muted: #fce1e5;
+            --dark: #0f172a;
+            --dark-card: #1e293b;
+            --text: #334155;
+            --text-muted: #64748b;
+            --white: #ffffff;
+            --gold: #f59e0b;
+            --max-width: 1200px;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            color: var(--text); 
+            background: var(--white); 
+            overflow-x: hidden; 
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* ===== NAVBAR ===== */
+        .nav {
+            position: fixed; top: 0; left: 0; right: 0;
+            padding: 1.2rem 4rem;
+            z-index: 10000;
+            transition: all 0.4s ease;
+        }
+        .nav.scrolled {
+            padding: 1rem 4rem;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.05);
+        }
+        .nav-container {
+            display: flex; align-items: center; justify-content: space-between;
+            width: 100%; max-width: var(--max-width); margin: 0 auto;
+        }
+        .nav-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem; font-weight: 700;
+            color: var(--pink);
+            display: flex; align-items: center; gap: 10px;
+            text-decoration: none;
+        }
+        .nav-logo i { font-size: 1.2rem; }
+        
+        .nav-links-top {
+            display: flex; align-items: center; gap: 2.5rem;
+            list-style: none;
+        }
+        .nav-links-top a {
+            text-decoration: none; color: rgba(255, 255, 255, 0.85);
+            font-weight: 500; transition: color 0.3s;
+            font-size: 0.95rem;
+        }
+        .nav-links-top a:hover { color: var(--white); }
+        .nav.scrolled .nav-links-top a { color: var(--text); }
+        .nav.scrolled .nav-links-top a:hover { color: var(--pink); }
+
+        .nav-cta { display: flex; gap: 12px; }
+        
+        .btn-ghost, .btn-cta {
+            padding: 0.6rem 1.4rem; 
+            border-radius: 50px;
+            font-weight: 600; cursor: pointer;
+            font-size: 0.9rem; transition: all 0.3s ease; 
+            text-decoration: none;
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        .btn-ghost {
+            border: 2px solid var(--pink); color: var(--pink); background: transparent;
+        }
+        .btn-ghost:hover { background: rgba(255, 77, 109, 0.15); }
+        .nav.scrolled .btn-ghost:hover { background: var(--pink-pale); }
+
+        .btn-cta {
+            background: var(--pink); color: var(--white); border: 2px solid var(--pink);
+            box-shadow: 0 4px 15px rgba(255,77,109,0.2);
+        }
+        .btn-cta:hover { 
+            background: var(--pink-light); border-color: var(--pink-light); 
+            transform: translateY(-1px); box-shadow: 0 8px 25px rgba(255,77,109,0.35); 
+        }
+
+        /* ===== HERO SECTION ===== */
+        .hero {
+            min-height: 95vh;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #16213e 100%);
+            display: flex; align-items: center;
+            padding: 8rem 4rem 4rem;
+            position: relative; overflow: hidden;
+            perspective: 1200px;
+        }
+        
+        .parallax-bg {
+            position: absolute; inset: -100px; z-index: 0; pointer-events: none;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .p-img {
+            position: absolute;
+            border-radius: 12px;
+            opacity: 0.15;
+            filter: blur(4px);
+            transition: transform 0.4s ease-out;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            border: 8px solid white;
+            border-bottom-width: 30px;
+        }
+        .p-img-1 { width: 150px; top: 15%; left: 10%; transform: rotate(-15deg); }
+        .p-img-2 { width: 200px; bottom: 20%; left: 15%; transform: rotate(10deg); filter: blur(6px); opacity: 0.1; }
+        .p-img-3 { width: 180px; top: 20%; right: 10%; transform: rotate(20deg); filter: blur(3px); }
+        .p-img-4 { width: 220px; bottom: 15%; right: 5%; transform: rotate(-10deg); filter: blur(5px); opacity: 0.12; }
+        .p-img-5 { width: 120px; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(5deg); opacity: 0.05; filter: blur(8px); }
+
+        .hero-container {
+            display: flex; align-items: center; justify-content: space-between;
+            width: 100%; max-width: var(--max-width); margin: 0 auto; gap: 2rem;
+            position: relative; z-index: 1;
+        }
+        
+        /* 65:35 PERFECT RATIO */
+        .hero-content { 
+            width: 65%; 
+            flex-shrink: 0; 
+            padding-right: 5%;
+        }
+        .hero-visual {
+            width: 35%; 
+            flex-shrink: 0;
+            display: flex; justify-content: flex-start;
+            align-items: center;
+            position: relative;
+        }
+
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(255,77,109,0.15); border: 1px solid rgba(255,77,109,0.3);
+            color: #ff8fa3; padding: 0.5rem 1.2rem; border-radius: 50px;
+            font-size: 0.85rem; font-weight: 600; margin-bottom: 2rem;
+            backdrop-filter: blur(5px);
+        }
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.8rem, 5vw, 4.5rem);
+            line-height: 1.15; color: var(--white); margin-bottom: 1.5rem;
+        }
+        .hero h1 span { 
+            background: linear-gradient(to right, #ff4d6d, #ffb3c1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-style: italic; 
+        }
+        .hero-desc {
+            font-size: 1.1rem; color: #cbd5e1; line-height: 1.8;
+            margin-bottom: 2.5rem; max-width: 500px;
+        }
+        .hero-actions { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+        
+        .btn-hero-primary {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 1.1rem 2.5rem; border-radius: 50px;
+            background: linear-gradient(135deg, var(--pink), var(--pink-light));
+            color: var(--white); font-size: 1rem; font-weight: 600;
+            text-decoration: none; border: none; transition: all 0.3s ease; 
+            box-shadow: 0 8px 30px rgba(255,77,109,0.4);
+            position: relative; overflow: hidden;
+            white-space: nowrap; /* Ensures text stays on one line */
+        }
+        .btn-hero-primary::after {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent);
+            transform: rotate(45deg); animation: shine 3s infinite;
+        }
+        @keyframes shine {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            80%, 100% { transform: translateX(100%) rotate(45deg); }
+        }
+        .btn-hero-primary:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(255,77,109,0.5); }
+        
+        .btn-hero-ghost {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 1.1rem 2.5rem; border-radius: 50px;
+            background: rgba(255,255,255,0.05); color: var(--white);
+            font-size: 1rem; font-weight: 500; text-decoration: none;
+            border: 1px solid rgba(255,255,255,0.15); transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            white-space: nowrap; /* Ensures text stays on one line */
+        }
+        .btn-hero-ghost:hover { border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.15); }
+
+        /* ===== CUSTOM CURSOR ===== */
+        .custom-cursor {
+            position: fixed; top: 0; left: 0; pointer-events: none;
+            width: 90px; height: 90px;
+            background: rgba(255, 77, 109, 0.9);
+            color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; font-weight: 700; text-align: center;
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10001; box-shadow: 0 10px 30px rgba(255, 77, 109, 0.4);
+            text-transform: uppercase; letter-spacing: 1px; line-height: 1.2;
+        }
+        .custom-cursor.active { transform: translate(-50%, -50%) scale(1); }
+
+        /* ===== CSS FLIPBOOK ILLUSTRATION ===== */
+        .flipbook-wrapper {
+            position: relative;
+            perspective: 2000px;
+            width: 100%;
+            display: flex;
+            justify-content: flex-start; 
+            align-items: center;
+            padding: 2rem 0;
+            cursor: pointer; 
+        }
+        
+        .flipbook {
+            width: 320px;
+            height: 480px; /* Perfect Square */
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.645, 0.045, 0.355, 1); 
+        }
+        
+        .book-glow {
+            position: absolute; top: 0; 
+            height: 100%;
+            background: rgba(255, 77, 109, 0.4);
+            filter: blur(40px); opacity: 0; 
+            transition: left 0.6s cubic-bezier(0.645, 0.045, 0.355, 1), 
+                        width 0.6s cubic-bezier(0.645, 0.045, 0.355, 1), 
+                        opacity 0.5s ease;
+            z-index: -1; border-radius: 20px; transform: translateZ(-20px);
+        }
+        .flipbook-wrapper:hover .book-glow { opacity: 1; }
+
+        .leaf {
+            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
+            transform-origin: left center; transform-style: preserve-3d;
+            border-radius: 4px 20px 20px 4px; box-shadow: 5px 5px 25px rgba(0,0,0,0.3);
+            transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1), z-index 0s 0.4s;
+        }
+
+        /* Unflipped (Right Side Stack) */
+        .leaf-1 { z-index: 4; transform: translateZ(4px) rotateY(0deg); }
+        .leaf-2 { z-index: 3; transform: translateZ(3px) rotateY(0deg); }
+        .leaf-3 { z-index: 2; transform: translateZ(2px) rotateY(0deg); }
+        .leaf-4 { z-index: 1; transform: translateZ(1px) rotateY(0deg); }
+
+        /* Flipped (Left Side Stack) */
+        .leaf-1.flipped { transform: translateZ(1px) rotateY(-180deg); z-index: 1; }
+        .leaf-2.flipped { transform: translateZ(2px) rotateY(-180deg); z-index: 2; }
+        .leaf-3.flipped { transform: translateZ(3px) rotateY(-180deg); z-index: 3; }
+        .leaf-4.flipped { transform: translateZ(4px) rotateY(-180deg); z-index: 4; }
+
+        .page {
+            position: absolute; width: 100%; height: 100%;
+            backface-visibility: hidden; border-radius: 4px 20px 20px 4px;
+            background-color: var(--white); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .page.back { transform: rotateY(180deg); }
+        
+        .cover-front {
+            background: linear-gradient(135deg, #1e293b, #0f172a); color: var(--white);
+            border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 8px 0 20px rgba(0,0,0,0.4);
+        }
+        .cover-back { background: #1e293b; box-shadow: inset 8px 0 20px rgba(0,0,0,0.4); }
+        .inner-page { background: #f8fafc; box-shadow: inset 15px 0 30px rgba(0,0,0,0.05); }
+        
+        .inner-page::before {
+            content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 30px;
+            background: linear-gradient(to right, rgba(0,0,0,0.15), transparent);
+            pointer-events: none; z-index: 5;
+        }
+
+        .page-photo {
+            width: 100%; height: 100%; object-fit: cover;
+            border: 15px solid var(--white); border-bottom-width: 50px; 
+            box-sizing: border-box; background-color: #f1f5f9;
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 15px;
+            padding: 30px 15px;
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            background-color: #f8fafc;
+        }
+        .grid-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border: 6px solid var(--white);
+            border-bottom-width: 20px; 
+            border-radius: 4px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            box-sizing: border-box;
+        }
+
+        /* Floating badges */
+        .hero-float-badge {
+            position: absolute; background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px); border-radius: 16px; padding: 0.8rem 1.2rem;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            display: flex; align-items: center; gap: 12px;
+            font-size: 0.85rem; font-weight: 600; color: var(--dark);
+            animation: float-badge 4s ease-in-out infinite;
+            z-index: 10; border: 1px solid rgba(255,255,255,0.5);
+            pointer-events: none;
+        }
+        @keyframes float-badge {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .badge-1 { top: 0%; left: -5%; animation-delay: 0.5s; }
+        .badge-2 { bottom: 2%; right: -15%; animation-delay: 1.5s; }
+        .float-badge-icon { 
+            width: 38px; height: 38px; border-radius: 10px; 
+            display: flex; align-items: center; justify-content: center; font-size: 1.1rem; 
+        }
+
+        /* ===== Rest of UI Styles ===== */
+        .stats-strip {
+            background: #0f172a; padding: 4rem 2rem; position: relative; z-index: 5;
+            border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.02);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        .stats-flex {
+            display: flex; justify-content: space-evenly; align-items: center;
+            width: 100%; max-width: var(--max-width); margin: 0 auto; gap: 2rem; flex-wrap: wrap;
+        }
+        .hero-stat { text-align: center; flex: 1; min-width: 200px; }
+        .hero-stat h3 { font-size: 3rem; color: var(--white); font-weight: 700; line-height: 1; }
+        .hero-stat p { color: #94a3b8; font-size: 0.95rem; margin-top: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+
+        section { padding: 6rem 4rem; position: relative; z-index: 1; }
+        .section-tag {
+            display: inline-block; background: var(--pink-pale); color: var(--pink); 
+            font-size: 0.85rem; font-weight: 700; text-transform: uppercase; 
+            letter-spacing: 1.5px; padding: 0.4rem 1.2rem; border-radius: 50px; margin-bottom: 1.2rem;
+        }
+        .section-title { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 3.5vw, 2.8rem); color: var(--dark); line-height: 1.2; margin-bottom: 1.2rem; }
+        .section-sub { font-size: 1.1rem; color: var(--text-muted); max-width: 600px; line-height: 1.7; }
+        .section-header { text-align: center; margin-bottom: 4rem; display: flex; flex-direction: column; align-items: center; }
+
+        .features { background: transparent; }
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2.5rem; }
+        .feature-card {
+            background: rgba(255,255,255,0.9); backdrop-filter: blur(5px);
+            border-radius: 24px; padding: 2.5rem; border: 1px solid #f1f5f9; transition: all 0.4s ease; position: relative; overflow: hidden;
+        }
+        .feature-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, var(--pink), var(--pink-light));
+            transform: scaleX(0); transform-origin: left; transition: transform 0.4s ease;
+        }
+        .feature-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.04); border-color: transparent; }
+        .feature-card:hover::before { transform: scaleX(1); }
+        .feature-icon { width: 65px; height: 65px; border-radius: 20px; background: var(--pink-pale); color: var(--pink); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 1.8rem; transition: all 0.4s ease; }
+        .feature-card:hover .feature-icon { background: var(--pink); color: var(--white); transform: scale(1.05) rotate(-5deg); }
+        .feature-card h3 { font-size: 1.3rem; font-weight: 700; color: var(--dark); margin-bottom: 1rem; }
+        .feature-card p { color: var(--text-muted); line-height: 1.6; font-size: 1rem; }
+
+        .how-it-works { background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); }
+        .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; position: relative; }
+        .step-card { text-align: center; padding: 2rem 1.5rem; position: relative; }
+        .step-number { width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, var(--pink), var(--pink-light)); color: var(--white); font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.8rem; box-shadow: 0 10px 25px rgba(255,77,109,0.3); }
+        .step-card h3 { font-size: 1.2rem; font-weight: 700; color: var(--dark); margin-bottom: 1rem; }
+        .step-card p { color: var(--text-muted); line-height: 1.6; font-size: 1rem; }
+
+        .pricing { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+        .pricing .section-title { color: var(--white); }
+        .pricing .section-sub { color: #94a3b8; }
+        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; max-width: 1000px; margin: 0 auto; align-items: center; }
+        .price-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 28px; padding: 3rem 2.5rem; position: relative; transition: all 0.4s ease; backdrop-filter: blur(10px); }
+        .price-card:hover { transform: translateY(-8px); background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); }
+        .price-card.popular { background: linear-gradient(135deg, rgba(255,77,109,0.1), rgba(255,117,143,0.05)); border-color: rgba(255,77,109,0.3); transform: scale(1.05); z-index: 2; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+        .price-card.popular:hover { transform: scale(1.05) translateY(-8px); border-color: rgba(255,77,109,0.5); }
+        .popular-badge { position: absolute; top: -16px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--pink), var(--pink-light)); color: var(--white); padding: 0.4rem 1.5rem; border-radius: 50px; font-size: 0.85rem; font-weight: 700; white-space: nowrap; box-shadow: 0 4px 15px rgba(255,77,109,0.3); }
+        .price-plan { font-size: 0.9rem; font-weight: 700; color: var(--pink); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.5rem; }
+        .price-amount { display: flex; align-items: flex-start; gap: 5px; margin: 1.5rem 0; }
+        .price-currency { font-size: 1.6rem; color: var(--white); font-weight: 600; padding-top: 8px; }
+        .price-value { font-size: 4rem; color: var(--white); font-weight: 800; line-height: 1; }
+        .price-period { color: #64748b; font-size: 0.95rem; padding-top: 40px; }
+        .price-desc { color: #94a3b8; font-size: 0.95rem; margin-bottom: 2rem; line-height: 1.6; min-height: 45px; }
+        .price-features { list-style: none; display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2.5rem; }
+        .price-features li { display: flex; align-items: center; gap: 12px; color: #cbd5e1; font-size: 0.95rem; }
+        .price-features li i { color: var(--pink); width: 18px; font-size: 1rem; }
+        .price-features li.unavailable { color: #475569; }
+        .price-features li.unavailable i { color: #475569; }
+        .btn-plan { width: 100%; padding: 1rem; border-radius: 14px; font-weight: 600; cursor: pointer; font-size: 1rem; transition: all 0.3s ease; border: none; text-decoration: none; display: block; text-align: center; }
+        .btn-plan-outline { background: transparent; color: var(--white); border: 2px solid rgba(255,255,255,0.15); }
+        .btn-plan-outline:hover { border-color: var(--white); background: rgba(255,255,255,0.05); }
+        .btn-plan-pink { background: linear-gradient(135deg, var(--pink), var(--pink-light)); color: var(--white); box-shadow: 0 8px 25px rgba(255,77,109,0.3); }
+        .btn-plan-pink:hover { transform: translateY(-2px); box-shadow: 0 15px 35px rgba(255,77,109,0.45); }
+
+        .cta-banner { background: linear-gradient(135deg, var(--pink), #ff8fa3); padding: 6rem 4rem; text-align: center; position: relative; overflow: hidden; z-index: 1;}
+        .cta-banner-content { position: relative; z-index: 2; max-width: 700px; margin: 0 auto; }
+        .cta-banner h2 { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 4vw, 3.2rem); color: var(--white); margin-bottom: 1.2rem; line-height: 1.2; }
+        .cta-banner p { color: rgba(255,255,255,0.9); font-size: 1.15rem; margin-bottom: 2.5rem; line-height: 1.6; }
+        .btn-cta-white { display: inline-flex; align-items: center; gap: 10px; padding: 1.2rem 2.8rem; border-radius: 50px; background: var(--white); color: var(--pink); font-size: 1.05rem; font-weight: 700; text-decoration: none; transition: all 0.3s ease; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .btn-cta-white:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(0,0,0,0.15); }
+
+        footer { background: var(--dark); padding: 4rem 4rem; border-top: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 100;}
+        .footer-content { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 2rem; max-width: var(--max-width); margin: 0 auto; }
+        .footer-logo { font-family: 'Playfair Display', serif; color: var(--pink); font-size: 1.5rem; display: flex; align-items: center; gap: 10px; font-weight: 700; }
+        .footer-links { display: flex; gap: 2.5rem; }
+        .footer-links a { color: #94a3b8; text-decoration: none; font-size: 0.95rem; transition: color 0.3s; font-weight: 500; }
+        .footer-links a:hover { color: var(--pink); }
+        .footer-copy { color: #64748b; font-size: 0.9rem; text-align: right; width: 100%; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.05); }
+
+        .reveal-up { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal-up.active { opacity: 1; transform: translateY(0); }
+        .delay-1 { transition-delay: 0.1s; }
+        .delay-2 { transition-delay: 0.2s; }
+        .delay-3 { transition-delay: 0.3s; }
+
+        @media (max-width: 1024px) {
+            .hero { padding: 8rem 0 4rem; text-align: center; }
+            .hero-container { flex-direction: column; padding: 0 1.5rem; }
+            .hero-content { width: 100%; max-width: 100%; display: flex; flex-direction: column; align-items: center; padding-right: 0; }
+            .hero-visual { width: 100%; justify-content: center; }
+            .hero-actions { justify-content: center; }
+            .price-card.popular { transform: scale(1); }
+            .price-card.popular:hover { transform: translateY(-8px); }
+            .pricing-grid { max-width: 700px; }
+            .flipbook-wrapper { margin-top: 2rem; justify-content: center; padding: 2rem; max-width: 100%; }
+            .stats-strip { padding: 3rem 1.5rem; }
+            .custom-cursor { display: none !important; }
+            .flipbook-wrapper { cursor: default; }
+        }
+        @media (max-width: 768px) {
+            section { padding: 4.5rem 1.5rem; }
+            .nav { padding: 1rem 1.5rem; }
+            .nav.scrolled { padding: 0.8rem 1.5rem; }
+            .nav-links-top { display: none; }
+            .flipbook-wrapper { transform: scale(0.85); padding: 1rem; }
+            footer { padding: 3rem 1.5rem; }
+            .footer-content { flex-direction: column; text-align: center; gap: 1.5rem; }
+            .footer-links { flex-wrap: wrap; justify-content: center; gap: 1.5rem; }
+            .footer-copy { text-align: center; }
+        }
+        @media (max-width: 480px) {
+            .btn-ghost { display: none; }
+            .nav-logo span { display: none; }
+            .flipbook { width: 300px; height: 420px; } /* Square on small mobiles */
+            .flipbook-wrapper { transform: scale(0.85); margin-top: 0; }
+            .hero h1 { font-size: 2.2rem; }
+            .hero-actions { flex-direction: column; width: 100%; }
+            .btn-hero-primary, .btn-hero-ghost { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CUSTOM CURSOR -->
+    <div class="custom-cursor" id="custom-cursor">Open<br>Book</div>
+
+    <!-- NAVBAR SECTION -->
+    <nav class="nav" id="mainNav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo"><i class="fas fa-heart"></i> Memoria</a>
+            <ul class="nav-links-top">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#how-it-works">How It Works</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+            </ul>
+            <div class="nav-cta">
+                <a href="/login" class="btn-ghost">Sign In</a>
+                <a href="/login" class="btn-cta">Get Started Free</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+        
+        <!-- Deep Parallax Gallery Background -->
+        <div class="parallax-bg" id="parallax-bg">
+            <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=300&q=80" class="p-img p-img-1" alt="Bg memory">
+            <img src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=300&q=80" class="p-img p-img-2" alt="Bg memory">
+            <img src="https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=300&q=80" class="p-img p-img-3" alt="Bg memory">
+            <img src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=300&q=80" class="p-img p-img-4" alt="Bg memory">
+            <img src="https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&w=300&q=80" class="p-img p-img-5" alt="Bg memory">
+        </div>
+
+        <div class="hero-container">
+            <div class="hero-content reveal-up">
+                <div class="hero-badge">
+                    <i class="fas fa-star" style="color: #f59e0b;"></i>
+                    Trusted by 500+ families
+                </div>
+                <h1>Your Memories Deserve a <span>Beautiful Home</span></h1>
+                <p class="hero-desc">Create stunning interactive flip-book photo albums. Relive your stories with immersive 3D physics and real video embedding.</p>
+                <div class="hero-actions">
+                    <a href="/login" class="btn-hero-primary">
+                        <i class="fas fa-book-open"></i> Start Creating Free
+                    </a>
+                    <a href="#features" class="btn-hero-ghost">
+                        <i class="fas fa-play-circle"></i> See How It Works
+                    </a>
+                </div>
+            </div>
+
+            <!-- CSS FLIPBOOK ILLUSTRATION -->
+            <div class="hero-visual reveal-up delay-2">
+                <div class="flipbook-wrapper" id="flipbook-wrapper" title="Click left or right side to turn pages">
+
+                    <div class="flipbook" id="interactive-book">
+                        <div class="book-glow"></div>
+                        
+                        <!-- Leaf 1 (Cover Front & Inside Cover) -->
+                        <div class="leaf leaf-1">
+                            <div class="page cover-front">
+                                <i class="fas fa-heart" style="color: var(--pink); font-size: 3.5rem; margin-bottom: 1.5rem; text-shadow: 0 4px 10px rgba(0,0,0,0.5);"></i>
+                                <h3 style="font-family: 'Playfair Display', serif; font-size: 2rem; text-shadow: 0 2px 5px rgba(0,0,0,0.5); font-style: italic;">Our Story</h3>
+                            </div>
+                            <div class="page back inner-page"></div>
+                        </div>
+                        
+                        <!-- Leaf 2 (Video Page & Page 2) -->
+                        <div class="leaf leaf-2">
+                            <div class="page inner-page">
+                                <video autoplay loop muted playsinline class="page-photo" style="object-fit: cover;">
+                                    <source src="https://cdn.coverr.co/videos/coverr-a-couple-holding-hands-2451/1080p.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                            <div class="page back inner-page">
+                                <img src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=400&q=80" class="page-photo" alt="Wedding Memories 2">
+                            </div>
+                        </div>
+                        
+                        <!-- Leaf 3 (Page 3 (4-Photo Layout) & Page 4) -->
+                        <div class="leaf leaf-3">
+                            <div class="page inner-page">
+                                <!-- 4-photo grid layout -->
+                                <div class="photo-grid">
+                                    <img src="https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=400&q=80" class="grid-photo" alt="Memories 3a">
+                                    <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=400&q=80" class="grid-photo" alt="Memories 3b">
+                                    <img src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=400&q=80" class="grid-photo" alt="Memories 3c">
+                                    <img src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=400&q=80" class="grid-photo" alt="Memories 3d">
+                                </div>
+                            </div>
+                            <div class="page back inner-page">
+                                <img src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=400&q=80" class="page-photo" alt="Wedding Memories 4">
+                            </div>
+                        </div>
+                        
+                        <!-- Leaf 4 (Inside Back Cover & Back Cover) -->
+                        <div class="leaf leaf-4">
+                            <div class="page inner-page">
+                                <div style="text-align: center; color: #94a3b8;">
+                                    <i class="fas fa-camera-retro" style="color: var(--pink-light); font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                                    <h4 style="font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--dark);">Fin.</h4>
+                                </div>
+                            </div>
+                            <div class="page back cover-back">
+                                <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
+                                    <i class="fas fa-heart" style="color: rgba(255,255,255,0.1); font-size: 2rem;"></i>
+                                    <p style="color: rgba(255,255,255,0.3); font-size: 0.8rem; margin-top: 1rem; font-family: 'Inter', sans-serif;">Memoria</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FULL WIDTH STATS STRIP -->
+    <section class="stats-strip">
+        <div class="stats-flex reveal-up delay-1">
+            <div class="hero-stat"><h3>500+</h3><p>Albums Created</p></div>
+            <div class="hero-stat"><h3>20+</h3><p>Templates</p></div>
+            <div class="hero-stat"><h3>99%</h3><p>Happy Users</p></div>
+        </div>
+    </section>
+
+    <!-- FEATURES SECTION -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header reveal-up">
+                <span class="section-tag">Features</span>
+                <h2 class="section-title">Everything You Need to Preserve Memories</h2>
+                <p class="section-sub">From elegant flip-books to custom themes, Memoria gives you the tools to create albums that last a lifetime.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card reveal-up">
+                    <div class="feature-icon"><i class="fas fa-book-open"></i></div>
+                    <h3>Flip-Book Experience</h3>
+                    <p>Beautiful animated page-turning effect that feels like flipping through a real photo album. Smooth, premium, and delightful.</p>
+                </div>
+                <div class="feature-card reveal-up delay-1">
+                    <div class="feature-icon"><i class="fas fa-palette"></i></div>
+                    <h3>Custom Themes</h3>
+                    <p>Choose from Wedding, Birthday, Anniversary, and more. Each theme comes with matched colors, fonts, and border styles.</p>
+                </div>
+                <div class="feature-card reveal-up delay-2">
+                    <div class="feature-icon"><i class="fas fa-images"></i></div>
+                    <h3>Rich Media Galleries</h3>
+                    <p>Upload up to 4 photos or videos per page. Choose from square, rounded, circle, or polaroid frame styles.</p>
+                </div>
+                <div class="feature-card reveal-up">
+                    <div class="feature-icon"><i class="fas fa-share-alt"></i></div>
+                    <h3>One-Link Sharing</h3>
+                    <p>Share your album with anyone via a single link — no account required. Perfect for gifting and preserving memories together.</p>
+                </div>
+                <div class="feature-card reveal-up delay-1">
+                    <div class="feature-icon"><i class="fas fa-pen-fancy"></i></div>
+                    <h3>Rich Text Editor</h3>
+                    <p>Add poems, captions, and stories alongside your photos. Bold, italic, headings — full formatting control every page.</p>
+                </div>
+                <div class="feature-card reveal-up delay-2">
+                    <div class="feature-icon"><i class="fas fa-border-style"></i></div>
+                    <h3>Global Border Styles</h3>
+                    <p>Apply a consistent border — floral, classic frame, or modern minimalist — across every page for a cohesive look.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW IT WORKS SECTION -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section-header reveal-up">
+                <span class="section-tag">How It Works</span>
+                <h2 class="section-title">Create Your Album in 3 Simple Steps</h2>
+                <p class="section-sub">It takes less than 5 minutes to go from zero to a beautiful shareable album.</p>
+            </div>
+            <div class="steps-grid">
+                <div class="step-card reveal-up">
+                    <div class="step-number">1</div>
+                    <h3>Create Your Account</h3>
+                    <p>Sign up for free in seconds. No credit card required. Your first album is on us.</p>
+                </div>
+                <div class="step-card reveal-up delay-1">
+                    <div class="step-number">2</div>
+                    <h3>Build Your Album</h3>
+                    <p>Choose a theme, upload photos, write captions, and arrange pages using our drag-and-drop editor.</p>
+                </div>
+                <div class="step-card reveal-up delay-2">
+                    <div class="step-number">3</div>
+                    <h3>Share & Cherish</h3>
+                    <p>Copy a link and share it anywhere. Your loved ones can view the flip-book on any device, forever.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PRICING SECTION -->
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <div class="section-header reveal-up">
+                <span class="section-tag" style="background: rgba(255,77,109,0.15); color: #ff8fa3;">Pricing</span>
+                <h2 class="section-title">Simple, Honest Pricing</h2>
+                <p class="section-sub">Start free. Upgrade when you need more albums.</p>
+            </div>
+            <div class="pricing-grid">
+                <div class="price-card reveal-up">
+                    <div class="price-plan">Free</div>
+                    <p class="price-desc">Perfect for trying out Memoria and creating your first album.</p>
+                    <div class="price-amount">
+                        <span class="price-currency">₹</span>
+                        <span class="price-value">0</span>
+                        <span class="price-period">/forever</span>
+                    </div>
+                    <ul class="price-features">
+                        <li><i class="fas fa-check"></i> 1 Album</li>
+                        <li><i class="fas fa-check"></i> All Themes</li>
+                        <li><i class="fas fa-check"></i> 4 Photos/Page</li>
+                        <li><i class="fas fa-check"></i> Shareable Link</li>
+                        <li class="unavailable"><i class="fas fa-times"></i> Priority Support</li>
+                    </ul>
+                    <a href="/login" class="btn-plan btn-plan-outline">Get Started Free</a>
+                </div>
+
+                <div class="price-card popular reveal-up delay-1">
+                    <span class="popular-badge">✨ Most Popular</span>
+                    <div class="price-plan">Basic</div>
+                    <p class="price-desc" style="color:#cbd5e1;">Great for families creating multiple albums throughout the year.</p>
+                    <div class="price-amount">
+                        <span class="price-currency">₹</span>
+                        <span class="price-value">299</span>
+                        <span class="price-period">/month</span>
+                    </div>
+                    <ul class="price-features">
+                        <li><i class="fas fa-check"></i> 5 Albums</li>
+                        <li><i class="fas fa-check"></i> All Themes</li>
+                        <li><i class="fas fa-check"></i> 4 Photos/Page</li>
+                        <li><i class="fas fa-check"></i> Shareable Link</li>
+                        <li><i class="fas fa-check"></i> Email Support</li>
+                    </ul>
+                    <a href="/login" class="btn-plan btn-plan-pink">Get Basic Plan</a>
+                </div>
+
+                <div class="price-card reveal-up delay-2">
+                    <div class="price-plan">Pro</div>
+                    <p class="price-desc">Unlimited albums for professionals, photographers, and agencies.</p>
+                    <div class="price-amount">
+                        <span class="price-currency">₹</span>
+                        <span class="price-value">599</span>
+                        <span class="price-period">/month</span>
+                    </div>
+                    <ul class="price-features">
+                        <li><i class="fas fa-check"></i> Unlimited Albums</li>
+                        <li><i class="fas fa-check"></i> All Themes</li>
+                        <li><i class="fas fa-check"></i> 4 Photos/Page</li>
+                        <li><i class="fas fa-check"></i> Shareable Link</li>
+                        <li><i class="fas fa-check"></i> Priority Support</li>
+                    </ul>
+                    <a href="/login" class="btn-plan btn-plan-outline">Get Pro Plan</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA BANNER SECTION -->
+    <section class="cta-banner">
+        <div class="cta-banner-content reveal-up">
+            <h2>Start Preserving Your Memories Today</h2>
+            <p>Join hundreds of families sharing their stories with Memoria. Free forever to start.</p>
+            <a href="/login" class="btn-cta-white">
+                <i class="fas fa-heart"></i> Create Your First Album — Free
+            </a>
+        </div>
+    </section>
+
+    <!-- FOOTER SECTION -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo"><i class="fas fa-heart"></i> Memoria</div>
+            <div class="footer-links">
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How It Works</a>
+                <a href="#pricing">Pricing</a>
+                <a href="/login">Sign In</a>
+            </div>
+            <p class="footer-copy">© 2026 Memoria. Made with ❤️ for every family.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Navbar scroll effect
+        const nav = document.getElementById('mainNav');
+        window.addEventListener('scroll', () => {
+            nav.classList.toggle('scrolled', window.scrollY > 50);
+        });
+
+        // Parallax Background
+        const parallaxGallery = document.querySelectorAll('.p-img');
+        if (window.innerWidth > 1024) {
+            window.addEventListener('mousemove', (e) => {
+                const xVal = (window.innerWidth / 2 - e.clientX) / 50;
+                const yVal = (window.innerHeight / 2 - e.clientY) / 50;
+                
+                parallaxGallery.forEach((img, index) => {
+                    const depth = (index + 1) * 0.5;
+                    img.style.transform = `translate(${xVal * depth}px, ${yVal * depth}px) rotate(${img.style.transform.match(/rotate\((.*?)\)/)?.[1] || '0deg'})`;
+                });
+            });
+        }
+
+        // ====== PERFECTED AUTO-FLIP LOGIC ======
+        const wrapper = document.getElementById('flipbook-wrapper');
+        const book = document.getElementById('interactive-book');
+        const glow = document.querySelector('.book-glow');
+        const leaves = document.querySelectorAll('.leaf'); 
+        let currentPage = 0;
+
+        let autoFlipInterval;
+        let manualOverride = false; 
+
+        function startAutoFlip() {
+            if (manualOverride) return; 
+            autoFlipInterval = setInterval(() => {
+                if (currentPage < leaves.length) {
+                    leaves[currentPage].classList.add('flipped');
+                    currentPage++;
+                } else {
+                    leaves.forEach((leaf) => leaf.classList.remove('flipped'));
+                    currentPage = 0;
+                }
+                updateBookPosition();
+            }, 3000); 
+        }
+
+        function stopAutoFlip() {
+            clearInterval(autoFlipInterval);
+        }
+
+        startAutoFlip();
+
+        function updateBookPosition() {
+            let targetX = 0; 
+            let glowLeft = '0%';
+            let glowWidth = '100%';
+            
+            const currentBookWidth = book.offsetWidth; 
+            
+            if (window.innerWidth <= 1024) {
+                if (currentPage === 0) { targetX = 0; glowLeft = '0%'; glowWidth = '100%'; }
+                else if (currentPage === leaves.length) { targetX = currentBookWidth / 2; glowLeft = '-100%'; glowWidth = '100%'; }
+                else { targetX = currentBookWidth / 4; glowLeft = '-100%'; glowWidth = '200%'; }
+            } else {
+                if (currentPage === 0) {
+                    targetX = 0; 
+                    glowLeft = '0%'; glowWidth = '100%';
+                } else if (currentPage === leaves.length) {
+                    targetX = currentBookWidth; 
+                    glowLeft = '-100%'; glowWidth = '100%'; 
+                } else {
+                    targetX = currentBookWidth / 2; 
+                    glowLeft = '-100%'; glowWidth = '200%';
+                }
+            }
+            
+            book.style.transform = `translateX(${targetX}px) rotateX(5deg) rotateY(-8deg)`;
+            
+            glow.style.left = glowLeft;
+            glow.style.width = glowWidth;
+        }
+
+        updateBookPosition();
+
+        const cursor = document.getElementById('custom-cursor');
+        
+        function updateCursor(e) {
+            if(window.innerWidth <= 1024) return;
+            const rect = book.getBoundingClientRect();
+            const visualCenterX = rect.left + rect.width / 2; 
+            
+            if (currentPage === 0) {
+                cursor.innerHTML = "Open<br>Book";
+                cursor.classList.add('active');
+            } else if (currentPage === leaves.length) {
+                if (e.clientX < visualCenterX) {
+                    cursor.innerHTML = "Flip<br>Back";
+                    cursor.classList.add('active');
+                } else {
+                    cursor.classList.remove('active'); 
+                }
+            } else {
+                if (e.clientX < visualCenterX) {
+                    cursor.innerHTML = "Flip<br>Back";
+                    cursor.classList.add('active');
+                } else {
+                    cursor.innerHTML = "Next<br>Page";
+                    cursor.classList.add('active');
+                }
+            }
+        }
+
+        if (window.innerWidth > 1024) {
+            window.addEventListener('mousemove', (e) => {
+                cursor.style.left = e.clientX + 'px';
+                cursor.style.top = e.clientY + 'px';
+            });
+            wrapper.addEventListener('mouseenter', (e) => {
+                updateCursor(e);
+            });
+            wrapper.addEventListener('mousemove', updateCursor);
+            wrapper.addEventListener('mouseleave', () => {
+                cursor.classList.remove('active');
+            });
+        }
+
+        wrapper.addEventListener('click', (e) => {
+            manualOverride = true; 
+            stopAutoFlip(); 
+            
+            const rect = book.getBoundingClientRect();
+            const visualCenterX = rect.left + rect.width / 2; 
+            
+            if (e.clientX < visualCenterX && currentPage > 0) {
+                currentPage--;
+                leaves[currentPage].classList.remove('flipped');
+            } else if (e.clientX >= visualCenterX && currentPage < leaves.length) {
+                leaves[currentPage].classList.add('flipped');
+                currentPage++;
+            }
+            updateBookPosition(); 
+            if (window.innerWidth > 1024) {
+                updateCursor(e);
+            }
+        });
+
+        // ====== Intersection Observer ======
+        const observerOptions = { root: null, rootMargin: '0px', threshold: 0.15 };
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal-up').forEach(el => observer.observe(el));
+    </script>
+</body>
+</html>

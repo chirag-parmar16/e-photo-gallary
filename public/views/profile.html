@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Settings | Memoria</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/admin.css?v=6">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"></script>
+</head>
+<body>
+    <div id="app-container" style="display: none;">
+        <div id="sidebar-container"></div>
+        <main class="main-wrapper">
+            <div id="navbar-container"></div>
+            
+            <div id="main-view">
+                <div id="profile-view" class="view-container active reveal-up">
+                    <div class="profile-dashboard">
+                        <!-- Left Sidebar: Summary & Navigation -->
+                        <aside class="profile-nav-card">
+                            <div class="profile-avatar-large">
+                                <i class="fas fa-user-shield"></i>
+                            </div>
+                            <h2 id="profile-display-name">User Profile</h2>
+                            <p class="profile-subtitle">Service Member</p>
+                            
+                            <div class="profile-stats-mini">
+                                <div class="mini-stat">
+                                    <small>Current Role</small>
+                                    <span id="profile-role-badge">
+                                        <i class="fas fa-key"></i> Loading...
+                                    </span>
+                                </div>
+                                <div class="mini-stat">
+                                    <small>Identity Status</small>
+                                    <span class="status-verified">
+                                        <i class="fas fa-check-double"></i> Verified System User
+                                    </span>
+                                </div>
+                            </div>
+                        </aside>
+
+                        <!-- Right Content Area -->
+                        <div class="profile-content-area">
+                             <!-- Account Details -->
+                             <section class="profile-section">
+                                 <div class="profile-section-header">
+                                     <h3>Account Information</h3>
+                                 </div>
+                                 <form id="profileForm">
+                                     <div class="form-grid">
+                                         <div class="form-group">
+                                             <label>Full Display Name</label>
+                                             <input type="text" id="profileName" class="form-control" placeholder="Update your name">
+                                         </div>
+                                         <div class="form-group">
+                                             <label>Registered Email</label>
+                                             <input type="email" id="profile-email-val" class="form-control" readonly>
+                                         </div>
+                                     </div>
+                                     <div class="form-actions">
+                                         <button type="submit" class="btn-primary">Save Changes</button>
+                                         <button type="button" id="openSettingsPasswordModal" class="btn-outline">Update Security Pin</button>
+                                     </div>
+                                 </form>
+                             </section>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <footer>
+                <p>&copy; 2026 Memoria | Capture Every Moment. Built with ❤️</p>
+            </footer>
+        </main>
+    </div>
+    <div id="modals-container"></div>
+    <div id="modal-container"></div>
+    <script>
+        window.currentViewName = 'profile';
+    </script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="/admin.js?v=8"></script>
+</body>
+</html>

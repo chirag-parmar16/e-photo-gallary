@@ -68,24 +68,15 @@ async function initDb() {
     const p = getPool();
     const db = createDbWrapper(p);
 
-    console.log('Resetting database schema...');
-
-    // Drop tables in reverse order of dependencies
-    await db.exec('SET FOREIGN_KEY_CHECKS = 0');
-    await db.exec('DROP TABLE IF EXISTS page_media');
-    await db.exec('DROP TABLE IF EXISTS pages');
-    await db.exec('DROP TABLE IF EXISTS books');
-    await db.exec('DROP TABLE IF EXISTS users');
-    await db.exec('SET FOREIGN_KEY_CHECKS = 1');
-
     // 1. Users
     await db.exec(`
-        CREATE TABLE users (
+        CREATE TABLE IF NOT EXISTS users (
             id               INT AUTO_INCREMENT PRIMARY KEY,
             email            VARCHAR(255) UNIQUE NOT NULL,
             password         TEXT NOT NULL,
             role             VARCHAR(20) DEFAULT 'user',
             display_name     VARCHAR(255) DEFAULT 'User',
+            subscription_plan VARCHAR(20) DEFAULT 'free',
             subscription_end DATETIME DEFAULT NULL,
             created_at       DATETIME DEFAULT CURRENT_TIMESTAMP
         )
@@ -93,7 +84,7 @@ async function initDb() {
 
     // 2. Books
     await db.exec(`
-        CREATE TABLE books (
+        CREATE TABLE IF NOT EXISTS books (
             id               INT AUTO_INCREMENT PRIMARY KEY,
             user_id          INT NOT NULL,
             title            VARCHAR(255) DEFAULT 'Untitled Album',
@@ -112,7 +103,7 @@ async function initDb() {
 
     // 3. Pages
     await db.exec(`
-        CREATE TABLE pages (
+        CREATE TABLE IF NOT EXISTS pages (
             id           INT AUTO_INCREMENT PRIMARY KEY,
             book_id      INT NOT NULL,
             text_content TEXT,
@@ -125,7 +116,7 @@ async function initDb() {
 
     // 4. Page Media
     await db.exec(`
-        CREATE TABLE page_media (
+        CREATE TABLE IF NOT EXISTS page_media (
             id          INT AUTO_INCREMENT PRIMARY KEY,
             page_id     INT NOT NULL,
             type        VARCHAR(20) NOT NULL,
@@ -136,27 +127,43 @@ async function initDb() {
         )
     `);
 
-    // ── Seed: Default Admin ───────────────────────────────────────────────────
+    // 5. Transactions (Revenue Tracking)
+    await db.exec(`
+        CREATE TABLE IF NOT EXISTS transactions (
+            id          INT AUTO_INCREMENT PRIMARY KEY,
+            user_id     INT NOT NULL,
+            plan        VARCHAR(20) NOT NULL,
+            amount      DECIMAL(10, 2) NOT NULL,
+            status      VARCHAR(20) DEFAULT 'completed',
+            created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    `);
+
+    // ── Seed: Default Admin (Only if not exists) ──────────────────────────────
     const adminEmail = 'admin@gmail.com';
-    const hashedPassword = await bcrypt.hash('admin', 10);
-    const result = await db.run(
-        'INSERT INTO users (email, password, role) VALUES (?, ?, ?)',
-        [adminEmail, hashedPassword, 'admin']
-    );
-    const adminId = result.lastID;
-    console.log('Admin user created → admin@gmail.com / admin');
+    const existingAdmin = await db.get('SELECT id FROM users WHERE email = ?', [adminEmail]);
 
-    // ── Seed: Default Book for Admin ─────────────────────────────────────────
-    const uuid = crypto.randomUUID();
-    const bookResult = await db.run(
-        `INSERT INTO books (user_id, title, cover_title, end_title, uuid)
-         VALUES (?, 'My First Photo Album', 'Our Timeless Journey', 'THE END', ?)`,
-        [adminId, uuid]
-    );
-    const defaultBookId = bookResult.lastID;
-    console.log('Default book created for Admin.');
+    if (!existingAdmin) {
+        const hashedPassword = await bcrypt.hash('admin', 10);
+        const result = await db.run(
+            'INSERT INTO users (email, password, role) VALUES (?, ?, ?)',
+            [adminEmail, hashedPassword, 'admin']
+        );
+        const adminId = result.lastID;
+        console.log('Admin user created → admin@gmail.com / admin');
 
-    console.log('Database initialized with fresh schema ✓');
+        // ── Seed: Default Book for Admin ─────────────────────────────────────
+        const uuid = crypto.randomUUID();
+        await db.run(
+            `INSERT INTO books (user_id, title, cover_title, end_title, uuid)
+             VALUES (?, 'My First Photo Album', 'Our Timeless Journey', 'THE END', ?)`,
+            [adminId, uuid]
+        );
+        console.log('Default book created for Admin.');
+    }
+
+    console.log('Database initialized ✓');
     return db;
 }
 

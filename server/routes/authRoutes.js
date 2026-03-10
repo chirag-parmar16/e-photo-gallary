@@ -42,13 +42,15 @@ module.exports = (db) => {
 
             jwt.verify(token, JWT_SECRET, async (err, payload) => {
                 if (err || !payload?.id) return res.json({ authenticated: false });
-                const user = await db.get('SELECT id, email, role, display_name, subscription_end FROM users WHERE id = ?', payload.id);
+                const user = await db.get('SELECT id, email, role, display_name, subscription_plan, subscription_end FROM users WHERE id = ?', payload.id);
                 if (!user) return res.json({ authenticated: false });
                 res.json({
                     authenticated: true,
                     id: user.id,
+                    email: user.email,
                     role: user.role,
                     display_name: user.display_name,
+                    subscription_plan: user.subscription_plan,
                     subscription_end: user.subscription_end
                 });
             });

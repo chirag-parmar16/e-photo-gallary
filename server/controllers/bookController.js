@@ -14,6 +14,24 @@ const createBook = async (req, res, db) => {
         let { title, cover_title, cover_subtitle, instruction_text, end_title, template_type, color_schema, border_style } = req.body;
         const uuid = crypto.randomUUID();
 
+        // --- SUBSCRIPTION ENFORCEMENT ---
+        const user = await db.get('SELECT subscription_plan, subscription_end FROM users WHERE id = ?', req.user.id);
+        const bookCountResult = await db.get('SELECT COUNT(*) as count FROM books WHERE user_id = ?', req.user.id);
+        const bookCount = bookCountResult.count;
+
+        const plan = user.subscription_plan || 'free';
+        const isExpired = user.subscription_end && new Date(user.subscription_end) < new Date();
+
+        if (plan === 'free' && bookCount >= 1) {
+            return res.status(403).json({ error: 'Free plan is limited to 1 album. Please upgrade to create more.' });
+        }
+        if (plan === 'basic' && bookCount >= 5) {
+            return res.status(403).json({ error: 'Basic plan is limited to 5 albums. Please upgrade to Pro for unlimited albums.' });
+        }
+        if (isExpired && plan !== 'free') {
+            return res.status(403).json({ error: 'Your subscription has expired. Please renew to create new albums.' });
+        }
+
         // Theme Analysis Defaults
         if (template_type === 'birthday') {
             cover_title = cover_title || 'Happy Birthday!';

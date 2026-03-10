@@ -1,67 +1,149 @@
-<div id="super-admin-dashboard" class="view-container" style="display: none;">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Memoria</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/admin.css?v=4">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="app-container" style="display: none;">
+        <div id="sidebar-container"></div>
+        <main class="main-wrapper">
+            <div id="navbar-container"></div>
+            <div id="main-view">
+<div id="super-admin-dashboard" class="view-container reveal-up" style="display: none;">
     <div class="view-header">
-        <h2>System Overview</h2>
+        <h2>Enterprise System Overview</h2>
+        <p style="color: var(--adm-text-muted);">Real-time metrics and administrative control center.</p>
     </div>
+    
     <div class="stats-grid">
-        <div class="stat-card">
+        <div class="stat-card premium-card-hover" style="border-left: 4px solid var(--adm-accent-color);">
             <div class="stat-icon"><i class="fas fa-users"></i></div>
             <div class="stat-info">
-                <h4>Total Users</h4>
-                <p id="sa-total-users">--</p>
+                <h4>Registered Clients</h4>
+                <p id="sa-total-users" style="font-size: 2rem;">--</p>
+                <small style="color: #10b981;"><i class="fas fa-arrow-up"></i> Active Service</small>
             </div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-book"></i></div>
+        <div class="stat-card premium-card-hover" style="border-left: 4px solid #f59e0b;">
+            <div class="stat-icon"><i class="fas fa-photo-video"></i></div>
             <div class="stat-info">
-                <h4>Total Books</h4>
-                <p id="sa-total-books">--</p>
+                <h4>Total Archive Books</h4>
+                <p id="sa-total-books" style="font-size: 2rem;">--</p>
+                <small style="color: var(--adm-text-muted);">Stored across all tiers</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="charts-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+        <div class="stat-card" style="flex-direction: column; align-items: stretch; height: 380px; padding: 1.5rem;">
+            <h4 style="margin-bottom: 1.5rem;"><i class="fas fa-chart-line" style="color:var(--adm-accent-color);"></i> Revenue Timeline (30D)</h4>
+            <div style="flex: 1; position: relative;">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+        <div class="stat-card" style="flex-direction: column; align-items: stretch; height: 380px; padding: 1.5rem;">
+            <h4 style="margin-bottom: 1.5rem;"><i class="fas fa-chart-pie" style="color:#6366f1;"></i> User Plan Distribution</h4>
+            <div style="flex: 1; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                <canvas id="planChart"></canvas>
+            </div>
+        </div>
+        <div class="stat-card" style="grid-column: 1 / -1; flex-direction: column; align-items: stretch; height: 400px;">
+            <h4 style="margin-bottom: 1rem;"><i class="fas fa-chart-bar" style="color:#10b981;"></i> Platform Growth</h4>
+            <div style="flex: 1; position: relative;">
+                <canvas id="growthChart"></canvas>
             </div>
         </div>
     </div>
 
-    <div class="view-header" style="margin-top: 2rem;">
-        <h3>Users</h3>
-        <button class="btn-primary" id="openAddUserModal">+ Create User</button>
+    <div class="view-header" style="margin-top: 3.5rem; border-top: 1px solid var(--adm-border-color); padding-top: 2.5rem;">
+        <h3>Registry Management</h3>
+        <button class="btn-primary" id="openAddUserModal"><i class="fas fa-plus"></i> New Account</button>
     </div>
     <div class="data-table">
         <div class="table-row table-header user-row">
-            <div>ID</div>
-            <div>Email</div>
-            <div>Role</div>
-            <div>Joined</div>
-            <div>Subscription</div>
-            <div>Actions</div>
+            <div>Account ID</div>
+            <div>Registry Email</div>
+            <div>Access Level</div>
+            <div>Registration</div>
+            <div>Service Expiry</div>
+            <div>Operations</div>
         </div>
         <div id="userList"></div>
     </div>
 </div>
 
-<div id="user-dashboard" class="view-container" style="display: none;">
+<div id="user-dashboard" class="view-container reveal-up" style="display: none;">
     <div class="view-header">
-        <h2>My Dashboard</h2>
+        <h2>Member Dashboard</h2>
+        <p style="color: var(--adm-text-muted);">Welcome back to your digital legacy.</p>
     </div>
+
     <div class="stats-grid">
-            <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-book-open"></i></div>
+        <div class="stat-card premium-card-hover">
+            <div class="stat-icon" style="color: var(--adm-accent-color);"><i class="fas fa-archive"></i></div>
             <div class="stat-info">
-                <h4>My Books</h4>
-                <p id="user-total-books">--</p>
+                <h4>My Active Books</h4>
+                <p id="user-total-books" style="font-size: 1.8rem; font-weight: 700;">--</p>
             </div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+        <div class="stat-card premium-card-hover">
+            <div class="stat-icon" style="color: #6366f1;"><i class="fas fa-shield-alt"></i></div>
             <div class="stat-info">
-                <h4>Subscription Valid Until</h4>
-                <p id="user-subscription-end">--</p>
+                <h4>Subscription Identity</h4>
+                <p id="user-subscription-end" style="font-size: 0.95rem; font-weight: 600;">--</p>
+                <small style="color: var(--adm-text-muted);">Verification Status</small>
             </div>
         </div>
     </div>
 
-    <div class="view-header" style="margin-top: 2rem;">
-        <h3>My Recent Activity</h3>
-        <button class="btn-outline" onclick="navigateTo('/albums')" style="padding: 5px 15px; font-size: 0.85rem;">View All Albums</button>
+    <div class="view-header" style="margin-top: 2rem; border-top: 1px solid var(--adm-border-color); padding-top: 2rem;">
+        <h3>Recent Archival Entries</h3>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-primary" id="openCreateBookModal"><i class="fas fa-plus"></i> New Album</button>
+            <button class="btn-outline" onclick="navigateTo('/albums')" style="padding: 10px 20px; font-size: 0.9rem;"><i class="fas fa-layer-group"></i> Manage All</button>
+        </div>
     </div>
-    <div id="recentActivityList" style="display: flex; flex-direction: column; gap: 10px;">
-        <p style="color: #888;">No recent albums found.</p>
+    <div id="recentActivityList" class="data-table" style="border-radius: 12px; border: 1px solid var(--adm-border-color);">
+        <!-- Table header for list view -->
+        <div class="table-row table-header" style="grid-template-columns: 50px 1fr 150px 100px;">
+            <div></div>
+            <div>Album Name</div>
+            <div>Date Created</div>
+            <div>Action</div>
+        </div>
+        <div id="activityItems">
+            <p style="color: var(--adm-text-muted); padding: 2rem; text-align: center;">No recent activity logs found.</p>
+        </div>
     </div>
 </div>
+
+            </div>
+            <footer>
+                <p>&copy; 2026 Timeless Memories. Built with ❤️</p>
+            </footer>
+        </main>
+    </div>
+    <div id="modals-container"></div>
+    <div id="modal-container"></div>
+    <script>
+        window.currentViewName = 'dashboard';
+    </script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="/admin.js?v=8"></script>
+</body>
+</html>

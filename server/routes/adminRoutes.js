@@ -32,18 +32,51 @@ module.exports = (db) => {
     router.put('/users/:id/subscription', adminAuth, async (req, res) => {
         try {
             const { id } = req.params;
+            const { plan, days, directDate } = req.body;
+
             const user = await db.get('SELECT subscription_end FROM users WHERE id = ?', id);
             if (!user) return res.status(404).json({ error: 'User not found' });
 
-            // Add 1 month to existing or current date
-            const currentEnd = user.subscription_end ? new Date(user.subscription_end) : new Date();
-            if (currentEnd < new Date()) currentEnd.setTime(new Date().getTime());
-            currentEnd.setMonth(currentEnd.getMonth() + 1);
+            let formattedDate = null;
 
-            const formattedDate = currentEnd.toISOString().slice(0, 19).replace('T', ' ');
-            await db.run('UPDATE users SET subscription_end = ? WHERE id = ?', [formattedDate, id]);
+            if (directDate) {
+                // Use the specific date provided
+                formattedDate = `${directDate} 23:59:59`;
+            } else if (days !== undefined) {
+                if (days > 0) {
+                    // Add days to current date or existing end date if it's in the future
+                    const currentEnd = (user.subscription_end && new Date(user.subscription_end) > new Date())
+                        ? new Date(user.subscription_end)
+                        : new Date();
 
-            res.json({ success: true, subscription_end: formattedDate });
+                    currentEnd.setDate(currentEnd.getDate() + parseInt(days));
+                    formattedDate = currentEnd.toISOString().slice(0, 19).replace('T', ' ');
+                } else if (days === 0) {
+                    // Lifetime / Far future
+                    formattedDate = '2099-12-31 23:59:59';
+                }
+            }
+
+            // Keep existing end date if nothing new provided (though usually one will be)
+            if (formattedDate === null && user.subscription_end) {
+                formattedDate = user.subscription_end;
+            }
+
+            await db.run(
+                'UPDATE users SET subscription_plan = ?, subscription_end = ? WHERE id = ?',
+                [plan || 'free', formattedDate, id]
+            );
+
+            // Record Transaction if plan is basic or pro
+            if (plan === 'basic' || plan === 'pro') {
+                const amount = plan === 'basic' ? 5.00 : 12.00; // Mock prices
+                await db.run(
+                    'INSERT INTO transactions (user_id, plan, amount) VALUES (?, ?, ?)',
+                    [id, plan, amount]
+                );
+            }
+
+            res.json({ success: true, subscription_plan: plan, subscription_end: formattedDate });
         } catch (err) {
             res.status(500).json({ error: err.message });
         }

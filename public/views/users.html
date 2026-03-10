@@ -21,23 +21,38 @@
         <main class="main-wrapper">
             <div id="navbar-container"></div>
             <div id="main-view">
-<div id="albums-view" class="view-container active reveal-up">
+<!-- User Management View -->
+<div class="view-container active reveal-up">
     <div class="view-header">
         <div>
-            <h2><i class="fas fa-layer-group" style="color:var(--adm-accent-color); margin-right:12px;"></i> Personal Archives</h2>
-            <p style="color:var(--adm-text-muted);">Manage your digital story collections.</p>
+            <h2><i class="fas fa-users-cog" style="color:var(--adm-accent-color); margin-right:12px;"></i> Registry Management</h2>
+            <p style="color:var(--adm-text-muted);">Manage enterprise access levels and account status.</p>
         </div>
-        <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-            <button class="btn-primary" id="openCreateBookModal">
-                <i class="fas fa-plus"></i> New Album
-            </button>
-        </div>
+        <button id="openCreateUserModal" class="btn-primary">
+            <i class="fas fa-user-plus"></i> Provision New Account
+        </button>
     </div>
-    
-    <div class="books-grid" id="booksList" style="margin-top: 2.5rem;">
-        <!-- Books injected here with .album-card class -->
+
+    <!-- Stats row -->
+    <div class="stats-grid" id="userStatsGrid" style="margin-bottom:2.5rem;">
+        <!-- Dynamically populated -->
+    </div>
+
+    <!-- User Table -->
+    <div class="data-table shadow-sm" style="background: var(--adm-main-bg); border-radius: 16px; border: 1px solid var(--adm-border-color); overflow: hidden;">
+        <div class="table-row table-header" style="grid-template-columns: 80px 1.8fr 120px 140px 180px 140px; background: rgba(0,0,0,0.02); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-size: 0.75rem;">
+            <div>Ref ID</div>
+            <div>Registry Email</div>
+            <div>Access</div>
+            <div>Tier</div>
+            <div>Service Expiry</div>
+            <div>Operations</div>
+        </div>
+        <div id="adminUserList"></div>
     </div>
 </div>
+
+<!-- Modals are loaded dynamically into #modals-container -->
 
             </div>
             <footer>
@@ -48,7 +63,7 @@
     <div id="modals-container"></div>
     <div id="modal-container"></div>
     <script>
-        window.currentViewName = 'albums';
+        window.currentViewName = 'users';
     </script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 

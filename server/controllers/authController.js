@@ -72,7 +72,7 @@ const register = async (req, res, db) => {
 
 const getMe = async (req, res, db) => {
     try {
-        const user = await db.get('SELECT id, email, role FROM users WHERE id = ?', req.user.id);
+        const user = await db.get('SELECT id, email, role, display_name, subscription_plan, subscription_end FROM users WHERE id = ?', req.user.id);
         if (!user) return res.status(404).json({ error: 'User not found' });
         res.json(user);
     } catch (err) {
@@ -82,9 +82,8 @@ const getMe = async (req, res, db) => {
 
 const getUsers = async (req, res, db) => {
     try {
-        const users = await db.all('SELECT id, email, role, created_at FROM users');
-        const masked = users.map(u => ({ ...u, email: maskEmail(u.email) }));
-        res.json(masked);
+        const users = await db.all("SELECT id, email, role, subscription_plan, subscription_end, created_at FROM users WHERE role != 'admin'");
+        res.json(users);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

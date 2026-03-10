@@ -17,7 +17,6 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use(express.static(path.join(__dirname, '../public')));
 
 // --- LOCAL FILE STORAGE ---
 const UPLOAD_DIR = path.join(__dirname, '../public/uploads');
@@ -26,16 +25,33 @@ fs.mkdirSync(path.join(UPLOAD_DIR, 'videos'), { recursive: true });
 
 // Database connection & Routes Initialization
 initDb().then(db => {
+    // Landing page at root (MUST be before express.static and other routes)
+    app.get('/', (req, res) => {
+        res.sendFile(path.join(__dirname, '../public/landing.html'));
+    });
+
+    app.use(express.static(path.join(__dirname, '../public'), { index: false }));
+
     // Mount routes
     app.use('/api/auth', authRoutes(db));
     app.use('/api/books', bookRoutes(db));
     app.use('/api/admin', adminRoutes(db));
     app.use('/api', apiRoutes(db));
 
-    // Fallback for HTML5 History API routing (Single Page Application)
+    // View Routes (Multi-Page Application)
+    app.get('/login', (req, res) => res.sendFile(path.join(__dirname, '../public/views/login.html')));
+    app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, '../public/views/dashboard.html')));
+    app.get('/albums', (req, res) => res.sendFile(path.join(__dirname, '../public/views/albums.html')));
+    app.get('/users', (req, res) => res.sendFile(path.join(__dirname, '../public/views/users.html')));
+    app.get('/users', (req, res) => res.sendFile(path.join(__dirname, '../public/views/users.html')));
+    app.get('/subscriptions', (req, res) => res.sendFile(path.join(__dirname, '../public/views/subscriptions.html')));
+    app.get('/book/:id', (req, res) => res.sendFile(path.join(__dirname, '../public/views/editor.html')));
+    app.get('/profile', (req, res) => res.sendFile(path.join(__dirname, '../public/views/profile.html')));
+
+    // 404 handler for non-API routes could go here
     app.use((req, res, next) => {
-        if (req.method === 'GET' && !req.path.startsWith('/api')) {
-            res.sendFile(path.join(__dirname, '../public/index.html'));
+        if (!req.path.startsWith('/api') && req.method === 'GET') {
+            res.status(404).send('Not Found');
         } else {
             next();
         }

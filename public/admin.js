@@ -1,7 +1,88 @@
+﻿console.log('Admin JS Loaded - v8');
 // State Management
 let currentUser = null;
 let currentRole = localStorage.getItem('role');
 let currentBookId = null;
+let allAdminUsers = [];
+
+// Ensure $ is globally defined for inline scripts
+if (typeof jQuery !== 'undefined' && typeof $ === 'undefined') {
+    window.$ = jQuery;
+}
+
+// Global Application Initialization
+async function initApp() {
+    initTheme();
+    await loadModals();
+
+    // Initial library setup after modals are loaded
+    initFlatpickr();
+
+    checkAuth();
+}
+
+async function loadModals() {
+    const container = document.getElementById('modal-container');
+    if (!container) return;
+    try {
+        const res = await fetch(`/components/modals.html?v=${Date.now()}`);
+        if (res.ok) {
+            container.innerHTML = await res.text();
+        }
+    } catch (err) {
+        console.error('Failed to load modals:', err);
+    }
+}
+
+// Theme Logic
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+
+    // Global iziToast Config
+    if (window.iziToast) {
+        iziToast.settings({
+            position: 'topRight',
+            transitionIn: 'fadeInDown',
+            transitionOut: 'fadeOut',
+            timeout: 5000
+        });
+    }
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+}
+
+
+// Reveal Animations
+function initRevealAnimation() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+            }
+        });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.reveal-up').forEach(el => observer.observe(el));
+}
+
+
+function initFlatpickr() {
+    if (typeof flatpickr === 'undefined') return;
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    flatpickr('input[type="date"]', {
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "F j, Y",
+        allowInput: true,
+        theme: isDark ? "dark" : "light"
+    });
+}
 
 // UI Elements
 window.confirmAction = function (message, onConfirm) {
@@ -42,151 +123,165 @@ window.toggleButtonLoader = function (btnIdOrEl, isLoading, originalText = '') {
 const appContainer = document.getElementById('app-container');
 const loginScreen = document.getElementById('login-screen');
 const loginForm = document.getElementById('loginForm');
-const sidebarNav = document.getElementById('sidebar-nav');
+const sidebarNav = document.getElementById('sidebarNav');
 const navUsername = document.getElementById('navUsername');
 
 // Dashboards
 let superAdminDash, userDash, bookEditor;
 
-// --- ROUTER ENGINE ---
-
-async function loadView(viewName) {
-    try {
-        const response = await fetch(`/views/${viewName}.html`);
-        if (!response.ok) throw new Error(`View not found: ${viewName}`);
-        const html = await response.text();
-        document.getElementById('main-view').innerHTML = html;
-
-        // Re-bind DOM elements for the loaded view
-        superAdminDash = document.getElementById('super-admin-dashboard');
-        userDash = document.getElementById('user-dashboard');
-        bookEditor = document.getElementById('book-editor');
-        const albumsView = document.getElementById('albums-view');
-        const settingsView = document.getElementById('settings-view');
-
-        // Execute specific view logic
-        if (viewName === 'dashboard') {
-            if (currentRole === 'admin') {
-                if (superAdminDash) superAdminDash.style.display = 'block';
-                if (userDash) userDash.style.display = 'none';
-                fetchAdminStats();
-                fetchUsers();
-                bindAdminDashboardEvents();
-            } else {
-                if (superAdminDash) superAdminDash.style.display = 'none';
-                if (userDash) userDash.style.display = 'block';
-                const subEl = document.getElementById('user-subscription-end');
-                if (subEl) {
-                    subEl.textContent = currentUser.subscription_end ? new Date(currentUser.subscription_end).toLocaleDateString() : 'Lifetime / Auto';
-                }
-                fetchUserBooks();
-                bindUserDashboardEvents();
-            }
-        } else if (viewName === 'editor') {
-            if (bookEditor) bookEditor.style.display = 'block';
-        } else if (viewName === 'albums') {
-            if (albumsView) albumsView.style.display = 'block';
-        } else if (viewName === 'settings') {
-            if (settingsView) settingsView.style.display = 'block';
-        }
-    } catch (err) {
-        console.error('Routing Error:', err);
-    }
-}
-
+// --- MPA VIEW INITIALIZATION ---
 window.navigateTo = function (path) {
-    history.pushState(null, '', path);
-    handleRoute();
+    // In an MPA, this just reloads. But for SPA-like consistency:
+    const viewTitleMap = {
+        '/dashboard': 'System Overview',
+        '/albums': 'Photo Collections',
+        '/editor': 'Album Designer',
+        '/profile': 'Account Settings',
+        '/users': 'User Management',
+        '/subscriptions': 'Service Plans'
+    };
+    const titleElement = document.getElementById('current-view-title');
+    if (titleElement) {
+        titleElement.textContent = viewTitleMap[path] || 'Memoria ERP';
+    }
+    window.location.href = path;
 };
 
-function handleRoute() {
-    if (!currentUser) {
-        if (window.location.pathname !== '/login') {
-            history.replaceState(null, '', '/login');
-        }
-        return; // Wait for checkAuth
-    }
 
-    let path = window.location.pathname;
-
-    // Redirect root and login to dashboard if already authenticated
-    if (path === '/' || path === '/login') {
-        history.replaceState(null, '', '/dashboard');
-        path = '/dashboard';
-    }
-
-    if (path === '/dashboard') {
-        loadView('dashboard');
-        updateNavActive('dashboard');
-    } else if (path === '/albums') {
-        loadView('albums').then(() => {
+function initView() {
+    if (window.currentViewName === 'dashboard') {
+        const superAdminDash = document.getElementById('super-admin-dashboard');
+        const userDash = document.getElementById('user-dashboard');
+        if (currentRole === 'admin') {
+            if (superAdminDash) superAdminDash.style.display = 'block';
+            if (userDash) userDash.style.display = 'none';
+            fetchAdminStats();
+            fetchUsers();
+            bindAdminDashboardEvents();
+        } else {
+            if (superAdminDash) superAdminDash.style.display = 'none';
+            if (userDash) userDash.style.display = 'block';
+            const subEl = document.getElementById('user-subscription-end');
+            if (subEl) {
+                subEl.textContent = currentUser?.subscription_end ? new Date(currentUser.subscription_end).toLocaleDateString() : 'Lifetime / Auto';
+            }
             fetchUserBooks();
             bindUserDashboardEvents();
-        });
-        updateNavActive('albums');
-    } else if (path === '/settings') {
-        loadView('settings').then(() => {
-            // Populate form
-            const nameInput = document.getElementById('profileName');
-            if (nameInput) nameInput.value = currentUser.display_name || 'User';
 
-            // bind settings events below
-            const openPassBtn = document.getElementById('openSettingsPasswordModal');
-            if (openPassBtn) {
-                openPassBtn.addEventListener('click', () => {
-                    document.getElementById('passwordModal').classList.add('active');
-                });
+            const upgradeBanner = document.getElementById('upgrade-banner');
+            const planName = document.getElementById('current-plan-name');
+            if (upgradeBanner && currentUser) {
+                if (currentUser.subscription_plan === 'pro') {
+                    upgradeBanner.style.display = 'none';
+                } else {
+                    upgradeBanner.style.display = 'block';
+                    if (planName) planName.textContent = currentUser.subscription_plan || 'free';
+                }
             }
+        }
+    } else if (window.currentViewName === 'albums') {
+        fetchUserBooks();
+        bindUserDashboardEvents();
+    } else if (window.currentViewName === 'profile') {
+        const nameInput = document.getElementById('profileName');
+        const emailInput = document.getElementById('profile-email-val');
+        if (nameInput) nameInput.value = currentUser?.display_name || 'User';
+        if (emailInput) emailInput.value = currentUser?.email || 'user@example.com';
 
-            const profileForm = document.getElementById('profileForm');
-            if (profileForm) {
-                profileForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const newName = nameInput.value;
-                    const btn = e.submitter || e.target.querySelector('button[type="submit"]');
-                    window.toggleButtonLoader(btn, true);
+        const profileSubtitle = document.querySelector('.profile-subtitle');
+        if (profileSubtitle && currentUser?.email) {
+            profileSubtitle.textContent = currentUser.email;
+            profileSubtitle.style.opacity = '0.7';
+            profileSubtitle.style.fontSize = '0.9rem';
+        }
 
-                    try {
-                        const res = await fetch('/api/auth/profile', {
-                            method: 'PUT',
-                            credentials: 'same-origin',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-                            },
-                            body: JSON.stringify({ display_name: newName })
-                        });
+        const openPassBtn = document.getElementById('openSettingsPasswordModal');
+        if (openPassBtn) {
+            openPassBtn.addEventListener('click', () => {
+                const modal = document.getElementById('passwordModal');
+                if (modal) modal.classList.add('active');
+            });
+        }
 
-                        if (res.ok) {
-                            iziToast.success({ title: 'Success', message: 'Profile updated!' });
-                            currentUser.display_name = newName;
-                            document.getElementById('navUsername').textContent = newName || 'User';
-                        } else {
-                            const data = await res.json();
-                            iziToast.error({ title: 'Error', message: data.error || 'Failed to update profile' });
-                        }
-                    } catch (err) {
-                        console.error(err);
-                        iziToast.error({ title: 'Error', message: 'Connection error' });
-                    } finally {
-                        window.toggleButtonLoader(btn, false);
+        const profileForm = document.getElementById('profileForm');
+        if (profileForm) {
+            profileForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const newName = nameInput.value;
+                const btn = e.submitter || e.target.querySelector('button[type="submit"]');
+                window.toggleButtonLoader(btn, true);
+
+                try {
+                    const res = await fetch('/api/auth/profile', {
+                        method: 'PUT',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                        },
+                        body: JSON.stringify({ display_name: newName })
+                    });
+
+                    if (res.ok) {
+                        iziToast.success({ title: 'Success', message: 'Profile updated!' });
+                        if (currentUser) currentUser.display_name = newName;
+                        const navUn = document.getElementById('navUsername');
+                        if (navUn) navUn.textContent = newName || 'User';
+                        const profDisp = document.getElementById('profile-display-name');
+                        if (profDisp) profDisp.textContent = newName || 'User';
+                    } else {
+                        const data = await res.json();
+                        iziToast.error({ title: 'Error', message: data.error || 'Failed to update profile' });
                     }
-                });
+                } catch (err) {
+                    console.error(err);
+                    iziToast.error({ title: 'Error', message: 'Connection error' });
+                } finally {
+                    window.toggleButtonLoader(btn, false);
+                }
+            });
+        }
+        fetchProfileDetails();
+    } else if (window.currentViewName === 'editor') {
+        const pathParts = window.location.pathname.split('/');
+        currentBookId = pathParts[pathParts.length - 1];
+        if (typeof initEditorView === 'function') initEditorView();
+        fetchBookDetails(currentBookId);
+        fetchPages(currentBookId);
+    } else if (window.currentViewName === 'users') {
+        fetchAdminUserList();
+        const openCreate = document.getElementById('openCreateUserModal');
+        if (openCreate) {
+            openCreate.addEventListener('click', () => {
+                document.getElementById('createUserModal').classList.add('active');
+            });
+        }
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.assign-sub-btn')) {
+                const btn = e.target.closest('.assign-sub-btn');
+                openAssignSubModal(btn.dataset.userId, btn.dataset.userEmail);
             }
         });
-        updateNavActive('settings');
-    } else if (path.startsWith('/book/')) {
-        currentBookId = path.split('/')[2];
-        loadView('editor').then(() => {
-            initEditorView();
-            fetchBookDetails(currentBookId);
-            fetchPages(currentBookId);
-        });
-        updateNavActive('albums');
+        const assignBtn = document.getElementById('assignSubBtn');
+        if (assignBtn) assignBtn.addEventListener('click', assignSubscription);
+
+    } else if (window.currentViewName === 'subscriptions') {
+        const adminSubView = document.getElementById('admin-subscription-view');
+        const userSubView = document.getElementById('user-subscription-view');
+
+        if (currentRole === 'admin') {
+            if (adminSubView) adminSubView.style.display = 'block';
+            if (userSubView) userSubView.style.display = 'none';
+        } else {
+            if (adminSubView) adminSubView.style.display = 'none';
+            if (userSubView) userSubView.style.display = 'block';
+            fetchProfileDetails();
+            updatePricingButtons();
+        }
+        console.log('Subscriptions view initialized');
     }
 }
 
-window.addEventListener('popstate', handleRoute);
 
 function updateNavActive(viewName) {
     document.querySelectorAll('.nav-links li').forEach(li => li.classList.remove('active'));
@@ -212,40 +307,98 @@ async function checkAuth() {
         currentRole = me.role;
         localStorage.setItem('role', me.role);
 
-        // Hide login, show app
-        document.getElementById('login-screen').style.display = 'none';
-        appContainer.style.display = 'flex';
-        navUsername.textContent = me.role === 'admin' ? 'Admin' : 'User';
+        // App Initialization logic for MPA
+        if (window.currentViewName !== 'login' && window.location.pathname !== '/login') {
+            await loadComponents();
+            setupSidebar();
+            bindGlobalEvents();
 
-        setupSidebar();
-        bindGlobalEvents();
-        handleRoute(); // Boot router
+            // Show App container
+            const appC = document.getElementById('app-container');
+            if (appC) appC.style.display = 'flex';
 
-    } catch (err) {
-        // If the login screen is already in index.html, just show it and bind
-        const existingLogin = document.getElementById('login-screen');
-        if (existingLogin && existingLogin.innerHTML.trim() !== '') {
-            appContainer.style.display = 'none';
-            existingLogin.style.display = 'flex';
-            bindLoginEvents();
+            // Make sure the active view is displayed
+            updateNavActive(window.currentViewName || 'dashboard');
+
+            // Initialize Animations
+            initRevealAnimation();
+
+            // Boot the specific page's logic
+            initView();
         } else {
-            appContainer.style.display = 'none';
-            fetch('/views/login.html').then(r => r.text()).then(html => {
-                document.getElementById('login-screen').outerHTML = html;
-                document.getElementById('login-screen').style.display = 'flex';
-                bindLoginEvents();
-            });
+            // Already authenticated but on login page -> redirect
+            if (window.location.pathname === '/login' || window.currentViewName === 'login') {
+                window.location.href = '/dashboard';
+            }
         }
 
+    } catch (err) {
+        console.error("Auth check failed:", err.message);
+        // Not authenticated
         currentUser = null;
         currentRole = null;
         localStorage.removeItem('role');
 
-        if (window.location.pathname !== '/login') {
-            history.replaceState(null, '', '/login');
+        if (window.currentViewName === 'login' || window.location.pathname === '/login') {
+            const extLogin = document.getElementById('login-screen');
+            if (extLogin) {
+                extLogin.style.display = 'flex';
+                bindLoginEvents();
+            }
+        } else {
+            window.location.href = '/login';
         }
     }
 }
+
+async function loadComponents() {
+    try {
+        const [sidebarHtml, navbarHtml, modalsHtml] = await Promise.all([
+            fetch('/components/sidebar.html').then(r => r.text()),
+            fetch('/components/navbar.html').then(r => r.text()),
+            fetch('/components/modals.html').then(r => r.text())
+        ]);
+
+        const sideC = document.getElementById('sidebar-container');
+        if (sideC) sideC.innerHTML = sidebarHtml;
+
+        const navC = document.getElementById('navbar-container');
+        if (navC) navC.innerHTML = navbarHtml;
+
+        const modC = document.getElementById('modals-container');
+        if (modC) modC.innerHTML = modalsHtml;
+
+        // Populate elements safely
+        const navUn = document.getElementById('navUsername');
+        if (navUn) {
+            navUn.textContent = currentUser?.display_name || currentUser?.email?.split('@')[0] || (currentRole === 'admin' ? 'Admin' : 'User');
+        }
+
+        // Add Theme Toggle Listener
+        const themeBtn = document.getElementById('themeToggle');
+        if (themeBtn) {
+            themeBtn.addEventListener('click', toggleTheme);
+        }
+
+        // Set initial navbar title based on view
+        const viewTitleMap = {
+            'dashboard': 'System Overview',
+            'albums': 'Photo Collections',
+            'editor': 'Album Designer',
+            'profile': 'Account Settings',
+            'users': 'User Management',
+            'subscriptions': 'Service Plans'
+        };
+        const titleElement = document.getElementById('current-view-title');
+        if (titleElement && window.currentViewName) {
+            titleElement.textContent = viewTitleMap[window.currentViewName] || 'Memoria ERP';
+        }
+
+    } catch (e) {
+        console.error('Failed to load components', e);
+    }
+}
+
 
 function bindLoginEvents() {
     const loginForm = document.getElementById('loginForm');
@@ -375,6 +528,38 @@ function bindGlobalEvents() {
         overlay.classList.remove('active');
     });
 
+    // Global Search Listener
+    const globalSearch = document.getElementById('globalSearch');
+    if (globalSearch) {
+        globalSearch.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            if (window.currentViewName === 'albums' || window.currentViewName === 'dashboard') {
+                const filtered = allUserBooks.filter(b =>
+                    b.title.toLowerCase().includes(term) ||
+                    b.uuid.toLowerCase().includes(term)
+                );
+                renderBooks(filtered);
+                if (window.currentViewName === 'dashboard') {
+                    renderRecentActivity(filtered);
+                }
+            } else if (window.currentViewName === 'users') {
+                const filtered = allAdminUsers.filter(u =>
+                    u.email.toLowerCase().includes(term) ||
+                    u.id.toString().includes(term)
+                );
+                renderAdminUserRows(filtered);
+            }
+        });
+
+        // Add âŒ˜K shortcut focus
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                globalSearch.focus();
+            }
+        });
+    }
+
     // Close menu when clicking links on mobile
     document.addEventListener('click', (e) => {
         if (window.innerWidth <= 992 && e.target.closest('.nav-links a')) {
@@ -387,14 +572,104 @@ function bindGlobalEvents() {
 // --- DASHBOARD SETUP ---
 
 function setupSidebar() {
-    const items = currentRole === 'admin'
-        ? `<li><a href="#" class="nav-dashboard" onclick="navigateTo('/dashboard'); return false;"><i class="fas fa-users-cog"></i> Dashboard</a></li>`
-        : `<li><a href="#" class="nav-dashboard" onclick="navigateTo('/dashboard'); return false;"><i class="fas fa-chart-line"></i> Dashboard</a></li>`;
+    const sidebarUsername = document.getElementById('sidebarUsername');
+    const navUsername = document.getElementById('navUsername');
+    const nameStr = currentUser?.display_name || currentUser?.email?.split('@')[0] || (currentRole === 'admin' ? 'Admin' : 'User');
 
-    sidebarNav.innerHTML = items + `
-        <li><a href="#" class="nav-albums" onclick="navigateTo('/albums'); return false;"><i class="fas fa-book"></i> Albums</a></li>
-        <li><a href="#" class="nav-settings" onclick="navigateTo('/settings'); return false;"><i class="fas fa-cog"></i> Settings</a></li>
+    if (sidebarUsername) sidebarUsername.textContent = nameStr;
+    if (navUsername) navUsername.textContent = nameStr;
+
+    const adminLinks = `
+        <li><a href="/dashboard" class="nav-dashboard"><i class="fas fa-chart-line"></i> System Overview</a></li>
+        <li><a href="/users" class="nav-users"><i class="fas fa-users-cog"></i> Member Registry</a></li>
+        <li><a href="/subscriptions" class="nav-subscriptions"><i class="fas fa-shield-alt"></i> Service Audits</a></li>
+        <li><a href="/profile" class="nav-profile"><i class="fas fa-cog"></i> System Settings</a></li>
     `;
+
+    const userLinks = `
+        <li><a href="/dashboard" class="nav-dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+        <li><a href="/albums" class="nav-albums"><i class="fas fa-layer-group"></i> Personal Archives</a></li>
+        <li><a href="/subscriptions" class="nav-subscriptions"><i class="fas fa-shield-alt"></i> Manage Subscription</a></li>
+        <li><a href="/profile" class="nav-profile"><i class="fas fa-user-shield"></i> Account Settings</a></li>
+    `;
+
+    const sidebarNav = document.getElementById('sidebarNav');
+    if (sidebarNav) {
+        sidebarNav.innerHTML = currentRole === 'admin' ? adminLinks : userLinks;
+    }
+
+}
+
+async function fetchProfileDetails() {
+    if (!currentUser) return;
+
+    const nameEl = document.getElementById('profile-display-name');
+    const roleBadge = document.getElementById('profile-role-badge');
+    const planValEl = document.getElementById('profile-plan-val');
+    const subEndValEl = document.getElementById('profile-sub-end-val');
+    const usageText = document.getElementById('profile-usage-text');
+    const usageFill = document.getElementById('profile-usage-fill');
+
+    // Role-based visibility for profile sections
+    const subCard = document.getElementById('profile-subscription-card');
+    const plansSection = document.getElementById('profile-plans-section');
+    if (currentRole === 'admin') {
+        if (subCard) subCard.style.display = 'none';
+        if (plansSection) plansSection.style.display = 'none';
+    } else {
+        if (subCard) subCard.style.display = 'block';
+        if (plansSection) plansSection.style.display = 'block';
+    }
+
+    if (nameEl) nameEl.textContent = currentUser.display_name || currentUser.email.split('@')[0];
+
+    if (roleBadge) {
+        roleBadge.innerHTML = `<i class="fas fa-key"></i> ${currentRole || 'Member'}`;
+    }
+
+    const emailInput = document.getElementById('profile-email-val');
+    if (emailInput) {
+        emailInput.value = currentUser.email || 'Email missing';
+    }
+
+    if (planValEl) {
+        planValEl.textContent = currentUser.subscription_plan || 'free';
+    }
+
+    const subDateStr = currentUser.subscription_end
+        ? new Date(currentUser.subscription_end).toLocaleDateString()
+        : 'Lifetime Access';
+
+    if (subEndValEl) subEndValEl.textContent = subDateStr;
+
+    // Also update dashboard stat card if it exists
+    const dashSubEnd = document.getElementById('user-subscription-end');
+    if (dashSubEnd) dashSubEnd.textContent = subDateStr;
+
+
+    // Fetch books to calculate usage
+    try {
+        const res = await fetch('/api/books', {
+            credentials: 'same-origin',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+        });
+        const books = await res.json();
+        const count = Array.isArray(books) ? books.length : 0;
+
+        const plan = currentUser.subscription_plan || 'free';
+        let limit = 1;
+        if (plan === 'basic') limit = 5;
+        if (plan === 'pro') limit = Infinity;
+
+        if (usageText) {
+            usageText.textContent = `${count} / ${limit === Infinity ? 'âˆž' : limit} used`;
+        }
+
+        if (usageFill) {
+            const percent = limit === Infinity ? 100 : Math.min((count / limit) * 100, 100);
+            usageFill.style.width = percent + '%';
+        }
+    } catch (err) { console.error('Error fetching books for profile usage:', err); }
 }
 
 // --- ADMIN LOGIC ---
@@ -406,13 +681,143 @@ async function fetchAdminStats() {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
         });
         const data = await res.json();
-        document.getElementById('sa-total-users').textContent = data.totalUsers;
-        document.getElementById('sa-total-books').textContent = data.totalBooks;
-    } catch (err) { console.error(err); }
+
+        // Update simple stats
+        const totalUsersEl = document.getElementById('sa-total-users');
+        const totalBooksEl = document.getElementById('sa-total-books');
+        if (totalUsersEl) totalUsersEl.textContent = data.totalUsers;
+        if (totalBooksEl) totalBooksEl.textContent = data.totalBooks;
+
+        // Render Analytics Charts
+        renderAdminCharts(data);
+    } catch (err) { console.error('fetchAdminStats Error:', err); }
+}
+
+let charts = {}; // Store chart instances for cleanup
+
+function renderAdminCharts(data) {
+    if (!window.Chart) return;
+
+    // 1. Revenue Chart
+    const revCtx = document.getElementById('revenueChart')?.getContext('2d');
+    if (revCtx) {
+        if (charts.revenue) charts.revenue.destroy();
+        charts.revenue = new Chart(revCtx, {
+            type: 'line',
+            data: {
+                labels: data.revenueData.map(d => new Date(d.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })),
+                datasets: [{
+                    label: 'Revenue (INR)',
+                    data: data.revenueData.map(d => d.total),
+                    borderColor: '#ff4d6d',
+                    backgroundColor: 'rgba(255, 77, 109, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#ff4d6d'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    // 2. Plan Distribution Chart
+    const planCtx = document.getElementById('planChart')?.getContext('2d');
+    if (planCtx) {
+        if (charts.plan) charts.plan.destroy();
+        const labels = data.planDistribution.map(p => p.plan.toUpperCase());
+        const counts = data.planDistribution.map(p => p.count);
+        const colorMap = { 'free': '#94a3b8', 'basic': '#0ea5e9', 'pro': '#ff4d6d' };
+        const backgroundColors = data.planDistribution.map(p => colorMap[p.plan] || '#cbd5e1');
+
+        charts.plan = new Chart(planCtx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: counts,
+                    backgroundColor: backgroundColors,
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                layout: {
+                    padding: { top: 10, bottom: 20, left: 0, right: 10 }
+                },
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        align: 'center',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 12,
+                            boxWidth: 8,
+                            font: { size: 10, weight: '600', family: "'Inter', sans-serif" },
+                            color: '#94a3b8'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // 3. Growth Chart
+    const growthCtx = document.getElementById('growthChart')?.getContext('2d');
+    if (growthCtx) {
+        if (charts.growth) charts.growth.destroy();
+
+        // Combine dates for labels
+        const dates = [...new Set([
+            ...data.growth.users.map(u => u.date),
+            ...data.growth.books.map(b => b.date)
+        ])].sort();
+
+        charts.growth = new Chart(growthCtx, {
+            type: 'bar',
+            data: {
+                labels: dates.map(d => new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })),
+                datasets: [
+                    {
+                        label: 'New Users',
+                        data: dates.map(date => data.growth.users.find(u => u.date === date)?.count || 0),
+                        backgroundColor: 'rgba(99, 102, 241, 0.8)',
+                        borderRadius: 6
+                    },
+                    {
+                        label: 'Albums Created',
+                        data: dates.map(date => data.growth.books.find(b => b.date === date)?.count || 0),
+                        backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                        borderRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
 }
 
 async function fetchUsers() {
     const userList = document.getElementById('userList');
+    if (!userList) return;
     try {
         const res = await fetch('/api/admin/users', {
             credentials: 'same-origin',
@@ -420,60 +825,289 @@ async function fetchUsers() {
         });
         const users = await res.json();
         userList.innerHTML = '';
-        users.forEach(user => {
+        users.forEach((user, idx) => {
             const row = document.createElement('div');
             row.className = 'table-row user-row';
+            row.style.gridTemplateColumns = '80px 1.8fr 120px 140px 180px 140px';
+            const subEndDisplay = user.subscription_end ? new Date(user.subscription_end).toLocaleDateString() : 'Active Access';
+            const subEndRaw = user.subscription_end || '';
             row.innerHTML = `
-                <div style="font-weight: 600; color: #94a3b8;">#${user.id}</div>
-                <div style="font-weight: 600; color: var(--adm-text-color);">${user.email || 'hidden'}</div>
+                <div style="font-weight: 700; color: #94a3b8;">#${idx + 1}</div>
+                <div style="font-weight: 700; color: var(--adm-text-color);">${user.email || 'hidden'}</div>
                 <div><span class="badge ${user.role}">${user.role}</span></div>
-                <div style="color: #94a3b8; font-size: 0.9rem;">${new Date(user.created_at).toLocaleDateString()}</div>
-                <div style="font-size: 0.9rem; color: #94a3b8;">${user.subscription_end ? new Date(user.subscription_end).toLocaleDateString() : 'N/A'}</div>
+                <div style="color: var(--adm-text-muted); font-size: 0.9rem; font-weight: 600;">${new Date(user.created_at).toLocaleDateString()}</div>
+                <div style="font-size: 0.9rem; font-weight: 700; color: var(--adm-accent-color);">${subEndDisplay}</div>
                 <div class="action-btns">
-                    <button class="action-btn" onclick="extendSubscription(${user.id})" title="Add 1 Month"><i class="fas fa-calendar-plus" style="color: var(--adm-accent-color);"></i></button>
-                    ${user.role !== 'admin' ? `<button class="action-btn delete-btn" onclick="deleteUser(${user.id})" title="Delete User"><i class="fas fa-trash"></i></button>` : ''}
+                    <button class="action-btn" onclick="openEditPlanModal(${user.id}, '${user.subscription_plan}', '${subEndRaw}')" title="Edit Subscription Plan"><i class="fas fa-edit" style="color: #6366f1;"></i></button>
+                    <button class="action-btn" onclick="extendSubscription(${user.id})" title="Quick Provision 30 Days"><i class="fas fa-calendar-plus" style="color: var(--adm-accent-color);"></i></button>
+                    ${user.role !== 'admin' ? `<button class="action-btn delete-btn" onclick="deleteUser(${user.id})" title="Terminate Account"><i class="fas fa-trash-alt"></i></button>` : ''}
                 </div>
             `;
             userList.appendChild(row);
         });
+
+        initFlatpickr();
+
     } catch (err) { console.error(err); }
 }
 
-async function extendSubscription(id) {
-    window.confirmAction("Add 1 month to this user's subscription?", async () => {
-        try {
-            const res = await fetch(`/api/admin/users/${id}/subscription`, {
-                method: 'PUT',
-                credentials: 'same-origin',
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
-            });
-            if (res.ok) {
-                iziToast.success({ title: 'Success', message: 'Subscription extended!' });
-                fetchUsers();
-            } else {
-                const data = await res.json();
-                iziToast.error({ title: 'Error', message: data.error || 'Failed to extend subscription' });
+window.openEditPlanModal = function (id, currentPlan, currentExpiry) {
+    const modal = document.getElementById('editPlanModal');
+    if (!modal) return;
+    document.getElementById('editPlanUserId').value = id;
+    document.getElementById('editPlanDays').value = 0;
+
+    // Show modal FIRST
+    modal.classList.add('active');
+
+    // Init libraries AFTER modal is visible
+    requestAnimationFrame(() => {
+        const $jq = window.jQuery || window.$;
+
+        // Set Plan Selection directly on native select
+        const sel = document.getElementById('editUserPlanSelect');
+        if (sel) sel.value = currentPlan || 'free';
+
+        // Apply Flatpickr to date input
+        const dateEl = document.getElementById('editPlanDirectDate');
+        if (dateEl && typeof flatpickr !== 'undefined') {
+            if (dateEl._flatpickr) {
+                dateEl._flatpickr.destroy();
             }
-        } catch (err) { console.error(err); }
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const fp = flatpickr(dateEl, {
+                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'j M Y',
+                allowInput: true,
+                theme: isDark ? 'dark' : 'light'
+            });
+            if (currentExpiry && currentExpiry !== '' && currentExpiry !== 'Active Access' && currentExpiry !== 'Lifetime Access') {
+                fp.setDate(currentExpiry.slice(0, 10));
+            } else {
+                fp.clear();
+            }
+        }
     });
 }
 
-async function deleteUser(id) {
-    window.confirmAction('Are you sure you want to delete this user? All their books and pages will be permanently removed.', async () => {
+window.setLifetime = function () {
+    document.getElementById('editPlanDays').value = 0;
+    document.getElementById('editPlanDirectDate').value = '2099-12-31';
+    iziToast.info({ message: 'Lifetime Access Selected' });
+};
+
+// Initialize Admin Edit Plan Form
+// Helper to refresh user lists across different views
+function refreshUserData() {
+    console.log('Refreshing user data for view:', window.currentViewName);
+    if (window.currentViewName === 'dashboard') {
+        fetchUsers();
+        if (typeof fetchAdminStats === 'function') fetchAdminStats();
+    } else if (window.currentViewName === 'users') {
+        fetchAdminUserList();
+    } else {
+        // Fallback: try to refresh both if they exist
+        if (document.getElementById('userList')) fetchUsers();
+        if (document.getElementById('adminUserList')) fetchAdminUserList();
+    }
+}
+
+document.addEventListener('submit', async (e) => {
+    if (e.target.id === 'editPlanForm') {
+        e.preventDefault();
+        const id = document.getElementById('editPlanUserId').value;
+        const plan = document.getElementById('editUserPlanSelect').value;
+        const days = document.getElementById('editPlanDays').value;
+        const directDate = document.getElementById('editPlanDirectDate').value;
+
         try {
-            const res = await fetch(`/api/admin/users/${id}`, {
-                method: 'DELETE',
-                credentials: 'same-origin',
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+            const body = { plan };
+            if (directDate) {
+                body.directDate = directDate;
+            } else {
+                body.days = parseInt(days);
+            }
+
+            const res = await fetch(`/api/admin/users/${id}/subscription`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                },
+                body: JSON.stringify(body)
             });
+
             if (res.ok) {
-                fetchUsers();
-                fetchAdminStats();
+                iziToast.success({ title: 'Success', message: 'User subscription updated' });
+                document.getElementById('editPlanModal').classList.remove('active');
+                refreshUserData();
             } else {
                 const data = await res.json();
-                iziToast.error({ title: 'Error', message: data.error || 'Failed to delete user' });
+                iziToast.error({ title: 'Error', message: data.error || 'Failed to update plan' });
             }
-        } catch (err) { console.error(err); }
+        } catch (err) {
+            console.error(err);
+            iziToast.error({ title: 'Error', message: 'Connection failed' });
+        }
+    }
+});
+
+window.extendSubscription = async function (id) {
+    try {
+        const res = await fetch(`/api/admin/users/${id}/subscription`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+            },
+            body: JSON.stringify({ days: 30 }) // Default quick extension
+        });
+
+        if (res.ok) {
+            iziToast.success({ title: 'Success', message: 'Added 30 days access' });
+            if (typeof fetchUsers === 'function') fetchUsers();
+            if (typeof fetchAdminUserList === 'function') fetchAdminUserList();
+            if (typeof fetchAdminStats === 'function') fetchAdminStats();
+        } else {
+            const data = await res.json();
+            iziToast.error({ title: 'Error', message: data.error || 'Failed to extend' });
+        }
+    } catch (err) {
+        console.error(err);
+        iziToast.error({ title: 'Error', message: 'Request failed' });
+    }
+};
+
+let allUserBooks = []; // Cache for filtration
+
+window.customConfirm = function (options) {
+    const modal = document.getElementById('deleteConfirmModal');
+    if (!modal) return window.confirmAction(options.message, options.onConfirm);
+
+    document.getElementById('deleteModalTitle').textContent = options.title || 'Confirm Deletion';
+    document.getElementById('deleteModalMessage').textContent = options.message;
+
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    const newBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newBtn, confirmBtn);
+
+    newBtn.addEventListener('click', () => {
+        modal.classList.remove('active');
+        options.onConfirm();
+    });
+
+    modal.classList.add('active');
+};
+
+async function fetchAdminUserList() {
+    const container = document.getElementById('adminUserList');
+    if (!container) return;
+
+    try {
+        const res = await fetch('/api/admin/users', {
+            credentials: 'same-origin',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+        });
+        const users = await res.json();
+        allAdminUsers = users; // Cache for Search
+
+        // Render Stats
+        const statsGrid = document.getElementById('userStatsGrid');
+        if (statsGrid) {
+            const total = users.length;
+            const pro = users.filter(u => u.subscription_plan === 'pro').length;
+            const basic = users.filter(u => (u.subscription_plan === 'basic')).length;
+            const free = total - pro - basic;
+
+            statsGrid.innerHTML = `
+                <div class="stat-card premium-card-hover">
+                    <div class="stat-value">${total}</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+                <div class="stat-card premium-card-hover">
+                    <div class="stat-value" style="color:var(--adm-accent-color);">${pro}</div>
+                    <div class="stat-label">Pro Users</div>
+                </div>
+                <div class="stat-card premium-card-hover">
+                    <div class="stat-value" style="color:#06b6d4;">${basic}</div>
+                    <div class="stat-label">Basic Users</div>
+                </div>
+                <div class="stat-card premium-card-hover">
+                    <div class="stat-value" style="color:var(--adm-text-muted);">${free}</div>
+                    <div class="stat-label">Free Users</div>
+                </div>
+            `;
+
+        }
+
+        renderAdminUserRows(users);
+
+    } catch (err) {
+        console.error('Error in fetchAdminUserList:', err);
+    }
+}
+
+function renderAdminUserRows(users) {
+    const container = document.getElementById('adminUserList');
+    if (!container) return;
+
+    container.innerHTML = '';
+    users.forEach((user, idx) => {
+        const row = document.createElement('div');
+        row.className = 'table-row';
+        row.style.gridTemplateColumns = '80px 1.8fr 120px 140px 180px 140px';
+        row.style.padding = '20px';
+        row.style.alignItems = 'center';
+
+        const subEnd = user.subscription_end ? new Date(user.subscription_end).toLocaleDateString() : 'Lifetime Access';
+        const subEndRaw = user.subscription_end || '';
+        const plan = user.subscription_plan || 'free';
+
+        row.innerHTML = `
+                <div style="font-weight: 700; color: #94a3b8;">${idx + 1}</div>
+                <div style="font-weight: 700; color: var(--adm-text-color);">${user.email}</div>
+                <div><span class="badge ${user.role}">${user.role}</span></div>
+                <div><span class="badge ${plan}">${plan}</span></div>
+                <div style="color: var(--adm-accent-color); font-weight: 700;">${subEnd}</div>
+                <div class="action-btns">
+                    <button class="action-btn" onclick="openEditPlanModal(${user.id}, '${plan}', '${subEndRaw}')" title="Edit Subscription Plan">
+                        <i class="fas fa-edit" style="color:#6366f1;"></i>
+                    </button>
+                    <button class="action-btn" onclick="extendSubscription(${user.id})" title="Quick Provision 30 Days">
+                        <i class="fas fa-calendar-plus" style="color:var(--adm-accent-color);"></i>
+                    </button>
+                    ${user.role !== 'admin' ?
+                `<button class="action-btn delete-btn" onclick="deleteUser(${user.id})" title="Terminate Account"><i class="fas fa-trash-alt"></i></button>` : ''}
+                </div>
+            `;
+        container.appendChild(row);
+    });
+
+    initFlatpickr();
+}
+
+async function deleteUser(id) {
+    window.customConfirm({
+        title: 'Delete User Account',
+        message: 'Are you sure you want to delete this user? This will permanently remove all their data.',
+        onConfirm: async () => {
+            try {
+                const res = await fetch(`/api/admin/users/${id}`, {
+                    method: 'DELETE',
+                    credentials: 'same-origin',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+                });
+                if (res.ok) {
+                    fetchUsers();
+                    fetchAdminStats();
+                    iziToast.success({ title: 'Success', message: 'User deleted successfully' });
+                } else {
+                    const data = await res.json();
+                    iziToast.error({ title: 'Error', message: data.error || 'Failed to delete user' });
+                }
+            } catch (err) { console.error(err); }
+        }
     });
 }
 
@@ -543,33 +1177,57 @@ async function fetchUserBooks() {
             return;
         }
 
+        allUserBooks = books; // Cache for Search
+
         const totalBooksEl = document.getElementById('user-total-books');
         if (totalBooksEl) totalBooksEl.textContent = books.length;
 
         renderBooks(books);
         renderRecentActivity(books);
-    } catch (err) { console.error('Error fetching user books:', err); }
+        // Chart logic removed as per user request for stat cards
+    } catch (err) { console.error('Error fetching dashboard books:', err); }
+}
+
+
+function searchHandler(e) {
+    const term = e.target.value.toLowerCase();
+    const filtered = allUserBooks.filter(b =>
+        b.title.toLowerCase().includes(term) ||
+        b.uuid.toLowerCase().includes(term)
+    );
+    renderBooks(filtered);
 }
 
 function renderBooks(books) {
     const list = document.getElementById('booksList');
-    if (!list) return; // Prevent crash when on Dashboard instead of Albums view
+    if (!list) return;
     list.innerHTML = '';
     books.forEach(book => {
         const card = document.createElement('div');
-        card.style.cssText = 'background: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #efefef; transition: transform 0.2s;';
+        card.className = 'album-card reveal-up active';
         card.innerHTML = `
-            <div style="font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--primary-color); margin-bottom: 0.5rem;">${book.title}</div>
-            <div style="font-size: 0.85rem; color: #888; margin-bottom: 1.5rem;">Created: ${new Date(book.created_at).toLocaleDateString()}</div>
-            <div style="display: flex; gap: 10px;">
-                    <button class="btn-primary" style="flex: 1; padding: 8px;" onclick="navigateTo('/book/${book.uuid}')">Edit Pages</button>
-                <button class="btn-secondary" style="padding: 8px;" onclick="copyLink('${book.uuid}')" title="Copy Share Link"><i class="fas fa-share-alt"></i></button>
-                <button class="btn-outline" style="padding: 8px; border-color: #ff4d6d; color: #ff4d6d;" onclick="deleteBook('${book.uuid}')" title="Delete Album"><i class="fas fa-trash-alt"></i></button>
+            <div class="album-card-title">${book.title}</div>
+            <div class="album-card-meta">
+                <i class="far fa-calendar-alt"></i> Created: ${new Date(book.created_at).toLocaleDateString()}
+            </div>
+            <div class="album-card-actions">
+                <button class="btn-primary" style="flex: 1;" onclick="navigateTo('/book/${book.uuid}')">
+                    <i class="fas fa-edit"></i> Edit Pages
+                </button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-secondary" onclick="copyLink('${book.uuid}')" title="Copy Share Link">
+                        <i class="fas fa-share-alt"></i>
+                    </button>
+                    <button class="action-btn delete-btn" onclick="deleteBook('${book.uuid}')" title="Delete Album">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
             </div>
         `;
         list.appendChild(card);
     });
 }
+
 
 function renderRecentActivity(books) {
     const activityList = document.getElementById('recentActivityList');
@@ -587,22 +1245,20 @@ function renderRecentActivity(books) {
 
     recentBooks.forEach(book => {
         const item = document.createElement('div');
-        item.style.cssText = 'background: white; padding: 1rem 1.5rem; border-radius: 12px; border: 1px solid #efefef; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;';
-        item.onmouseover = () => { item.style.transform = 'translateY(-2px)'; item.style.boxShadow = '0 4px 10px rgba(0,0,0,0.05)'; };
-        item.onmouseout = () => { item.style.transform = 'translateY(0)'; item.style.boxShadow = 'none'; };
+        item.className = 'activity-list-item premium-card-hover reveal-up active'; // active for immediate visibility
+        item.style.cssText = 'padding: 1.2rem 1.5rem; border-radius: 16px; border: 1px solid var(--adm-border-color); display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: all 0.3s ease;';
 
-        // Wrap onClick handler instead of inline to keep scope
         item.addEventListener('click', () => navigateTo('/book/' + book.uuid));
 
         const dateStr = new Date(book.created_at).toLocaleDateString();
 
         item.innerHTML = `
             <div>
-                <div style="font-weight: 600; color: var(--text-color); margin-bottom: 4px;">${book.title}</div>
-                <div style="font-size: 0.8rem; color: #888;">Created on ${dateStr} • Template: <span style="text-transform: capitalize;">${book.template_type || 'default'}</span></div>
+                <div style="font-weight: 700; color: var(--adm-text-color); margin-bottom: 4px; font-size: 1.05rem;">${book.title}</div>
+                <div style="font-size: 0.85rem; color: var(--adm-text-muted);">Created on ${dateStr} â€¢ Template: <span style="text-transform: capitalize; color: var(--adm-accent-color); font-weight: 500;">${book.template_type || 'default'}</span></div>
             </div>
-            <div>
-                <i class="fas fa-chevron-right" style="color: #ccc;"></i>
+            <div class="activity-icon-container" style="background: var(--adm-pink-pale); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-chevron-right" style="color: var(--adm-accent-color); font-size: 0.8rem;"></i>
             </div>
         `;
         activityList.appendChild(item);
@@ -610,20 +1266,24 @@ function renderRecentActivity(books) {
 }
 
 async function deleteBook(id) {
-    window.confirmAction('Are you sure you want to delete this entire album and all its pages? This cannot be undone.', async () => {
-        try {
-            const res = await fetch(`/api/books/${id}`, {
-                method: 'DELETE',
-                credentials: 'same-origin',
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
-            });
-            if (res.ok) {
-                fetchUserBooks();
-            } else {
-                const data = await res.json();
-                iziToast.error({ title: 'Error', message: data.error || 'Failed to delete album' });
-            }
-        } catch (err) { console.error(err); }
+    window.customConfirm({
+        title: 'Delete Album',
+        message: 'Are you sure you want to delete this entire album? This cannot be undone.',
+        onConfirm: async () => {
+            try {
+                const res = await fetch(`/api/books/${id}`, {
+                    method: 'DELETE',
+                    credentials: 'same-origin',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+                });
+                if (res.ok) {
+                    fetchUserBooks();
+                } else {
+                    const data = await res.json();
+                    iziToast.error({ title: 'Error', message: data.error || 'Failed to delete album' });
+                }
+            } catch (err) { console.error(err); }
+        }
     });
 }
 
@@ -667,9 +1327,16 @@ function bindUserDashboardEvents() {
                     const data = await res.json();
                     document.getElementById('createBookModal').classList.remove('active');
                     document.getElementById('createBookForm').reset();
+                    iziToast.success({ title: 'Success', message: 'Album created!' });
                     navigateTo('/book/' + data.uuid);
+                } else {
+                    const data = await res.json();
+                    iziToast.error({ title: 'Limit Reached', message: data.error || 'Failed to create album' });
                 }
-            } catch (err) { console.error(err); } finally {
+            } catch (err) {
+                console.error(err);
+                iziToast.error({ title: 'Error', message: 'Something went wrong.' });
+            } finally {
                 window.toggleButtonLoader(btn, false);
             }
         });
@@ -733,8 +1400,16 @@ function initEditorView() {
                     },
                     body: JSON.stringify(data)
                 });
-                if (res.ok) iziToast.success({ title: 'Success', message: 'Settings updated!' });
-            } catch (err) { console.error(err); } finally {
+                if (res.ok) {
+                    iziToast.success({ title: 'Success', message: 'Settings updated!' });
+                } else {
+                    const data = await res.json();
+                    iziToast.error({ title: 'Error', message: data.error || 'Update failed' });
+                }
+            } catch (err) {
+                console.error(err);
+                iziToast.error({ title: 'Error', message: 'Something went wrong.' });
+            } finally {
                 window.toggleButtonLoader(btn, false);
             }
         });
@@ -1062,25 +1737,27 @@ function markMediaForDelete(id, btn) {
 }
 
 async function deletePage(pageId) {
-    window.confirmAction('Delete this page?', async () => {
-        await fetch(`/api/pages/${pageId}`, {
-            method: 'DELETE',
-            credentials: 'same-origin'
-        });
-        fetchPages(currentBookId);
+    window.customConfirm({
+        title: 'Remove Page',
+        message: 'Are you sure you want to delete this page from the album?',
+        onConfirm: async () => {
+            await fetch(`/api/pages/${pageId}`, {
+                method: 'DELETE',
+                credentials: 'same-origin'
+            });
+            fetchPages(currentBookId);
+            iziToast.success({ title: 'Success', message: 'Page removed' });
+        }
     });
 }
 
-// Modal closing helper
-document.querySelectorAll('.close-modal').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const modalId = btn.getAttribute('data-modal');
-        document.getElementById(modalId).classList.remove('active');
-    });
-});
-
-// Close modal when clicking outside
-window.addEventListener('click', (e) => {
+// Improved Global Modal closer using delegation
+document.addEventListener('click', (e) => {
+    if (e.target.closest('.close-modal')) {
+        const modal = e.target.closest('.modal');
+        if (modal) modal.classList.remove('active');
+        return;
+    }
     if (e.target.classList.contains('modal')) {
         e.target.classList.remove('active');
     }
@@ -1146,5 +1823,50 @@ if (passForm) {
     });
 }
 
+// --- SUBSCRIPTION PRICING LOGIC ---
+function updatePricingButtons() {
+    const plan = (currentUser?.subscription_plan || 'free').toLowerCase();
+
+    const pricingCards = document.querySelectorAll('.pricing-card');
+    if (!pricingCards.length) return;
+
+    // Reset all buttons
+    pricingCards.forEach(card => {
+        const btn = card.querySelector('button');
+        if (!btn) return;
+
+        const isProCard = card.classList.contains('popular');
+
+        if (isProCard) {
+            if (plan === 'pro') {
+                btn.className = 'btn-outline';
+                btn.textContent = 'Your Current Tier';
+                btn.disabled = true;
+                btn.style.opacity = '0.6';
+            } else {
+                btn.className = 'btn-primary';
+                btn.textContent = 'Upgrade Service';
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            }
+        } else {
+            // Essential (Free/Basic)
+            if (plan === 'free' || plan === 'basic') {
+                btn.className = 'btn-outline';
+                btn.textContent = 'Your Current Tier';
+                btn.disabled = true;
+                btn.style.opacity = '0.6';
+            } else {
+                btn.className = 'btn-primary';
+                btn.textContent = 'Switch Plan';
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            }
+        }
+    });
+}
+
 // Init
-checkAuth();
+document.addEventListener('DOMContentLoaded', () => {
+    initApp();
+});

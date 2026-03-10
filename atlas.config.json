@@ -1,0 +1,7 @@
+{
+  "projectType": "node-express",
+  "targetDomain": "e-book",
+  "startupTimeout": 30000,
+  "recordingEnabled": true,
+  "debugMode": false
+}

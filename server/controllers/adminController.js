@@ -39,13 +39,54 @@ const getSettings = async (req, res, db) => {
 
 const getStats = async (req, res, db) => {
     try {
-        const userCount = await db.get('SELECT COUNT(*) as count FROM users');
+        const userCount = await db.get("SELECT COUNT(*) as count FROM users WHERE role != 'admin'");
         const bookCount = await db.get('SELECT COUNT(*) as count FROM books');
         const mediaCount = await db.get('SELECT COUNT(*) as count FROM page_media');
+
+        // Distribution of users by plan
+        const planCounts = await db.all(`
+            SELECT subscription_plan as plan, COUNT(*) as count 
+            FROM users 
+            WHERE role != 'admin'
+            GROUP BY subscription_plan
+        `);
+
+        // Revenue over time (Last 30 days)
+        const revenueTimeline = await db.all(`
+            SELECT DATE(created_at) as date, SUM(amount) as total
+            FROM transactions
+            WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+            GROUP BY DATE(created_at)
+            ORDER BY date ASC
+        `);
+
+        // Growth metrics (New users and books per day)
+        const userGrowth = await db.all(`
+            SELECT DATE(created_at) as date, COUNT(*) as count
+            FROM users
+            WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) AND role != 'admin'
+            GROUP BY DATE(created_at)
+            ORDER BY date ASC
+        `);
+
+        const bookGrowth = await db.all(`
+            SELECT DATE(created_at) as date, COUNT(*) as count
+            FROM books
+            WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+            GROUP BY DATE(created_at)
+            ORDER BY date ASC
+        `);
+
         res.json({
             totalUsers: userCount.count,
             totalBooks: bookCount.count,
-            totalMedia: mediaCount.count
+            totalMedia: mediaCount.count,
+            planDistribution: planCounts,
+            revenueData: revenueTimeline,
+            growth: {
+                users: userGrowth,
+                books: bookGrowth
+            }
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
