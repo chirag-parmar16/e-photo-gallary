@@ -67,14 +67,6 @@ module.exports = (db) => {
                 [plan || 'free', formattedDate, id]
             );
 
-            // Record Transaction if plan is basic or pro
-            if (plan === 'basic' || plan === 'pro') {
-                const amount = plan === 'basic' ? 5.00 : 12.00; // Mock prices
-                await db.run(
-                    'INSERT INTO transactions (user_id, plan, amount) VALUES (?, ?, ?)',
-                    [id, plan, amount]
-                );
-            }
 
             res.json({ success: true, subscription_plan: plan, subscription_end: formattedDate });
         } catch (err) {

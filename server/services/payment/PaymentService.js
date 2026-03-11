@@ -75,11 +75,6 @@ class PaymentService {
             [plan.id, formattedDate, userId]
         );
 
-        // Track in legacy table
-        await db.run(
-            'INSERT INTO transactions (user_id, plan, amount, status) VALUES (?, ?, ?, "completed")',
-            [userId, plan.id, plan.amount, 'completed']
-        );
     }
 }
 

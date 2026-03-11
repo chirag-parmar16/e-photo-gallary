@@ -127,19 +127,6 @@ async function initDb() {
         )
     `);
 
-    // 5. Transactions (Legacy Revenue Tracking)
-    await db.exec(`
-        CREATE TABLE IF NOT EXISTS transactions (
-            id          INT AUTO_INCREMENT PRIMARY KEY,
-            user_id     INT NOT NULL,
-            plan        VARCHAR(20) NOT NULL,
-            amount      DECIMAL(10, 2) NOT NULL,
-            status      VARCHAR(20) DEFAULT 'completed',
-            created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        )
-    `);
-
     // 6. Payments (Modular Gateway Implementation)
     await db.exec(`
         CREATE TABLE IF NOT EXISTS payments (
