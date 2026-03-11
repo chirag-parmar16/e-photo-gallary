@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Login | Memoria</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"></script>
     <style>
-        /* ===== VARIABLES MATCHING LANDING PAGE ===== */
+        /* ===== VARIABLES ===== */
         :root {
             --pink: #ff4d6d;
             --pink-light: #ff758f;
@@ -29,25 +29,35 @@
             font-family: 'Inter', sans-serif;
         }
 
+        /* Prevent icon font override */
+        .fas, .fab, .far, .fa-solid, .fa-brands, .fa-regular {
+            font-family: "Font Awesome 6 Free" !important;
+        }
+
         html, body {
-            height: 100%;
             width: 100%;
+            min-height: 100vh; /* Changed to 100vh to fix vertical background breaking */
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #16213e 100%);
+            background-attachment: fixed; /* Prevents gradient from breaking on scroll */
             color: var(--white);
-            overflow: hidden; /* Parallax ki wajah se scroll bar rokne ke liye */
+            overflow-x: hidden;
         }
 
         /* ===== BACKGROUND PARALLAX ===== */
         .parallax-bg {
-            position: absolute; 
-            inset: -100px; 
+            position: fixed; /* Changed from absolute to fixed to prevent document stretching */
+            inset: 0; 
             z-index: 0; 
             pointer-events: none;
-            display: flex; justify-content: center; align-items: center;
+            overflow: hidden; /* Prevent blurred elements from causing scrollbars */
         }
         .p-img {
-            position: absolute; border-radius: 12px; opacity: 0.08; filter: blur(6px);
-            border: 8px solid white; border-bottom-width: 30px;
+            position: absolute; 
+            border-radius: 12px; 
+            opacity: 0.08; 
+            filter: blur(6px);
+            border: 8px solid white; 
+            border-bottom-width: 30px;
         }
         .p-img-1 { width: 180px; top: 15%; left: 10%; transform: rotate(-15deg); }
         .p-img-2 { width: 250px; bottom: 15%; right: 10%; transform: rotate(10deg); filter: blur(8px); opacity: 0.05; }
@@ -61,31 +71,37 @@
             min-height: 100vh;
             padding: 20px;
             position: relative;
-            z-index: 1; /* Background ke upar rakhne ke liye */
+            z-index: 1; 
+            width: 100%;
         }
 
         /* ===== BRANDING LOGO ===== */
         .logo-header {
             font-family: 'Playfair Display', serif;
-            font-size: 2.5rem; font-weight: 700;
+            font-size: 2.5rem; 
+            font-weight: 700;
             color: var(--pink);
             margin-bottom: 30px;
-            display: flex; align-items: center; gap: 12px;
+            display: flex; 
+            align-items: center; 
+            gap: 12px;
             text-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            text-align: center;
         }
 
         /* ===== LOGIN CONTAINER ===== */
         .login-container {
-            background: rgba(255, 255, 255, 0.03); /* Glass effect */
+            background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            padding: 40px 50px;
+            padding: 40px;
             border-radius: 28px;
             box-shadow: 0 30px 60px rgba(0,0,0,0.4);
             width: 100%;
-            max-width: 450px;
+            max-width: 420px; /* Slightly tightened for better form proportions */
             text-align: center;
+            margin: 0 auto;
         }
 
         .login-title {
@@ -103,7 +119,7 @@
         .login-subtitle {
             color: var(--text-muted);
             margin-bottom: 35px;
-            font-size: 1rem;
+            font-size: 0.95rem;
         }
 
         /* ===== TABS ===== */
@@ -112,6 +128,7 @@
             justify-content: space-between;
             margin-bottom: 30px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
+            width: 100%;
         }
 
         .auth-tab {
@@ -126,6 +143,7 @@
             color: var(--text-muted);
             transition: all 0.3s ease;
             position: relative;
+            text-align: center;
         }
 
         .auth-tab.active {
@@ -144,55 +162,60 @@
         }
 
         /* ===== FORMS & INPUTS ===== */
+        form {
+            width: 100%;
+            display: block;
+        }
+
         .form-group {
             margin-bottom: 20px;
             text-align: left;
+            width: 100%;
         }
 
         .form-group.last {
             margin-bottom: 30px;
         }
 
-        /* Fixed Readability Issue Here */
         .form-group .form-label {
             display: block;
             font-size: 0.95rem;
-            color: var(--white); /* Forcing white color */
+            color: var(--white);
             font-weight: 500;
             margin-bottom: 8px;
         }
 
-        .login-container .form-input {
+        .form-input {
             width: 100%;
             padding: 14px 16px;
-            background: rgba(255, 255, 255, 0.08); /* Lighter background so text is visible */
+            background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 12px;
-            color: var(--white) !important; /* Force text color */
+            color: var(--white) !important;
             font-family: 'Inter', sans-serif;
             font-size: 1rem;
             transition: all 0.3s ease;
-            box-sizing: border-box;
+            display: block; /* Fixes inline-block spacing bugs */
         }
 
-        .login-container .form-input:focus {
+        .form-input:focus {
             outline: none;
             border-color: var(--pink);
             background: rgba(0, 0, 0, 0.4);
             box-shadow: 0 0 0 4px rgba(255, 77, 109, 0.15);
         }
 
-        .login-container .form-input::placeholder {
+        .form-input::placeholder {
             color: rgba(255, 255, 255, 0.4);
         }
 
-        /* Autocomplete styles overwriting system defaults */
+        /* Autocomplete fixes */
         input:-webkit-autofill,
         input:-webkit-autofill:hover, 
         input:-webkit-autofill:focus, 
         input:-webkit-autofill:active{
-            -webkit-box-shadow: 0 0 0 30px #1e293b inset !important; /* Keeps dark background */
-            -webkit-text-fill-color: var(--white) !important; /* Keeps text white */
+            -webkit-box-shadow: 0 0 0 30px #1e293b inset !important;
+            -webkit-text-fill-color: var(--white) !important;
             transition: background-color 5000s ease-in-out 0s;
         }
 
@@ -210,6 +233,7 @@
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 8px 25px rgba(255,77,109,0.3);
+            display: block;
         }
 
         .auth-submit-btn:hover {
@@ -232,11 +256,28 @@
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 480px) {
+            #login-screen {
+                padding: 15px;
+            }
             .login-container {
                 padding: 30px 20px;
                 border-radius: 20px;
+                box-shadow: 0 15px 40px rgba(0,0,0,0.3);
             }
-            .logo-header { font-size: 2rem; }
+            .logo-header { 
+                font-size: 2rem; 
+                margin-bottom: 25px;
+            }
+            .login-title { 
+                font-size: 1.7rem; 
+            }
+            .login-subtitle {
+                font-size: 0.9rem;
+                margin-bottom: 25px;
+            }
+            .form-input {
+                padding: 12px 14px;
+            }
         }
     </style>
 </head>
@@ -295,7 +336,6 @@
 </div>
 
 <script>
-    // Login aur Register tabs switch karne ke liye logic
     function switchTab(tab) {
         const loginForm = document.getElementById('loginForm');
         const registerForm = document.getElementById('registerForm');
