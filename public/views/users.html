@@ -14,6 +14,13 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"></script>
+    
+    <!-- DataTables CDN -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 </head>
 <body>
     <div id="app-container" style="display: none;">
@@ -39,16 +46,20 @@
     </div>
 
     <!-- User Table -->
-    <div class="data-table shadow-sm" style="background: var(--adm-main-bg); border-radius: 16px; border: 1px solid var(--adm-border-color); overflow: hidden;">
-        <div class="table-row table-header" style="grid-template-columns: 80px 1.8fr 120px 140px 180px 140px; background: rgba(0,0,0,0.02); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-size: 0.75rem;">
-            <div>Ref ID</div>
-            <div>Registry Email</div>
-            <div>Access</div>
-            <div>Tier</div>
-            <div>Service Expiry</div>
-            <div>Operations</div>
-        </div>
-        <div id="adminUserList"></div>
+    <div class="data-table-container">
+        <table id="adminUserManagementTable" class="display responsive nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Ref ID</th>
+                    <th>Registry Email</th>
+                    <th>Access</th>
+                    <th>Tier</th>
+                    <th>Service Expiry</th>
+                    <th>Operations</th>
+                </tr>
+            </thead>
+            <tbody id="adminUserList"></tbody>
+        </table>
     </div>
 </div>
 
@@ -65,7 +76,6 @@
     <script>
         window.currentViewName = 'users';
     </script>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="/admin.js?v=8"></script>

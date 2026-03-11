@@ -51,11 +51,11 @@ const getStats = async (req, res, db) => {
             GROUP BY subscription_plan
         `);
 
-        // Revenue over time (Last 30 days)
+        // Revenue over time (Last 30 days) - Using payments table
         const revenueTimeline = await db.all(`
-            SELECT DATE(created_at) as date, SUM(amount) as total
-            FROM transactions
-            WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+            SELECT DATE(created_at) as date, SUM(amount) / 100 as total
+            FROM payments
+            WHERE status = 'success' AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
             GROUP BY DATE(created_at)
             ORDER BY date ASC
         `);

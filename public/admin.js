@@ -529,37 +529,7 @@ function bindGlobalEvents() {
         overlay.classList.remove('active');
     });
 
-    // Global Search Listener
-    const globalSearch = document.getElementById('globalSearch');
-    if (globalSearch) {
-        globalSearch.addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            if (window.currentViewName === 'albums' || window.currentViewName === 'dashboard') {
-                const filtered = allUserBooks.filter(b =>
-                    b.title.toLowerCase().includes(term) ||
-                    b.uuid.toLowerCase().includes(term)
-                );
-                renderBooks(filtered);
-                if (window.currentViewName === 'dashboard') {
-                    renderRecentActivity(filtered);
-                }
-            } else if (window.currentViewName === 'users') {
-                const filtered = allAdminUsers.filter(u =>
-                    u.email.toLowerCase().includes(term) ||
-                    u.id.toString().includes(term)
-                );
-                renderAdminUserRows(filtered);
-            }
-        });
-
-        // Add âŒ˜K shortcut focus
-        document.addEventListener('keydown', (e) => {
-            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-                e.preventDefault();
-                globalSearch.focus();
-            }
-        });
-    }
+    // Global Search Listener removed as per user request
 
     // Close menu when clicking links on mobile
     document.addEventListener('click', (e) => {
@@ -825,26 +795,51 @@ async function fetchUsers() {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
         });
         const users = await res.json();
-        userList.innerHTML = '';
+        
+        // Destroy existing DataTable if it exists
+        if ($.fn.DataTable.isDataTable('#saUserTable')) {
+            $('#saUserTable').DataTable().destroy();
+        }
+
         users.forEach((user, idx) => {
-            const row = document.createElement('div');
-            row.className = 'table-row user-row';
-            row.style.gridTemplateColumns = '80px 1.8fr 120px 140px 180px 140px';
+            const tr = document.createElement('tr');
             const subEndDisplay = user.subscription_end ? new Date(user.subscription_end).toLocaleDateString() : 'Active Access';
             const subEndRaw = user.subscription_end || '';
-            row.innerHTML = `
-                <div style="font-weight: 700; color: #94a3b8;">#${idx + 1}</div>
-                <div style="font-weight: 700; color: var(--adm-text-color);">${user.email || 'hidden'}</div>
-                <div><span class="badge ${user.role}">${user.role}</span></div>
-                <div style="color: var(--adm-text-muted); font-size: 0.9rem; font-weight: 600;">${new Date(user.created_at).toLocaleDateString()}</div>
-                <div style="font-size: 0.9rem; font-weight: 700; color: var(--adm-accent-color);">${subEndDisplay}</div>
-                <div class="action-btns">
-                    <button class="action-btn" onclick="openEditPlanModal(${user.id}, '${user.subscription_plan}', '${subEndRaw}')" title="Edit Subscription Plan"><i class="fas fa-edit" style="color: #6366f1;"></i></button>
-                    <button class="action-btn" onclick="extendSubscription(${user.id})" title="Quick Provision 30 Days"><i class="fas fa-calendar-plus" style="color: var(--adm-accent-color);"></i></button>
-                    ${user.role !== 'admin' ? `<button class="action-btn delete-btn" onclick="deleteUser(${user.id})" title="Terminate Account"><i class="fas fa-trash-alt"></i></button>` : ''}
-                </div>
+            const roleClass = user.role === 'admin' ? 'pro' : 'basic';
+            
+            tr.innerHTML = `
+                <td class="col-id">#${idx + 1}</td>
+                <td class="col-email">
+                    <div style="font-weight: 700; color: var(--adm-text-color); font-size: 0.95rem;">${user.email || 'hidden'}</div>
+                </td>
+                <td class="col-role"><span class="badge ${roleClass}">${user.role}</span></td>
+                <td class="col-date" style="color: var(--adm-text-muted); font-size: 0.85rem; font-weight: 500;">${new Date(user.created_at).toLocaleDateString()}</td>
+                <td class="col-expiry" style="font-size: 0.9rem; font-weight: 700; color: var(--adm-accent-color);">${subEndDisplay}</td>
+                <td class="col-actions">
+                    <div class="action-btns">
+                        <button class="action-btn" onclick="openEditPlanModal(${user.id}, '${user.subscription_plan}', '${subEndRaw}')" title="Edit Subscription Plan"><i class="fas fa-edit" style="color: #6366f1;"></i></button>
+                        <button class="action-btn" onclick="extendSubscription(${user.id})" title="Quick Provision 30 Days"><i class="fas fa-calendar-plus" style="color: var(--adm-accent-color);"></i></button>
+                        ${user.role !== 'admin' ? `<button class="action-btn delete-btn" onclick="deleteUser(${user.id})" title="Terminate Account"><i class="fas fa-trash-alt"></i></button>` : ''}
+                    </div>
+                </td>
             `;
-            userList.appendChild(row);
+            userList.appendChild(tr);
+        });
+
+        // Initialize DataTable
+        $('#saUserTable').DataTable({
+            responsive: true,
+            searching: false,
+            pageLength: 5,
+            lengthMenu: [5, 10, 25],
+            dom: '<"dt-top-row">rt<"dt-bottom-row"lp>',
+            language: {
+                search: "",
+                searchPlaceholder: "Search registry..."
+            },
+            columnDefs: [
+                { className: 'all', targets: [0, 1] } // ID and Email always visible
+            ]
         });
 
         initFlatpickr();
@@ -1053,36 +1048,54 @@ function renderAdminUserRows(users) {
     const container = document.getElementById('adminUserList');
     if (!container) return;
 
+    if ($.fn.DataTable.isDataTable('#adminUserManagementTable')) {
+        $('#adminUserManagementTable').DataTable().destroy();
+    }
+
     container.innerHTML = '';
     users.forEach((user, idx) => {
-        const row = document.createElement('div');
-        row.className = 'table-row';
-        row.style.gridTemplateColumns = '80px 1.8fr 120px 140px 180px 140px';
-        row.style.padding = '20px';
-        row.style.alignItems = 'center';
-
+        const tr = document.createElement('tr');
         const subEnd = user.subscription_end ? new Date(user.subscription_end).toLocaleDateString() : 'Lifetime Access';
         const subEndRaw = user.subscription_end || '';
         const plan = user.subscription_plan || 'free';
+        const roleClass = user.role === 'admin' ? 'pro' : 'basic';
 
-        row.innerHTML = `
-                <div style="font-weight: 700; color: #94a3b8;">${idx + 1}</div>
-                <div style="font-weight: 700; color: var(--adm-text-color);">${user.email}</div>
-                <div><span class="badge ${user.role}">${user.role}</span></div>
-                <div><span class="badge ${plan}">${plan}</span></div>
-                <div style="color: var(--adm-accent-color); font-weight: 700;">${subEnd}</div>
-                <div class="action-btns">
-                    <button class="action-btn" onclick="openEditPlanModal(${user.id}, '${plan}', '${subEndRaw}')" title="Edit Subscription Plan">
-                        <i class="fas fa-edit" style="color:#6366f1;"></i>
-                    </button>
-                    <button class="action-btn" onclick="extendSubscription(${user.id})" title="Quick Provision 30 Days">
-                        <i class="fas fa-calendar-plus" style="color:var(--adm-accent-color);"></i>
-                    </button>
-                    ${user.role !== 'admin' ?
-                `<button class="action-btn delete-btn" onclick="deleteUser(${user.id})" title="Terminate Account"><i class="fas fa-trash-alt"></i></button>` : ''}
-                </div>
+        tr.innerHTML = `
+                <td class="col-id">${idx + 1}</td>
+                <td class="col-email">
+                    <div style="font-weight: 700; color: var(--adm-text-color); font-size: 0.95rem;">${user.email}</div>
+                </td>
+                <td class="col-role"><span class="badge ${roleClass}">${user.role}</span></td>
+                <td class="col-role"><span class="badge ${plan}">${plan}</span></td>
+                <td class="col-expiry" style="color: var(--adm-accent-color); font-weight: 700; font-size: 0.9rem;">${subEnd}</td>
+                <td class="col-actions">
+                    <div class="action-btns">
+                        <button class="action-btn" onclick="openEditPlanModal(${user.id}, '${plan}', '${subEndRaw}')" title="Edit Subscription Plan">
+                            <i class="fas fa-edit" style="color:#6366f1;"></i>
+                        </button>
+                        <button class="action-btn" onclick="extendSubscription(${user.id})" title="Quick Provision 30 Days">
+                            <i class="fas fa-calendar-plus" style="color:var(--adm-accent-color);"></i>
+                        </button>
+                        ${user.role !== 'admin' ?
+                    `<button class="action-btn delete-btn" onclick="deleteUser(${user.id})" title="Terminate Account"><i class="fas fa-trash-alt"></i></button>` : ''}
+                    </div>
+                </td>
             `;
-        container.appendChild(row);
+        container.appendChild(tr);
+    });
+
+    $('#adminUserManagementTable').DataTable({
+        responsive: true,
+        searching: false,
+        pageLength: 10,
+        dom: '<"dt-top-row">rt<"dt-bottom-row"lp>',
+        language: {
+            search: "",
+            searchPlaceholder: "Search users..."
+        },
+        columnDefs: [
+            { className: 'all', targets: [0, 1] } // Ref ID and Email always visible
+        ]
     });
 
     initFlatpickr();
@@ -1231,38 +1244,56 @@ function renderBooks(books) {
 
 
 function renderRecentActivity(books) {
-    const activityList = document.getElementById('recentActivityList');
-    if (!activityList) return;
+    const activityItems = document.getElementById('activityItems');
+    if (!activityItems) return;
 
-    activityList.innerHTML = '';
+    if ($.fn.DataTable.isDataTable('#userActivityTable')) {
+        $('#userActivityTable').DataTable().destroy();
+    }
+
+    activityItems.innerHTML = '';
 
     if (!books || books.length === 0) {
-        activityList.innerHTML = '<p style="color: #888;">No recent albums found.</p>';
         return;
     }
 
-    // Sort array by created_at DESC to get recent first, then slice top 3
-    const recentBooks = [...books].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 3);
+    const recentBooks = [...books].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
 
     recentBooks.forEach(book => {
-        const item = document.createElement('div');
-        item.className = 'activity-list-item premium-card-hover reveal-up active'; // active for immediate visibility
-        item.style.cssText = 'padding: 1.2rem 1.5rem; border-radius: 16px; border: 1px solid var(--adm-border-color); display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: all 0.3s ease;';
-
-        item.addEventListener('click', () => navigateTo('/book/' + book.uuid));
+        const tr = document.createElement('tr');
+        tr.style.cursor = 'pointer';
+        tr.onclick = () => navigateTo('/book/' + book.uuid);
 
         const dateStr = new Date(book.created_at).toLocaleDateString();
 
-        item.innerHTML = `
-            <div>
-                <div style="font-weight: 700; color: var(--adm-text-color); margin-bottom: 4px; font-size: 1.05rem;">${book.title}</div>
-                <div style="font-size: 0.85rem; color: var(--adm-text-muted);">Created on ${dateStr} â€¢ Template: <span style="text-transform: capitalize; color: var(--adm-accent-color); font-weight: 500;">${book.template_type || 'default'}</span></div>
-            </div>
-            <div class="activity-icon-container" style="background: var(--adm-pink-pale); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-chevron-right" style="color: var(--adm-accent-color); font-size: 0.8rem;"></i>
-            </div>
+        tr.innerHTML = `
+            <td>
+                <div class="activity-icon-container" style="background: var(--adm-pink-pale); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-book" style="color: var(--adm-accent-color); font-size: 0.8rem;"></i>
+                </div>
+            </td>
+            <td>
+                <div style="font-weight: 700; color: var(--adm-text-color);">${book.title}</div>
+            </td>
+            <td style="color: var(--adm-text-muted); font-size: 0.85rem;">${dateStr}</td>
+            <td>
+                <span class="badge pro" style="text-transform: capitalize;">${book.template_type || 'default'}</span>
+            </td>
         `;
-        activityList.appendChild(item);
+        activityItems.appendChild(tr);
+    });
+
+    $('#userActivityTable').DataTable({
+        responsive: true,
+        searching: false,
+        pageLength: 5,
+        dom: 'rtp', // Minimal UI for dashboard activity
+        language: {
+            emptyTable: "No recent albums found."
+        },
+        columnDefs: [
+            { className: 'all', targets: [0, 1] } // Thumbnail and Album Name
+        ]
     });
 }
 
@@ -1478,11 +1509,17 @@ async function fetchPages(bookId) {
 
 function renderPages(pages) {
     const list = document.getElementById('pageList');
+    if (!list) return;
+
+    if ($.fn.DataTable.isDataTable('#pageEditorTable')) {
+        $('#pageEditorTable').DataTable().destroy();
+    }
+
     list.innerHTML = '';
     pages.forEach((page, index) => {
-        const row = document.createElement('div');
-        row.className = 'table-row page-row';
-        row.dataset.id = page.id;
+        const tr = document.createElement('tr');
+        tr.className = 'page-row';
+        tr.dataset.id = page.id;
 
         const mediaHtml = page.media.map(m =>
             m.type === 'video' ? `<video src="${m.media_path}" muted style="width:40px;height:40px;object-fit:cover;border-radius:4px;"></video>` : `<img src="${m.media_path}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;">`
@@ -1492,17 +1529,34 @@ function renderPages(pages) {
         temp.innerHTML = page.text_content || '';
         const previewText = temp.textContent.substring(0, 50) + '...';
 
-        row.innerHTML = `
-            <div style="cursor: grab;" class="drag-handle"><i class="fas fa-grip-vertical" style="color: #bbb; margin-right: 5px;"></i> #${index + 1}</div>
-            <div style="font-size:0.9rem; color:#666;">${previewText}</div>
-            <div style="display:flex; gap:5px;">${mediaHtml}</div>
-            <div class="action-btns">
-                <button class="action-btn edit-btn" onclick="openEditPage(${page.id})"><i class="fas fa-edit"></i></button>
-                <button class="action-btn delete-btn" onclick="deletePage(${page.id})"><i class="fas fa-trash"></i></button>
-            </div>
+        tr.innerHTML = `
+            <td style="cursor: grab;" class="drag-handle"><i class="fas fa-grip-vertical" style="color: #bbb; margin-right: 5px;"></i> #${index + 1}</td>
+            <td style="font-size:0.9rem; color:#666;">${previewText}</td>
+            <td style="display:flex; gap:5px;">${mediaHtml}</td>
+            <td>
+                <div class="action-btns">
+                    <button class="action-btn edit-btn" onclick="openEditPage(${page.id})"><i class="fas fa-edit"></i></button>
+                    <button class="action-btn delete-btn" onclick="deletePage(${page.id})"><i class="fas fa-trash"></i></button>
+                </div>
+            </td>
         `;
-        list.appendChild(row);
+        list.appendChild(tr);
     });
+
+    $('#pageEditorTable').DataTable({
+        responsive: true,
+        searching: false,
+        pageLength: 25,
+        dom: '<"dt-top-row">rt<"dt-bottom-row"lp>',
+        language: {
+            search: "",
+            searchPlaceholder: "Search pages..."
+        },
+        columnDefs: [
+            { className: 'all', targets: [0, 1] } // Order and Content
+        ]
+    });
+
 
     // Initialize Sortable
     if (window.pageSortable) {
@@ -1890,37 +1944,55 @@ function renderAuditLogs(payments) {
     const logList = document.getElementById('auditLogList');
     if (!logList) return;
 
-    if (!payments.length) {
-        logList.innerHTML = `
-            <div style="padding: 40px; text-align: center; color: var(--adm-text-muted);">
-                <i class="fas fa-history" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.3;"></i>
-                <p>No transaction history found.</p>
-            </div>
-        `;
-        return;
+    // Destroy existing table if it exists
+    if ($.fn.DataTable.isDataTable('#auditTable')) {
+        $('#auditTable').DataTable().destroy();
     }
 
-    logList.innerHTML = payments.map(p => {
-        const date = new Date(p.created_at).toLocaleDateString(undefined, { 
-            month: 'short', day: 'numeric', year: 'numeric' 
-        });
-        const statusClass = p.status === 'success' ? 'verified' : (p.status === 'failed' ? 'failed' : 'pending');
-        const statusLabel = p.status === 'success' ? 'VERIFIED' : p.status.toUpperCase();
-        const statusIcon = p.status === 'success' ? 'fa-check-circle' : (p.status === 'failed' ? 'fa-times-circle' : 'fa-clock');
-        const statusColor = p.status === 'success' ? '#10b981' : (p.status === 'failed' ? '#ef4444' : '#f59e0b');
+    // Explicitly clear existing content
+    logList.innerHTML = '';
 
-        return `
-            <div class="table-row" style="grid-template-columns: 140px 1.5fr 120px 120px 120px; padding: 20px; border-bottom: 1px solid var(--adm-border-color);">
-                <div style="font-size: 0.85rem; font-weight: 600;">${date}</div>
-                <div style="font-weight: 700; color: var(--adm-text-color);">${p.user_email}</div>
-                <div><span class="badge ${p.plan_id}">${p.plan_id.toUpperCase()}</span></div>
-                <div style="font-weight: 600;">₹${(p.amount).toLocaleString()}</div>
-                <div>
-                    <span style="display: inline-flex; align-items: center; gap: 6px; color: ${statusColor}; font-weight: 800; font-size: 0.8rem;">
-                        <i class="fas ${statusIcon}"></i> ${statusLabel}
-                    </span>
-                </div>
-            </div>
-        `;
-    }).join('');
+    const hasData = Array.isArray(payments) && payments.length > 0;
+
+    if (hasData) {
+        logList.innerHTML = payments.map((p, idx) => {
+            const date = new Date(p.created_at).toLocaleDateString(undefined, { 
+                month: 'short', day: 'numeric', year: 'numeric' 
+            });
+            const statusColor = p.status === 'success' ? '#10b981' : (p.status === 'failed' ? '#ef4444' : '#f59e0b');
+            const statusIcon = p.status === 'success' ? 'fa-check-circle' : (p.status === 'failed' ? 'fa-times-circle' : 'fa-clock');
+            const statusLabel = p.status === 'success' ? 'VERIFIED' : p.status.toUpperCase();
+
+            return `
+                <tr>
+                    <td style="text-align: center; vertical-align: middle;"><span style="font-size: 0.85rem; font-weight: 700; color: var(--adm-text-muted);">#${idx + 1}</span></td>
+                    <td style="vertical-align: middle;">
+                        <div style="font-weight: 700; color: var(--adm-text-color);">${p.user_email}</div>
+                        <div style="font-size: 0.75rem; color: var(--adm-text-muted);">${date}</div>
+                    </td>
+                    <td style="text-align: center; vertical-align: middle;"><span class="badge ${p.plan_id}">${p.plan_id.toUpperCase()}</span></td>
+                    <td style="text-align: center; vertical-align: middle;"><span style="font-weight: 600;">₹${(p.amount).toLocaleString()}</span></td>
+                    <td style="text-align: center; vertical-align: middle;">
+                        <span style="display: inline-flex; align-items: center; gap: 6px; color: ${statusColor}; font-weight: 800; font-size: 0.8rem;">
+                            <i class="fas ${statusIcon}"></i> ${statusLabel}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // Re-initialize DataTable
+    $('#auditTable').DataTable({
+        responsive: true,
+        searching: false,
+        pageLength: 10,
+        dom: '<"dt-top-row">rt<"dt-bottom-row"lp>',
+        language: {
+            emptyTable: "No transactions recorded."
+        },
+        columnDefs: [
+            { className: 'all', targets: [0, 1] } // ID and Entity
+        ]
+    });
 }

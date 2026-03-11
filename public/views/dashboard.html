@@ -15,6 +15,13 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- DataTables CDN -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 </head>
 <body>
     <div id="app-container" style="display: none;">
@@ -47,7 +54,7 @@
         </div>
     </div>
     
-    <div class="charts-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+    <div class="charts-grid">
         <div class="stat-card" style="flex-direction: column; align-items: stretch; height: 380px; padding: 1.5rem;">
             <h4 style="margin-bottom: 1.5rem;"><i class="fas fa-chart-line" style="color:var(--adm-accent-color);"></i> Revenue Timeline (30D)</h4>
             <div style="flex: 1; position: relative;">
@@ -72,16 +79,20 @@
         <h3>Registry Management</h3>
         <button class="btn-primary" id="openAddUserModal"><i class="fas fa-plus"></i> New Account</button>
     </div>
-    <div class="data-table">
-        <div class="table-row table-header user-row">
-            <div>Account ID</div>
-            <div>Registry Email</div>
-            <div>Access Level</div>
-            <div>Registration</div>
-            <div>Service Expiry</div>
-            <div>Operations</div>
-        </div>
-        <div id="userList"></div>
+    <div class="data-table-container">
+        <table id="saUserTable" class="display responsive nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th class="col-id">ID</th>
+                    <th class="col-email">Registry Email</th>
+                    <th class="col-role">Level</th>
+                    <th class="col-date">Registered</th>
+                    <th class="col-expiry">Service Expiry</th>
+                    <th class="col-actions">Operations</th>
+                </tr>
+            </thead>
+            <tbody id="userList"></tbody>
+        </table>
     </div>
 </div>
 
@@ -116,17 +127,18 @@
             <button class="btn-outline" onclick="navigateTo('/albums')" style="padding: 10px 20px; font-size: 0.9rem;"><i class="fas fa-layer-group"></i> Manage All</button>
         </div>
     </div>
-    <div id="recentActivityList" class="data-table" style="border-radius: 12px; border: 1px solid var(--adm-border-color);">
-        <!-- Table header for list view -->
-        <div class="table-row table-header" style="grid-template-columns: 50px 1fr 150px 100px;">
-            <div></div>
-            <div>Album Name</div>
-            <div>Date Created</div>
-            <div>Action</div>
-        </div>
-        <div id="activityItems">
-            <p style="color: var(--adm-text-muted); padding: 2rem; text-align: center;">No recent activity logs found.</p>
-        </div>
+    <div class="data-table-container">
+        <table id="userActivityTable" class="display responsive nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Album Name</th>
+                    <th>Date Created</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="activityItems"></tbody>
+        </table>
     </div>
 </div>
 
@@ -141,7 +153,6 @@
     <script>
         window.currentViewName = 'dashboard';
     </script>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="/admin.js?v=8"></script>

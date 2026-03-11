@@ -14,7 +14,13 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"></script>
-    <!-- Removed Razorpay Script for Simulation -->
+    
+    <!-- DataTables CDN -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 </head>
 <body>
     <div id="app-container" style="display: none;">
@@ -31,16 +37,19 @@
             <div class="view-header" style="margin-bottom: 2rem;">
                 <h2><i class="fas fa-clipboard-list" style="color:var(--adm-accent-color); margin-right:12px;"></i> Service Audit Logs</h2>
             </div>
-            <div class="data-table shadow-sm" style="border: 1px solid var(--adm-border-color); border-radius: 16px; overflow: hidden;">
-                <div class="table-row table-header" style="grid-template-columns: 140px 1.5fr 120px 120px 120px; background: rgba(0,0,0,0.02); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-size: 0.75rem;">
-                    <div>Transaction Date</div>
-                    <div>Entity / Account</div>
-                    <div>Service Tier</div>
-                    <div>Amount (INR)</div>
-                    <div>Status</div>
-                </div>
-                <div id="auditLogList">
-                </div>
+            <div class="data-table-container">
+                <table id="auditTable" class="display responsive nowrap" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px; text-align: center;">ID</th>
+                            <th>Entity / Account</th>
+                            <th style="text-align: center;">Service Tier</th>
+                            <th style="text-align: center;">Amount (INR)</th>
+                            <th style="text-align: center;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditLogList"></tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -362,8 +371,6 @@
             closePaymentModal();
         }
     </script>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="/admin.js?v=8"></script>
 </body>
