@@ -185,8 +185,11 @@ function initView() {
     } else if (window.currentViewName === 'profile') {
         const nameInput = document.getElementById('profileName');
         const emailInput = document.getElementById('profile-email-val');
+        const typeInput = document.getElementById('profileType');
+
         if (nameInput) nameInput.value = currentUser?.display_name || 'User';
         if (emailInput) emailInput.value = currentUser?.email || 'user@example.com';
+        if (typeInput) typeInput.value = (currentUser?.role === 'admin' ? 'Administrator' : 'Standard Member');
 
         const profileSubtitle = document.querySelector('.profile-subtitle');
         if (profileSubtitle && currentUser?.email) {

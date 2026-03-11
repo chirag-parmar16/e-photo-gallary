@@ -71,7 +71,10 @@ module.exports = (db) => {
     router.put('/profile', authenticateToken, async (req, res) => {
         const { display_name } = req.body;
         try {
-            await db.run('UPDATE users SET display_name = ? WHERE id = ?', [display_name || '', req.user.id]);
+            await db.run(
+                'UPDATE users SET display_name = ? WHERE id = ?', 
+                [display_name || '', req.user.id]
+            );
             res.json({ success: true });
         } catch (err) {
             res.status(500).json({ error: err.message });
