@@ -1440,6 +1440,26 @@ function initEditorView() {
 
     const bookSettingsForm = document.getElementById('bookSettingsForm');
     if (bookSettingsForm) {
+        // Theme template to color mapping
+        const themeColors = {
+            'default': '#ff4d6d',
+            'birthday': '#ffc107',
+            'wedding': '#b76e79',
+            'anniversary': '#e83e8c'
+        };
+
+        const templateSelect = document.getElementById('editTemplateType');
+        const colorInput = document.getElementById('editColorSchema');
+
+        if (templateSelect && colorInput) {
+            templateSelect.addEventListener('change', (e) => {
+                const selectedTheme = e.target.value;
+                if (themeColors[selectedTheme]) {
+                    colorInput.value = themeColors[selectedTheme];
+                }
+            });
+        }
+
         bookSettingsForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const data = {
@@ -1748,8 +1768,8 @@ function renderNewMediaPreview(file, index) {
 
         item.innerHTML = `
             ${mediaHtml}
-            <button type="button" onclick="removeNewMedia(${index}, this)" style="position:absolute; top:-5px; right:-5px; background:#444; color:white; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer; font-size:12px; z-index:10;">&times;</button>
-            <select class="media-frame-style" style="position:absolute; bottom:0; left:0; width:100%; font-size:10px; padding:2px; background:rgba(255,255,255,0.9); border:none; border-radius:0 0 8px 8px;">
+            <button type="button" class="remove-media-btn" onclick="removeNewMedia(${index}, this)">&times;</button>
+            <select class="media-frame-style">
                 <option value="square">Square</option>
                 <option value="rounded">Rounded</option>
                 <option value="circle">Circle</option>
@@ -1805,8 +1825,8 @@ async function openEditPage(pageId) {
 
                 item.innerHTML = `
                     ${mediaHtml}
-                    <button type="button" onclick="markMediaForDelete(${m.id}, this)" style="position:absolute; top:-5px; right:-5px; background:red; color:white; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer; font-size:12px; z-index:10;">&times;</button>
-                    <select class="media-frame-style" style="position:absolute; bottom:0; left:0; width:100%; font-size:10px; padding:2px; background:rgba(255,255,255,0.9); border:none; border-radius:0 0 8px 8px;">
+                    <button type="button" class="remove-media-btn danger" onclick="markMediaForDelete(${m.id}, this)">&times;</button>
+                    <select class="media-frame-style">
                         <option value="square" ${m.frame_style === 'square' ? 'selected' : ''}>Square</option>
                         <option value="rounded" ${m.frame_style === 'rounded' ? 'selected' : ''}>Rounded</option>
                         <option value="circle" ${m.frame_style === 'circle' ? 'selected' : ''}>Circle</option>

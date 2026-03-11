@@ -42,6 +42,20 @@
     /* Dark Theme Table Variables */
     --adm-table-head-bg: #1f2937;
     --adm-table-row-hover: rgba(255, 77, 109, 0.05);
+
+    /* Form Overrides */
+    --adm-input-bg: #111827;
+}
+
+[data-theme="dark"] .form-control {
+    background: var(--adm-input-bg);
+    color: var(--adm-text-color);
+    border-color: var(--adm-border-color);
+}
+
+[data-theme="dark"] select.form-control option {
+    background: var(--adm-card-bg);
+    color: var(--adm-text-color);
 }
 
 
@@ -551,7 +565,7 @@ body {
 }
 
 .modal-content {
-    background: white;
+    background: var(--adm-card-bg);
     width: 90%;
     max-width: 500px;
     border-radius: 16px;
@@ -559,6 +573,7 @@ body {
     position: relative;
     max-height: 90vh;
     overflow-y: auto;
+    border: 1px solid var(--adm-border-color);
 }
 
 .modal-content h3 {
@@ -602,6 +617,86 @@ body {
     outline: none;
     border-color: var(--adm-accent-color);
     box-shadow: 0 0 0 3px rgba(255, 77, 109, 0.1);
+}
+
+.custom-file-upload {
+    padding: 2.5rem;
+    background: var(--adm-main-bg);
+    border: 2px dashed var(--adm-border-color);
+    border-radius: 16px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .custom-file-upload {
+    background: #111827 !important;
+}
+
+.custom-file-upload:hover {
+    border-color: var(--adm-accent-color);
+    background: var(--adm-pink-pale);
+}
+
+[data-theme="dark"] .custom-file-upload:hover {
+    background: rgba(255, 77, 109, 0.1) !important;
+}
+
+#previewGrid {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 1.25rem;
+    background: var(--adm-main-bg);
+    border-radius: 12px;
+    min-height: 100px;
+    border: 1px solid var(--adm-border-color);
+}
+
+.media-frame-style {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    font-size: 10px;
+    padding: 4px;
+    background: var(--adm-card-bg);
+    color: var(--adm-text-color);
+    border: none;
+    border-top: 1px solid var(--adm-border-color);
+    border-radius: 0 0 8px 8px;
+    cursor: pointer;
+}
+
+.remove-media-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #444;
+    color: white;
+    border: 2px solid var(--adm-card-bg);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 12px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.remove-media-btn:hover {
+    background: var(--adm-accent-color);
+    transform: scale(1.1);
+}
+
+.remove-media-btn.danger {
+    background: #ef4444;
+}
+
+.remove-media-btn.danger:hover {
+    background: #dc2626;
 }
 
 #editColorSchema {
@@ -1912,4 +2007,42 @@ footer {
     align-items: center;
     justify-content: center;
     font-size: 0.9rem;
+}
+/* Quill Dark Mode Overrides */
+[data-theme="dark"] .ql-toolbar.ql-snow {
+    background: #1f2937 !important;
+    border-color: #374151 !important;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+[data-theme="dark"] .ql-toolbar.ql-snow .ql-stroke {
+    stroke: #e5e7eb !important;
+}
+
+[data-theme="dark"] .ql-toolbar.ql-snow .ql-fill {
+    fill: #e5e7eb !important;
+}
+
+[data-theme="dark"] .ql-toolbar.ql-snow .ql-picker {
+    color: #e5e7eb !important;
+}
+
+[data-theme="dark"] .ql-container.ql-snow {
+    border-color: #374151 !important;
+    background: #111827 !important;
+    color: #f9fafb !important;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    font-family: 'Inter', sans-serif;
+}
+
+[data-theme="dark"] .ql-snow .ql-picker-options {
+    background-color: #1f2937 !important;
+    color: #e5e7eb !important;
+    border: 1px solid #374151 !important;
+}
+
+[data-theme="dark"] .ql-snow .ql-editor.ql-blank::before {
+    color: #6b7280 !important;
 }

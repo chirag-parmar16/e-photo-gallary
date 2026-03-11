@@ -35,13 +35,15 @@ const createBook = async (req, res, db) => {
         // Theme Analysis Defaults
         if (template_type === 'birthday') {
             cover_title = cover_title || 'Happy Birthday!';
-            color_schema = color_schema || '#ffc107'; // Golden Yellow
+            color_schema = color_schema || '#ffc107'; 
         } else if (template_type === 'wedding') {
             cover_title = cover_title || 'Our Wedding Day';
-            color_schema = color_schema || '#b76e79'; // Rose Gold
+            color_schema = color_schema || '#b76e79'; 
         } else if (template_type === 'anniversary') {
             cover_title = cover_title || 'Happy Anniversary';
-            color_schema = color_schema || '#e83e8c'; // Deep Pink
+            color_schema = color_schema || '#e83e8c'; 
+        } else {
+            color_schema = color_schema || '#ff4d6d';
         }
 
         template_type = template_type || 'default';
