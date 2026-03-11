@@ -19,7 +19,7 @@ const initiatePayment = async (req, res, db) => {
 
 const verifyPayment = async (req, res, db) => {
     try {
-        const { transactionId, mockPaymentId } = req.body;
+        const { transactionId, mockPaymentId, paymentDetails } = req.body;
 
         if (!transactionId || !mockPaymentId) {
             return res.status(400).json({ error: 'Missing simulation data' });
@@ -27,7 +27,8 @@ const verifyPayment = async (req, res, db) => {
 
         const result = await paymentService.handlePaymentSuccess(db, {
             transactionId,
-            mockPaymentId
+            mockPaymentId,
+            paymentDetails
         });
 
         res.json(result);

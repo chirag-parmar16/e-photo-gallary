@@ -42,7 +42,7 @@ class PaymentService {
     /**
      * Verify and complete a simulated payment
      */
-    async handlePaymentSuccess(db, { transactionId, mockPaymentId }) {
+    async handlePaymentSuccess(db, { transactionId, mockPaymentId, paymentDetails }) {
         // 1. Check if already processed
         const payment = await db.get('SELECT * FROM payments WHERE razorpay_order_id = ?', [transactionId]);
         if (!payment) throw new Error('Transaction record not found');
@@ -53,10 +53,30 @@ class PaymentService {
             throw new Error('Invalid simulator signal');
         }
 
-        // 3. Mark payment as SUCCESS
+        // 3. Mark payment as SUCCESS with structured info
         await db.run(
-            'UPDATE payments SET status = "success", razorpay_payment_id = ? WHERE id = ?',
-            [mockPaymentId, payment.id]
+            `UPDATE payments 
+             SET status = "success", 
+                 razorpay_payment_id = ?, 
+                 payment_method = ?,
+                 upi_id = ?,
+                 bank_name = ?,
+                 card_last4 = ?, 
+                 card_expiry = ?, 
+                 card_holder = ?, 
+                 card_network = ? 
+             WHERE id = ?`,
+            [
+                mockPaymentId, 
+                paymentDetails?.payment_method || 'card',
+                paymentDetails?.upi_id || null,
+                paymentDetails?.bank_name || null,
+                paymentDetails?.card_last4 || null, 
+                paymentDetails?.card_expiry || null, 
+                paymentDetails?.card_holder || null, 
+                paymentDetails?.card_network || null,
+                payment.id
+            ]
         );
 
         // 4. Fetch plan from DB and update user subscription

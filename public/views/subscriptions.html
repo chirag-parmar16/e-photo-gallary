@@ -240,34 +240,69 @@
                     <div class="payment-methods">
                         <label>Select Payment Method</label>
                         <div class="method-options">
-                            <div class="method-item active">
+                            <div class="method-item active" onclick="switchPaymentMethod('card')">
                                 <i class="fas fa-credit-card"></i>
                                 <span>Card</span>
                             </div>
-                            <div class="method-item">
+                            <div class="method-item" onclick="switchPaymentMethod('upi')">
                                 <i class="fab fa-google-pay"></i>
                                 <span>UPI</span>
                             </div>
-                            <div class="method-item">
+                            <div class="method-item" onclick="switchPaymentMethod('netbanking')">
                                 <i class="fas fa-university"></i>
                                 <span>NetBank</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card-details-mock">
-                        <div class="mock-input">
-                            <label>Card Number</label>
-                            <input type="text" value="XXXX XXXX XXXX 4242" disabled>
-                        </div>
-                        <div style="display: flex; gap: 10px;">
-                            <div class="mock-input" style="flex:1">
-                                <label>Expiry</label>
-                                <input type="text" value="12/28" disabled>
+                    <!-- CARD VIEW -->
+                    <div id="method-view-card" class="payment-method-view">
+                        <div class="card-details-mock">
+                            <div class="mock-input">
+                                <label>Card Holder Name</label>
+                                <input type="text" id="sim-card-holder" placeholder="e.g. John Doe">
                             </div>
-                            <div class="mock-input" style="flex:1">
-                                <label>CVV</label>
-                                <input type="password" value="***" disabled>
+                            <div class="mock-input">
+                                <label>Card Number</label>
+                                <input type="text" id="sim-card-number" placeholder="XXXX XXXX XXXX XXXX">
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <div class="mock-input" style="flex:1">
+                                    <label>Expiry</label>
+                                    <input type="text" id="sim-card-expiry" placeholder="MM/YY">
+                                </div>
+                                <div class="mock-input" style="flex:1">
+                                    <label>CVV</label>
+                                    <input type="password" id="sim-card-cvv" placeholder="***">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- UPI VIEW -->
+                    <div id="method-view-upi" class="payment-method-view" style="display: none;">
+                        <div class="card-details-mock">
+                            <div class="mock-input">
+                                <label>UPI ID</label>
+                                <input type="text" id="sim-upi-id" placeholder="username@bank">
+                                <small style="color: var(--adm-text-muted); font-size: 0.7rem; margin-top: 5px; display: block;">Enter any dummy UPI ID (e.g., test@ybl)</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NETBANKING VIEW -->
+                    <div id="method-view-netbanking" class="payment-method-view" style="display: none;">
+                        <div class="card-details-mock">
+                            <div class="mock-input">
+                                <label>Select Your Bank</label>
+                                <select id="sim-bank-name" class="form-select" style="width: 100%; background: var(--adm-bg-color); border: 1px solid var(--adm-border-color); border-radius: 10px; padding: 12px; color: var(--adm-text-color);">
+                                    <option value="">Choose a bank...</option>
+                                    <option value="SBI">State Bank of India</option>
+                                    <option value="HDFC">HDFC Bank</option>
+                                    <option value="ICICI">ICICI Bank</option>
+                                    <option value="AXIS">Axis Bank</option>
+                                    <option value="OTHER">Other Bank</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -304,44 +339,47 @@
     <style>
         .custom-gateway-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            background: rgba(0,0,0,0.4); backdrop-filter: blur(8px);
             display: flex; align-items: center; justify-content: center; z-index: 10000;
         }
         .custom-gateway-card {
-            background: #1a1a1a; width: 100%; max-width: 440px;
-            border-radius: 24px; border: 1px solid rgba(255,255,255,0.1);
-            overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            background: var(--adm-main-bg); width: 100%; max-width: 600px;
+            border-radius: 24px; border: 1px solid var(--adm-border-color);
+            overflow: hidden; box-shadow: var(--adm-shadow-lg);
             animation: modalAppear 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            color: var(--adm-text-color);
         }
         @keyframes modalAppear { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
         
-        .gateway-header { padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .gateway-logo { display: flex; align-items: center; gap: 10px; color: #ff4d6d; font-weight: 700; font-size: 1.1rem; }
-        .gateway-close { background: none; border: none; color: #888; font-size: 2rem; cursor: pointer; }
+        .gateway-header { padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--adm-border-color); }
+        .gateway-logo { display: flex; align-items: center; gap: 10px; color: var(--adm-accent-color); font-weight: 700; font-size: 1.1rem; }
+        .gateway-close { background: none; border: none; color: var(--adm-text-muted); font-size: 2rem; cursor: pointer; }
         
         .gateway-body { padding: 2rem; }
-        .plan-summary { background: rgba(255,255,255,0.03); padding: 1.2rem; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .plan-summary { background: var(--adm-pink-pale); padding: 1.2rem; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border: 1px solid var(--adm-border-pink); }
         .plan-info { display: flex; flex-direction: column; }
-        #buy-plan-name { color: #fff; font-weight: 600; font-size: 1.1rem; }
-        .plan-info small { color: #888; }
-        .plan-price { font-size: 1.3rem; font-weight: 800; color: #fff; }
+        #buy-plan-name { color: var(--adm-text-color); font-weight: 700; font-size: 1.1rem; }
+        .plan-info small { color: var(--adm-text-muted); }
+        .plan-price { font-size: 1.3rem; font-weight: 800; color: var(--adm-text-color); }
         
-        .payment-methods label { display: block; color: #888; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.8rem; letter-spacing: 1px; }
+        .payment-methods label { display: block; color: var(--adm-text-muted); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.8rem; letter-spacing: 1px; }
         .method-options { display: flex; gap: 10px; margin-bottom: 1.5rem; }
-        .method-item { flex: 1; padding: 1rem; border-radius: 12px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); text-align: center; cursor: pointer; transition: 0.2s; }
-        .method-item i { display: block; font-size: 1.2rem; margin-bottom: 5px; color: #888; }
-        .method-item span { font-size: 0.75rem; color: #888; }
-        .method-item.active { background: rgba(255, 77, 109, 0.1); border-color: #ff4d6d; }
-        .method-item.active i, .method-item.active span { color: #ff4d6d; }
+        .method-item { flex: 1; padding: 1rem; border-radius: 12px; background: var(--adm-bg-color); border: 1px solid var(--adm-border-color); text-align: center; cursor: pointer; transition: 0.2s; }
+        .method-item i { display: block; font-size: 1.2rem; margin-bottom: 5px; color: var(--adm-text-muted); }
+        .method-item span { font-size: 0.75rem; color: var(--adm-text-muted); }
+        .method-item.active { background: var(--adm-accent-glow); border-color: var(--adm-accent-color); }
+        .method-item.active i, .method-item.active span { color: var(--adm-accent-color); }
         
         .card-details-mock { display: flex; flex-direction: column; gap: 12px; margin-bottom: 2rem; }
-        .mock-input label { font-size: 0.75rem; color: #666; display: block; margin-bottom: 4px; }
-        .mock-input input { width: 100%; background: #222; border: 1px solid #333; border-radius: 8px; padding: 10px; color: #666; font-size: 0.9rem; }
+        .mock-input label { font-size: 0.75rem; color: var(--adm-text-muted); display: block; margin-bottom: 4px; }
+        .mock-input input { width: 100%; background: var(--adm-bg-color); border: 1px solid var(--adm-border-color); border-radius: 10px; padding: 12px; color: var(--adm-text-color); font-size: 0.95rem; transition: 0.3s; }
+        .mock-input input:focus { border-color: var(--adm-accent-color); outline: none; box-shadow: 0 0 0 3px var(--adm-accent-glow); }
         
-        .gateway-pay-btn { width: 100%; background: #ff4d6d; color: #fff; border: none; padding: 1.1rem; border-radius: 14px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 15px -3px rgba(255, 77, 109, 0.3); }
-        .gateway-footer { padding: 1rem; text-align: center; color: #555; font-size: 0.75rem; background: rgba(0,0,0,0.1); }
+        .gateway-pay-btn { width: 100%; background: var(--adm-accent-color); color: #fff; border: none; padding: 1.1rem; border-radius: 14px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 15px -3px var(--adm-accent-glow); }
+        .gateway-pay-btn:hover { background: var(--adm-accent-hover); transform: translateY(-2px); }
+        .gateway-footer { padding: 1rem; text-align: center; color: var(--adm-text-muted); font-size: 0.75rem; background: rgba(0,0,0,0.02); }
         
-        .gateway-spinner { width: 60px; height: 60px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #ff4d6d; border-radius: 50%; margin: 0 auto; animation: spin 1s linear infinite; }
+        .gateway-spinner { width: 60px; height: 60px; border: 4px solid var(--adm-border-color); border-top: 4px solid var(--adm-accent-color); border-radius: 50%; margin: 0 auto; animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         
         .success-checkmark { width: 80px; height: 80px; background: #10b981; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: #fff; box-shadow: 0 0 30px rgba(16, 185, 129, 0.4); animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -473,10 +511,49 @@
             document.getElementById('payment-gateway-modal').style.display = 'none';
         }
 
+        let activePaymentMethod = 'card';
+
+        function switchPaymentMethod(method) {
+            activePaymentMethod = method;
+            
+            // Toggle active class on buttons
+            document.querySelectorAll('.method-item').forEach(el => {
+                el.classList.remove('active');
+                if (el.innerText.toLowerCase().includes(method === 'netbanking' ? 'netbank' : method)) {
+                    el.classList.add('active');
+                }
+            });
+
+            // Show relevant view
+            document.querySelectorAll('.payment-method-view').forEach(el => el.style.display = 'none');
+            document.getElementById(`method-view-${method}`).style.display = 'block';
+        }
+
         function startPaymentSimulation() {
             // Animation sequence
             document.getElementById('payment-step-1').style.display = 'none';
             document.getElementById('payment-step-processing').style.display = 'block';
+
+            // Capture Data based on method
+            let paymentData = {
+                payment_method: activePaymentMethod
+            };
+
+            if (activePaymentMethod === 'card') {
+                const cardNum = document.getElementById('sim-card-number').value || '';
+                const cardLast4 = cardNum.trim().slice(-4) || '4242';
+                paymentData = {
+                    ...paymentData,
+                    card_last4: cardLast4,
+                    card_expiry: document.getElementById('sim-card-expiry').value || '12/28',
+                    card_holder: document.getElementById('sim-card-holder').value || 'Mock User',
+                    card_network: cardNum.startsWith('4') ? 'Visa' : (cardNum.startsWith('5') ? 'Mastercard' : 'Simulated')
+                };
+            } else if (activePaymentMethod === 'upi') {
+                paymentData.upi_id = document.getElementById('sim-upi-id').value || 'test@upi';
+            } else if (activePaymentMethod === 'netbanking') {
+                paymentData.bank_name = document.getElementById('sim-bank-name').value || 'Simulated Bank';
+            }
 
             // Simulate the 2s delay
             setTimeout(() => {
@@ -484,11 +561,11 @@
                 document.getElementById('payment-step-success').style.display = 'block';
                 
                 // Trigger backend verification in the background
-                verifySimulatedPayment();
+                verifySimulatedPayment(paymentData);
             }, 2500);
         }
 
-        async function verifySimulatedPayment() {
+        async function verifySimulatedPayment(cardData) {
             try {
                 const token = localStorage.getItem('token');
                 
@@ -500,7 +577,8 @@
                     },
                     body: JSON.stringify({ 
                         transactionId: activeTransactionId,
-                        mockPaymentId: `pay_sim_${Date.now()}`
+                        mockPaymentId: `pay_sim_${Date.now()}`,
+                        paymentDetails: cardData
                     })
                 });
 

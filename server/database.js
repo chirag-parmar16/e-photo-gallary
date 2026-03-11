@@ -140,6 +140,13 @@ async function initDb() {
             amount             INT NOT NULL, -- In paise
             currency           VARCHAR(10) DEFAULT 'INR',
             status             VARCHAR(20) DEFAULT 'pending', -- pending, success, failed
+            payment_method     VARCHAR(20), -- card, upi, netbanking
+            upi_id             VARCHAR(255),
+            bank_name          VARCHAR(255),
+            card_last4         VARCHAR(4),
+            card_expiry        VARCHAR(10),
+            card_holder        VARCHAR(255),
+            card_network       VARCHAR(50),
             error_reason       TEXT,
             notes              JSON,
             created_at         DATETIME DEFAULT CURRENT_TIMESTAMP,
