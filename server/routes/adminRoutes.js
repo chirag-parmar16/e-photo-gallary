@@ -76,7 +76,55 @@ module.exports = (db) => {
 
     router.get('/stats', adminAuth, (req, res) => adminController.getStats(req, res, db));
     router.get('/payments', adminAuth, (req, res) => adminController.getPayments(req, res, db));
+    router.put('/payments/:id/status', adminAuth, (req, res) => adminController.updatePaymentStatus(req, res, db));
     router.put('/settings', adminAuth, (req, res) => adminController.updateSettings(req, res, db));
+
+    // ── Subscription Plan CRUD ──────────────────────────────────────────────────
+    router.get('/plans', adminAuth, async (req, res) => {
+        try {
+            const plans = await db.all('SELECT * FROM subscription_plans ORDER BY price ASC');
+            res.json(plans);
+        } catch (err) { res.status(500).json({ error: err.message }); }
+    });
+
+    router.post('/plans', adminAuth, async (req, res) => {
+        try {
+            const { plan_key, name, price, days, max_books, features } = req.body;
+            if (!plan_key || !name) return res.status(400).json({ error: 'plan_key and name are required' });
+            await db.run(
+                'INSERT INTO subscription_plans (plan_key, name, price, days, max_books, features) VALUES (?, ?, ?, ?, ?, ?)',
+                [plan_key, name, price || 0, days || 30, max_books || 1, JSON.stringify(features || [])]
+            );
+            const newPlan = await db.get('SELECT * FROM subscription_plans WHERE plan_key = ?', [plan_key]);
+            res.json(newPlan);
+        } catch (err) { res.status(500).json({ error: err.message }); }
+    });
+
+    router.put('/plans/:id', adminAuth, async (req, res) => {
+        try {
+            const { name, price, days, max_books, features, is_active } = req.body;
+            await db.run(
+                `UPDATE subscription_plans SET
+                    name = COALESCE(?, name),
+                    price = COALESCE(?, price),
+                    days = COALESCE(?, days),
+                    max_books = COALESCE(?, max_books),
+                    features = COALESCE(?, features),
+                    is_active = COALESCE(?, is_active)
+                WHERE id = ?`,
+                [name, price, days, max_books, features ? JSON.stringify(features) : null, is_active, req.params.id]
+            );
+            const updated = await db.get('SELECT * FROM subscription_plans WHERE id = ?', [req.params.id]);
+            res.json(updated);
+        } catch (err) { res.status(500).json({ error: err.message }); }
+    });
+
+    router.delete('/plans/:id', adminAuth, async (req, res) => {
+        try {
+            await db.run('UPDATE subscription_plans SET is_active = 0 WHERE id = ?', [req.params.id]);
+            res.json({ success: true });
+        } catch (err) { res.status(500).json({ error: err.message }); }
+    });
 
     return router;
 };

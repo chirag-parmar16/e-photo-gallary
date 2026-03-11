@@ -132,9 +132,25 @@ const getPayments = async (req, res, db) => {
     }
 };
 
+const updatePaymentStatus = async (req, res, db) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+        if (!['success', 'pending', 'failed', 'cancel'].includes(status)) {
+            return res.status(400).json({ error: 'Invalid status' });
+        }
+
+        await db.run('UPDATE payments SET status = ? WHERE id = ?', [status, id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
 module.exports = {
     getSettings,
     getStats,
     updateSettings,
-    getPayments
+    getPayments,
+    updatePaymentStatus
 };

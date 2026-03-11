@@ -148,6 +148,34 @@ async function initDb() {
         )
     `);
 
+    // 7. Subscription Plans
+    await db.exec(`
+        CREATE TABLE IF NOT EXISTS subscription_plans (
+            id           INT AUTO_INCREMENT PRIMARY KEY,
+            plan_key     VARCHAR(50) UNIQUE NOT NULL,
+            name         VARCHAR(100) NOT NULL,
+            price        INT NOT NULL DEFAULT 0,
+            currency     VARCHAR(10) DEFAULT 'INR',
+            days         INT NOT NULL DEFAULT 30,
+            max_books    INT NOT NULL DEFAULT 1,
+            features     JSON,
+            is_active    TINYINT(1) DEFAULT 1,
+            created_at   DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    // ── Seed: Default Subscription Plans ──────────────────────────────────────
+    const plansExist = await db.get('SELECT id FROM subscription_plans LIMIT 1');
+    if (!plansExist) {
+        await db.run(`INSERT INTO subscription_plans (plan_key, name, price, days, max_books, features) VALUES (?, ?, ?, ?, ?, ?)`,
+            ['free', 'Essential', 0, 36500, 1, JSON.stringify(['1 Live Album', '100 Photos/Videos'])]);
+        await db.run(`INSERT INTO subscription_plans (plan_key, name, price, days, max_books, features) VALUES (?, ?, ?, ?, ?, ?)`,
+            ['basic', 'Basic', 500, 30, 5, JSON.stringify(['5 Live Albums', '500 Photos/Videos', 'Email Support'])]);
+        await db.run(`INSERT INTO subscription_plans (plan_key, name, price, days, max_books, features) VALUES (?, ?, ?, ?, ?, ?)`,
+            ['pro', 'Professional', 1200, 30, 999, JSON.stringify(['Unlimited Albums', 'Premium Layouts', 'Priority Support', 'All Templates'])]);
+        console.log('Default subscription plans seeded ✓');
+    }
+
     // ── Seed: Default Admin (Only if not exists) ──────────────────────────────
     const adminEmail = 'admin@gmail.com';
     const existingAdmin = await db.get('SELECT id FROM users WHERE email = ?', [adminEmail]);

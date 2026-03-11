@@ -33,9 +33,38 @@
     <div id="admin-subscription-view" style="display: none;">
 
 
-        <div style="margin-top: 2rem;">
+        <div style="margin-top: 2rem; display: none;">
+            <div class="view-header" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h2><i class="fas fa-cubes-stacked" style="color:var(--adm-accent-color); margin-right:12px;"></i> Manage Subscription Tiers</h2>
+                    <p style="color:var(--adm-text-muted);">Configure plans, pricing, and features visible to users.</p>
+                </div>
+                <button class="btn-primary" onclick="openCreatePlanModal()">
+                    <i class="fas fa-plus-circle"></i> Create New Plan
+                </button>
+            </div>
+            <div class="data-table-container">
+                <table id="planManagementTable" class="display responsive nowrap" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px; text-align: center;">ID</th>
+                            <th>Plan Name</th>
+                            <th style="text-align: center;">Price (INR)</th>
+                            <th style="text-align: center;">Duration (Days)</th>
+                            <th style="text-align: center;">Max Albums</th>
+                            <th style="text-align: center;">Status</th>
+                            <th style="text-align: center;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="planManagementList"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style="margin-top: 4rem;">
             <div class="view-header" style="margin-bottom: 2rem;">
-                <h2><i class="fas fa-clipboard-list" style="color:var(--adm-accent-color); margin-right:12px;"></i> Service Audit Logs</h2>
+                <h2><i class="fas fa-receipt" style="color:var(--adm-accent-color); margin-right:12px;"></i> Service Audit Logs</h2>
+                <p style="color:var(--adm-text-muted);">Historical transaction records for all users.</p>
             </div>
             <div class="data-table-container">
                 <table id="auditTable" class="display responsive nowrap" style="width:100%">
@@ -46,6 +75,7 @@
                             <th style="text-align: center;">Service Tier</th>
                             <th style="text-align: center;">Amount (INR)</th>
                             <th style="text-align: center;">Status</th>
+
                         </tr>
                     </thead>
                     <tbody id="auditLogList"></tbody>
@@ -58,7 +88,7 @@
     <div id="user-subscription-view" style="display: none;">
         <div class="view-header">
             <div>
-                <h2><i class="fas fa-gem" style="color:var(--adm-accent-color); margin-right:12px;"></i> Manage Subscription</h2>
+                <h2><i class="fas fa-crown" style="color:var(--adm-accent-color); margin-right:12px;"></i> Manage Subscription</h2>
                 <p style="color:var(--adm-text-muted);">View your current plan and explore premium upgrades.</p>
             </div>
         </div>
@@ -95,42 +125,85 @@
             <div class="view-header" style="margin-bottom: 2rem;">
                 <h3>Available Service Tiers</h3>
             </div>
-            <div class="pricing-grid">
-                <div class="pricing-card">
-                    <div class="plan-badge plan-basic">Essential</div>
-                    <div style="font-size: 2.5rem; font-weight: 800; margin: 1.5rem 0 0.5rem 0; font-family: 'Playfair Display', serif; color: var(--adm-text-color);">Free</div>
-                    <p style="color: var(--adm-text-muted); margin-bottom: 2rem; font-size: 0.95rem;">Perfect for casual users getting started.</p>
-                    <ul style="list-style: none; margin-bottom: 2.5rem; flex-grow: 1; display: flex; flex-direction: column; gap: 12px; padding: 0;">
-                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> 1 Live Album</li>
-                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> 100 Photos/Video</li>
-                    </ul>
-                    <button class="btn-outline current-tier-btn" disabled style="opacity: 0.6; width: 100%;">Current Plan</button>
-                </div>
-
-                <div class="pricing-card">
-                    <div class="plan-badge plan-basic" style="background: rgba(6, 182, 212, 0.1); color: #06b6d4;">Basic Tier</div>
-                    <div style="font-size: 2.5rem; font-weight: 800; margin: 1.5rem 0 0.5rem 0; font-family: 'Playfair Display', serif; color: var(--adm-text-color);">₹500<span style="font-size: 1rem; color: #888;">/mo</span></div>
-                    <p style="color: var(--adm-text-muted); margin-bottom: 2rem; font-size: 0.95rem;">Enhanced features for small teams.</p>
-                    <ul style="list-style: none; margin-bottom: 2.5rem; flex-grow: 1; display: flex; flex-direction: column; gap: 12px; padding: 0;">
-                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> 5 Live Albums</li>
-                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> 500 Photos/Video</li>
-                    </ul>
-                    <button id="btn-pay-basic" class="btn-primary upgrade-btn" style="width: 100%; background: #06b6d4;" onclick="initiateRazorpayPayment('basic')">Upgrade Basic</button>
-                </div>
-                
-                <div class="pricing-card popular">
-                    <div class="popular-tag">MOST SECURE</div>
-                    <div class="plan-badge plan-pro">Professional ERP</div>
-                    <div style="font-size: 2.5rem; font-weight: 800; margin: 1.5rem 0 0.5rem 0; font-family: 'Playfair Display', serif; color: var(--adm-accent-color);">₹1200<span style="font-size: 1rem; color: #888;">/mo</span></div>
-                    <p style="color: var(--adm-text-muted); margin-bottom: 2rem; font-size: 0.95rem;">Unleash the full potential of your digital archive.</p>
-                    <ul style="list-style: none; margin-bottom: 2.5rem; flex-grow: 1; display: flex; flex-direction: column; gap: 12px; padding: 0;">
-                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> Unlimited Albums</li>
-                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> Premium Layouts</li>
-                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> Priority Architecture</li>
-                    </ul>
-                    <button id="btn-pay-pro" class="btn-primary upgrade-btn" style="width: 100%;" onclick="initiateRazorpayPayment('pro')">Upgrade Professional</button>
+            <!-- Dynamic pricing cards rendered by JS -->
+            <div id="dynamic-pricing-grid" class="pricing-grid">
+                <div style="text-align:center;padding:3rem;color:var(--adm-text-muted);">
+                    <i class="fas fa-spinner fa-spin" style="font-size:2rem;"></i>
+                    <p style="margin-top:1rem;">Loading plans...</p>
                 </div>
             </div>
+</div>
+
+<!-- Plan Editor Modal -->
+<div id="planEditorModal" class="modal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3 id="planModalTitle">Edit Plan</h3>
+            <button class="close-btn" onclick="closePlanModal()">&times;</button>
+        </div>
+        <form id="planEditorForm">
+            <input type="hidden" id="planEditId">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label>Plan Key (Unique ID)</label>
+                    <input type="text" id="planEditKey" placeholder="e.g. basic" required style="width: 100%; border-radius: 8px; border: 1px solid var(--adm-border-color); padding: 10px;">
+                </div>
+                <div class="form-group">
+                    <label>Display Name</label>
+                    <input type="text" id="planEditName" placeholder="e.g. Premium Tier" required style="width: 100%; border-radius: 8px; border: 1px solid var(--adm-border-color); padding: 10px;">
+                </div>
+                <div class="form-group">
+                    <label>Price (INR)</label>
+                    <input type="number" id="planEditPrice" value="0" required style="width: 100%; border-radius: 8px; border: 1px solid var(--adm-border-color); padding: 10px;">
+                </div>
+                <div class="form-group">
+                    <label>Duration (Days)</label>
+                    <input type="number" id="planEditDays" value="30" required style="width: 100%; border-radius: 8px; border: 1px solid var(--adm-border-color); padding: 10px;">
+                </div>
+                <div class="form-group">
+                    <label>Max Books</label>
+                    <input type="number" id="planEditMaxBooks" value="1" required style="width: 100%; border-radius: 8px; border: 1px solid var(--adm-border-color); padding: 10px;">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="planEditActive" style="width: 100%; border-radius: 8px; border: 1px solid var(--adm-border-color); padding: 10px;">
+                        <option value="1">Active</option>
+                        <option value="0">Inactive</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Features (JSON Array of strings)</label>
+                <textarea id="planEditFeatures" placeholder='["Feature 1", "Feature 2"]' style="width: 100%; border-radius: 8px; border: 1px solid var(--adm-border-color); padding: 10px; min-height: 80px;"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn-outline" onclick="closePlanModal()">Cancel</button>
+                <button type="submit" class="btn-primary" id="btn-save-plan">Save Plan Changes</button>
+            </div>
+        </form>
+</div>
+</div>
+
+<!-- Payment Status Edit Modal -->
+<div id="paymentStatusModal" class="modal">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3>Update Payment Status</h3>
+            <button class="close-btn" onclick="document.getElementById('paymentStatusModal').classList.remove('active')">&times;</button>
+        </div>
+        <div class="form-group" style="margin-top: 1rem;">
+            <label>Transaction Status</label>
+            <input type="hidden" id="editPaymentId">
+            <select id="editPaymentStatus" class="form-control" style="width: 100%; border-radius: 8px; border: 1px solid var(--adm-border-color); padding: 10px;">
+                <option value="pending">Pending</option>
+                <option value="success">Paid / Success</option>
+                <option value="failed">Failed</option>
+                <option value="cancel">Cancelled</option>
+            </select>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 2rem;">
+            <button class="btn-primary" style="flex:1" onclick="submitPaymentStatusUpdate()">Update Status</button>
+            <button class="btn-outline" style="flex:1" onclick="document.getElementById('paymentStatusModal').classList.remove('active')">Cancel</button>
         </div>
     </div>
 </div>
@@ -277,6 +350,82 @@
     <script>
         window.currentViewName = 'subscriptions';
         let activeTransactionId = null;
+
+        // ─── Load dynamic plan cards from backend ─────────────────────────────────
+        async function loadSubscriptionPlans(userPlan) {
+            const grid = document.getElementById('dynamic-pricing-grid');
+            if (!grid) return;
+            try {
+                const res = await fetch('/api/plans');
+                const plans = await res.json();
+                if (!Array.isArray(plans) || plans.length === 0) {
+                    grid.innerHTML = '<p style="color:var(--adm-text-muted);padding:2rem;">No plans available.</p>';
+                    return;
+                }
+                grid.innerHTML = plans.map(plan => {
+                    const isCurrentPlan = plan.plan_key === (userPlan || 'free');
+                    const isFree = plan.price === 0;
+                    const isPopular = plan.plan_key === 'pro';
+                    const priceHtml = isFree
+                        ? `<div style="font-size:2.8rem;font-weight:900;margin:1.5rem 0 0.5rem;font-family:'Playfair Display',serif;color:var(--adm-text-color);">Free</div>`
+                        : `<div style="font-size:2.8rem;font-weight:900;margin:1.5rem 0 0.5rem;font-family:'Playfair Display',serif;color:${isPopular?'var(--adm-accent-color)':'var(--adm-text-color)'};">₹${plan.price.toLocaleString()}<span style="font-size:1rem;color:#94a3b8;font-weight:500;">/mo</span></div>`;
+                    
+                    let features = [];
+                    try { features = JSON.parse(plan.features) || []; } catch(e) {}
+                    const featureItems = features.map(f => `<li style="display:flex;align-items:center;gap:10px;"><i class="fas fa-circle-check" style="color:#10b981;font-size:0.9rem;"></i> <span style="font-size:0.9rem;font-weight:500;">${f}</span></li>`).join('');
+
+                    const btnHtml = isCurrentPlan
+                        ? `<button class="btn-outline" disabled style="opacity:0.6;width:100%;cursor:default;border-color:#10b981;color:#10b981;"><i class="fas fa-check-double"></i> Your Active Plan</button>`
+                        : (isFree
+                            ? `<button class="btn-outline" disabled style="opacity:0.5;width:100%;">Plan Downgrade unavailable</button>`
+                            : `<button class="btn-primary" style="width:100%;${isPopular?'':'background:#0ea5e9;'}" onclick="initiateRazorpayPayment('${plan.plan_key}')"><i class="fas fa-bolt"></i> Upgrade to ${plan.name}</button>`);
+
+                    return `
+                        <div class="pricing-card ${isPopular ? 'popular' : ''}" style="${isCurrentPlan ? 'border-color: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,0.2);' : ''}">
+                            ${isPopular ? '<div class="popular-tag">MOST POPULAR</div>' : ''}
+                            ${isCurrentPlan ? '<div style="position:absolute;top:16px;right:16px;background:#10b981;color:white;font-size:0.7rem;font-weight:700;padding:3px 10px;border-radius:50px;letter-spacing:0.5px;">ACTIVE</div>' : ''}
+                            <div class="plan-badge plan-${plan.plan_key}" style="${plan.plan_key==='basic'?'background:rgba(6,182,212,0.1);color:#06b6d4;':''}">${plan.name}</div>
+                            ${priceHtml}
+                            <ul style="list-style:none;margin-bottom:2.5rem;flex-grow:1;display:flex;flex-direction:column;gap:12px;padding:0;text-align:left;">
+                                ${featureItems || '<li style="color:var(--adm-text-muted);">Basic access</li>'}
+                            </ul>
+                            ${btnHtml}
+                        </div>`.trim();
+                }).join('');
+            } catch(err) {
+                grid.innerHTML = '<p style="color:var(--adm-text-muted);padding:2rem;">Could not load plans. Please refresh.</p>';
+            }
+        }
+
+        // ─── Page init: called by admin.js after currentUser is loaded ────────────
+        window.onSubscriptionsPageReady = async function(user) {
+            const isAdmin = user?.role === 'admin';
+
+            // Show the correct section
+            const adminView = document.getElementById('admin-subscription-view');
+            const userView = document.getElementById('user-subscription-view');
+
+            if (isAdmin) {
+                if (adminView) adminView.style.display = 'block';
+                if (userView) userView.style.display = 'none';
+                // Populate audit log and plan management
+                if (typeof fetchAuditLogs === 'function') fetchAuditLogs();
+                if (typeof fetchSubscriptionPlansAdmin === 'function') fetchSubscriptionPlansAdmin();
+            } else {
+                if (adminView) adminView.style.display = 'none';
+                if (userView) userView.style.display = 'block';
+
+                // Set current plan display
+                const planEl = document.getElementById('profile-plan-val');
+                const subEndEl = document.getElementById('profile-sub-end-val');
+                if (planEl) planEl.textContent = (user.subscription_plan || 'free').toUpperCase();
+                if (subEndEl) subEndEl.textContent = user.subscription_end ? new Date(user.subscription_end).toLocaleDateString() : 'Never (Free)';
+
+                // Load dynamic plan cards
+                await loadSubscriptionPlans(user.subscription_plan || 'free');
+            }
+        };
+
 
         async function initiateRazorpayPayment(planId) {
             try {

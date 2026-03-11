@@ -16,6 +16,14 @@ module.exports = (db) => {
     // Public endpoints
     router.get('/public/books/:uuid', (req, res) => pageController.getPublicBook(req, res, db));
     router.get('/settings', (req, res) => adminController.getSettings(req, res, db));
+    
+    // Public: list active subscription plans (used by user-facing subscription page)
+    router.get('/plans', async (req, res) => {
+        try {
+            const plans = await db.all('SELECT * FROM subscription_plans WHERE is_active = 1 ORDER BY price ASC');
+            res.json(plans);
+        } catch (err) { res.status(500).json({ error: err.message }); }
+    });
 
     return router;
 };

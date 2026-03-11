@@ -271,20 +271,22 @@ function initView() {
         if (assignBtn) assignBtn.addEventListener('click', assignSubscription);
 
     } else if (window.currentViewName === 'subscriptions') {
-        const adminSubView = document.getElementById('admin-subscription-view');
-        const userSubView = document.getElementById('user-subscription-view');
-
-        if (currentRole === 'admin') {
-            if (adminSubView) adminSubView.style.display = 'block';
-            if (userSubView) userSubView.style.display = 'none';
-            fetchAuditLogs();
+        // Delegate to the page's onSubscriptionsPageReady callback with user context
+        if (typeof window.onSubscriptionsPageReady === 'function') {
+            window.onSubscriptionsPageReady(currentUser);
         } else {
-            if (adminSubView) adminSubView.style.display = 'none';
-            if (userSubView) userSubView.style.display = 'block';
-            fetchProfileDetails();
-            updatePricingButtons();
+            // Fallback: show admin vs user view
+            const adminSubView = document.getElementById('admin-subscription-view');
+            const userSubView = document.getElementById('user-subscription-view');
+            if (currentRole === 'admin') {
+                if (adminSubView) adminSubView.style.display = 'block';
+                if (userSubView) userSubView.style.display = 'none';
+                if (typeof fetchAuditLogs === 'function') fetchAuditLogs();
+            } else {
+                if (adminSubView) adminSubView.style.display = 'none';
+                if (userSubView) userSubView.style.display = 'block';
+            }
         }
-        console.log('Subscriptions view initialized');
     }
 }
 
@@ -801,7 +803,7 @@ async function fetchUsers() {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
         });
         const users = await res.json();
-        
+
         // Destroy existing DataTable if it exists
         if ($.fn.DataTable.isDataTable('#saUserTable')) {
             $('#saUserTable').DataTable().destroy();
@@ -812,7 +814,7 @@ async function fetchUsers() {
             const subEndDisplay = user.subscription_end ? new Date(user.subscription_end).toLocaleDateString() : 'Active Access';
             const subEndRaw = user.subscription_end || '';
             const roleClass = user.role === 'admin' ? 'pro' : 'basic';
-            
+
             tr.innerHTML = `
                 <td class="col-id">#${idx + 1}</td>
                 <td class="col-email">
@@ -1083,7 +1085,7 @@ function renderAdminUserRows(users) {
                             <i class="fas fa-calendar-plus" style="color:var(--adm-accent-color);"></i>
                         </button>
                         ${user.role !== 'admin' ?
-                    `<button class="action-btn delete-btn" onclick="deleteUser(${user.id})" title="Terminate Account"><i class="fas fa-trash-alt"></i></button>` : ''}
+                `<button class="action-btn delete-btn" onclick="deleteUser(${user.id})" title="Terminate Account"><i class="fas fa-trash-alt"></i></button>` : ''}
                     </div>
                 </td>
             `;
@@ -1279,11 +1281,11 @@ function renderRecentActivity(books) {
                 </div>
             </td>
             <td>
-                <div style="font-weight: 700; color: var(--adm-text-color);">${book.title}</div>
+                <div style="font-family: 'Playfair Display', serif; font-weight: 800; color: var(--adm-text-color); font-size: 1.1rem; letter-spacing: -0.01em;">${book.title}</div>
             </td>
-            <td style="color: var(--adm-text-muted); font-size: 0.85rem;">${dateStr}</td>
+            <td style="color: var(--adm-text-muted); font-size: 0.85rem; font-weight: 500;">${dateStr}</td>
             <td>
-                <span class="badge pro" style="text-transform: capitalize;">${book.template_type || 'default'}</span>
+                <span class="badge pro" style="text-transform: capitalize; background: rgba(255, 77, 109, 0.08); color: var(--adm-accent-color); border: 1px solid rgba(255, 77, 109, 0.1);">${book.template_type || 'default'}</span>
             </td>
         `;
         activityItems.appendChild(tr);
@@ -1346,9 +1348,9 @@ function bindUserDashboardEvents() {
             e.preventDefault();
             const recipientName = document.getElementById('newRecipientName').value;
             const confirmNameSpan = document.getElementById('confirmRecipientName');
-            
+
             if (confirmNameSpan) confirmNameSpan.textContent = recipientName;
-            
+
             // Show confirmation modal instead of creating directly
             const confirmModal = document.getElementById('confirmCreateBookModal');
             if (confirmModal) {
@@ -1366,7 +1368,7 @@ function bindUserDashboardEvents() {
                 submitCreateBook();
             });
         }
-        
+
         bookForm.dataset.bound = "true";
     }
 }
@@ -1932,6 +1934,75 @@ if (passForm) {
     });
 }
 
+// --- EDIT USER PLAN MODAL ---
+const EDIT_PLAN_MODAL_HTML = `
+<div id="editPlanModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;">
+    <div style="width:90%;max-width:460px;background:var(--adm-card-bg);border-radius:20px;padding:2rem;border:1px solid var(--adm-border-color);">
+        <h3 style="margin-bottom:1.5rem;font-family:'Playfair Display',serif;">Edit User Subscription</h3>
+        <input type="hidden" id="editPlanUserId">
+        <div class="form-group">
+            <label>Subscription Plan</label>
+            <select id="editPlanSelect" class="form-control">
+                <option value="free">Essential (Free)</option>
+                <option value="basic">Basic – ₹500/mo</option>
+                <option value="pro">Professional – ₹1200/mo</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Expiry Date (leave blank for 30 days from today)</label>
+            <input type="date" id="editPlanDate" class="form-control">
+        </div>
+        <div style="display:flex;gap:10px;margin-top:1.5rem;">
+            <button class="btn-primary" style="flex:1;" onclick="saveUserPlanEdit()"><i class="fas fa-save"></i> Save</button>
+            <button class="btn-outline" style="flex:1;" onclick="document.getElementById('editPlanModal').remove()">Cancel</button>
+        </div>
+    </div>
+</div>`;
+
+function openEditPlanModal(userId, currentPlan, subEnd) {
+    const existing = document.getElementById('editPlanModal');
+    if (existing) existing.remove();
+    document.body.insertAdjacentHTML('beforeend', EDIT_PLAN_MODAL_HTML);
+    document.getElementById('editPlanUserId').value = userId;
+    const sel = document.getElementById('editPlanSelect');
+    if (currentPlan) sel.value = currentPlan;
+    if (subEnd) {
+        try {
+            const dateStr = new Date(subEnd).toISOString().split('T')[0];
+            document.getElementById('editPlanDate').value = dateStr;
+        } catch (e) { }
+    }
+}
+
+async function saveUserPlanEdit() {
+    const userId = document.getElementById('editPlanUserId').value;
+    const plan = document.getElementById('editPlanSelect').value;
+    const dateVal = document.getElementById('editPlanDate').value;
+    const token = localStorage.getItem('token');
+
+    let body = { plan };
+    if (dateVal) {
+        body.directDate = dateVal;
+    } else {
+        body.days = 30;
+    }
+
+    try {
+        const res = await fetch(`/api/admin/users/${userId}/subscription`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to save');
+        document.getElementById('editPlanModal').remove();
+        iziToast.success({ message: `Plan updated to "${plan.toUpperCase()}" successfully` });
+        if (typeof loadSuperAdminData === 'function') loadSuperAdminData();
+    } catch (err) {
+        iziToast.error({ title: 'Save Error', message: err.message });
+    }
+}
+
 // --- SUBSCRIPTION PRICING LOGIC ---
 function updatePricingButtons() {
     const plan = (currentUser?.subscription_plan || 'free').toLowerCase();
@@ -2010,8 +2081,8 @@ function renderAuditLogs(payments) {
 
     if (hasData) {
         logList.innerHTML = payments.map((p, idx) => {
-            const date = new Date(p.created_at).toLocaleDateString(undefined, { 
-                month: 'short', day: 'numeric', year: 'numeric' 
+            const date = new Date(p.created_at).toLocaleDateString(undefined, {
+                month: 'short', day: 'numeric', year: 'numeric'
             });
             const statusColor = p.status === 'success' ? '#10b981' : (p.status === 'failed' ? '#ef4444' : '#f59e0b');
             const statusIcon = p.status === 'success' ? 'fa-check-circle' : (p.status === 'failed' ? 'fa-times-circle' : 'fa-clock');
@@ -2042,11 +2113,208 @@ function renderAuditLogs(payments) {
         searching: false,
         pageLength: 10,
         dom: '<"dt-top-row">rt<"dt-bottom-row"lp>',
-        language: {
-            emptyTable: "No transactions recorded."
-        },
         columnDefs: [
-            { className: 'all', targets: [0, 1] } // ID and Entity
+            { className: 'all', targets: [0, 1, 4] }
         ]
     });
 }
+
+window.openEditPaymentStatusModal = function (paymentId, currentStatus) {
+    document.getElementById('editPaymentId').value = paymentId;
+    document.getElementById('editPaymentStatus').value = currentStatus;
+    document.getElementById('paymentStatusModal').classList.add('active');
+};
+
+window.submitPaymentStatusUpdate = async function () {
+    const id = document.getElementById('editPaymentId').value;
+    const status = document.getElementById('editPaymentStatus').value;
+    const token = localStorage.getItem('token');
+
+    try {
+        const res = await fetch(`/api/admin/payments/${id}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ status })
+        });
+
+        if (res.ok) {
+            iziToast.success({ title: 'Updated', message: 'Payment status changed' });
+            document.getElementById('paymentStatusModal').classList.remove('active');
+            fetchAuditLogs();
+        } else {
+            const err = await res.json();
+            iziToast.error({ title: 'Error', message: err.error || 'Failed to update' });
+        }
+    } catch (err) {
+        iziToast.error({ title: 'Error', message: 'Connection Error' });
+    }
+};
+
+// ─── Plan Management CRUD ───────────────────────────────────────────────────
+
+window.fetchSubscriptionPlansAdmin = async function () {
+    try {
+        const res = await fetch('/api/admin/plans', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const plans = await res.json();
+        renderPlanManagementTable(plans || []);
+    } catch (err) {
+        console.error('Error fetching plans:', err);
+    }
+};
+
+function renderPlanManagementTable(plans) {
+    const list = document.getElementById('planManagementList');
+    if (!list) return;
+
+    if ($.fn.DataTable.isDataTable('#planManagementTable')) {
+        $('#planManagementTable').DataTable().destroy();
+    }
+
+    list.innerHTML = plans.map(plan => {
+        const statusBadge = plan.is_active
+            ? '<span style="color:#10b981;background:rgba(16,185,129,0.1);padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:800;">ACTIVE</span>'
+            : '<span style="color:#ef4444;background:rgba(239,68,68,0.1);padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:800;">INACTIVE</span>';
+
+        return `
+            <tr>
+                <td style="text-align: center; vertical-align: middle;"><span style="font-size: 0.85rem; font-weight: 700; color: var(--adm-text-muted);">#${plan.id}</span></td>
+                <td style="vertical-align: middle;">
+                    <div style="font-weight: 700; color: var(--adm-text-color);">${plan.name}</div>
+                    <div style="font-size: 0.7rem; color: var(--adm-text-muted);">${plan.plan_key}</div>
+                </td>
+                <td style="text-align: center; vertical-align: middle;"><span style="font-weight: 600;">₹${plan.price.toLocaleString()}</span></td>
+                <td style="text-align: center; vertical-align: middle;">${plan.days} Days</td>
+                <td style="text-align: center; vertical-align: middle;">${plan.max_books === 9999 ? 'UNLIMITED' : plan.max_books}</td>
+                <td style="text-align: center; vertical-align: middle;">${statusBadge}</td>
+                <td style="text-align: center; vertical-align: middle;">
+                    <div style="display: flex; gap: 8px; justify-content: center;">
+                        <button class="btn-icon edit-plan-btn" data-plan='${JSON.stringify(plan).replace(/'/g, "&apos;")}' title="Edit Plan">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-icon" style="color:#ef4444;" onclick="deleteSubscriptionPlan(${plan.id})" title="Delete Plan">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    // Add event listeners for edit buttons
+    document.querySelectorAll('.edit-plan-btn').forEach(btn => {
+        btn.onclick = () => {
+            const plan = JSON.parse(btn.dataset.plan);
+            openEditPlanEditorModal(plan);
+        };
+    });
+
+    $('#planManagementTable').DataTable({
+        responsive: true,
+        pageLength: 5,
+        dom: '<"dt-top-row">rt<"dt-bottom-row"lp>',
+        language: { emptyTable: "No subscription plans defined." },
+        columnDefs: [{ className: 'all', targets: [0, 1, 6] }]
+    });
+}
+
+window.openCreatePlanModal = function () {
+    document.getElementById('planModalTitle').textContent = 'Create New Plan';
+    document.getElementById('planEditId').value = '';
+    document.getElementById('planEditKey').value = '';
+    document.getElementById('planEditName').value = '';
+    document.getElementById('planEditPrice').value = '0';
+    document.getElementById('planEditDays').value = '30';
+    document.getElementById('planEditMaxBooks').value = '1';
+    document.getElementById('planEditActive').value = '1';
+    document.getElementById('planEditFeatures').value = '[]';
+    document.getElementById('planEditorModal').classList.add('active');
+};
+
+window.openEditPlanEditorModal = function (plan) {
+    document.getElementById('planModalTitle').textContent = 'Edit Plan';
+    document.getElementById('planEditId').value = plan.id;
+    document.getElementById('planEditKey').value = plan.plan_key;
+    document.getElementById('planEditName').value = plan.name;
+    document.getElementById('planEditPrice').value = plan.price;
+    document.getElementById('planEditDays').value = plan.days;
+    document.getElementById('planEditMaxBooks').value = plan.max_books;
+    document.getElementById('planEditActive').value = plan.is_active;
+    document.getElementById('planEditFeatures').value = plan.features;
+    document.getElementById('planEditorModal').classList.add('active');
+};
+
+window.closePlanModal = function () {
+    document.getElementById('planEditorModal').classList.remove('active');
+};
+
+// Handle Plan Save
+document.addEventListener('submit', async (e) => {
+    if (e.target && e.target.id === 'planEditorForm') {
+        e.preventDefault();
+        const id = document.getElementById('planEditId').value;
+        const data = {
+            plan_key: document.getElementById('planEditKey').value,
+            name: document.getElementById('planEditName').value,
+            price: parseFloat(document.getElementById('planEditPrice').value),
+            days: parseInt(document.getElementById('planEditDays').value),
+            max_books: parseInt(document.getElementById('planEditMaxBooks').value),
+            is_active: parseInt(document.getElementById('planEditActive').value),
+            features: document.getElementById('planEditFeatures').value || '[]'
+        };
+
+        const btn = document.getElementById('btn-save-plan');
+        window.toggleButtonLoader(btn, true);
+
+        try {
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `/api/admin/plans/${id}` : '/api/admin/plans';
+
+            const res = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+                iziToast.success({ title: 'Success', message: 'Plan saved successfully' });
+                closePlanModal();
+                fetchSubscriptionPlansAdmin();
+            } else {
+                const err = await res.json();
+                iziToast.error({ title: 'Error', message: err.error || 'Failed to save plan' });
+            }
+        } catch (err) {
+            iziToast.error({ title: 'Error', message: 'Connection error' });
+        } finally {
+            window.toggleButtonLoader(btn, false);
+        }
+    }
+});
+
+window.deleteSubscriptionPlan = function (id) {
+    window.confirmAction('Delete Subscription Plan', 'Are you sure you want to delete this plan? This may affect users subscribed to it.', async () => {
+        try {
+            const res = await fetch(`/api/admin/plans/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            if (res.ok) {
+                iziToast.success({ title: 'Deleted', message: 'Plan removed' });
+                fetchSubscriptionPlansAdmin();
+            } else {
+                const err = await res.json();
+                iziToast.error({ title: 'Error', message: err.error || 'Failed to delete plan' });
+            }
+        } catch (err) {
+            iziToast.error({ title: 'Error', message: 'Connection error' });
+        }
+    });
+};

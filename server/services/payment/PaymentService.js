@@ -1,33 +1,40 @@
 const simulatedGateway = require('./SimulatedGateway');
-const config = require('./paymentConfig');
 
 class PaymentService {
+    /**
+     * Fetch plan definition from the DB
+     */
+    async _getPlan(db, planKey) {
+        const plan = await db.get('SELECT * FROM subscription_plans WHERE plan_key = ? AND is_active = 1', [planKey]);
+        if (!plan) throw new Error(`Invalid or inactive plan: "${planKey}"`);
+        return plan;
+    }
+
     /**
      * Create a new payment record and initiate simulated transaction
      */
     async createPayment(db, { userId, planId }) {
-        const plan = config.plans[planId];
-        if (!plan) throw new Error('Invalid plan selection');
+        const plan = await this._getPlan(db, planId);
 
         // Create Mock Transaction
         const transaction = await simulatedGateway.createTransaction({
-            amount: plan.amount,
-            currency: plan.currency,
+            amount: plan.price,
+            currency: plan.currency || 'INR',
             planId,
             userId
         });
 
-        // Store pending payment in DB (Reusing table for consistency)
+        // Store pending payment in DB
         await db.run(
             `INSERT INTO payments (user_id, plan_id, razorpay_order_id, amount, currency, status, gateway) 
              VALUES (?, ?, ?, ?, ?, 'pending', 'simulated')`,
-            [userId, planId, transaction.id, plan.amount, plan.currency]
+            [userId, planId, transaction.id, plan.price, plan.currency || 'INR']
         );
 
         return {
             transactionId: transaction.id,
-            amount: plan.amount,
-            currency: plan.currency,
+            amount: plan.price,
+            currency: plan.currency || 'INR',
             planName: plan.name
         };
     }
@@ -52,29 +59,28 @@ class PaymentService {
             [mockPaymentId, payment.id]
         );
 
-        // 4. Update User Subscription
-        const plan = config.plans[payment.plan_id];
+        // 4. Fetch plan from DB and update user subscription
+        const plan = await this._getPlan(db, payment.plan_id);
         await this._activateSubscription(db, payment.user_id, plan);
 
-        console.log(`[SIM_PAYMENT_SUCCESS] User: ${payment.user_id}, Tx: ${transactionId}`);
+        console.log(`[SIM_PAYMENT_SUCCESS] User: ${payment.user_id}, Plan: ${payment.plan_id}, Tx: ${transactionId}`);
         return { success: true };
     }
 
     async _activateSubscription(db, userId, plan) {
-        const user = await db.get('SELECT subscription_end FROM users WHERE id = ?', userId);
-        
-        const currentEnd = (user.subscription_end && new Date(user.subscription_end) > new Date())
+        const user = await db.get('SELECT subscription_end FROM users WHERE id = ?', [userId]);
+
+        const currentEnd = (user && user.subscription_end && new Date(user.subscription_end) > new Date())
             ? new Date(user.subscription_end)
             : new Date();
 
-        currentEnd.setDate(currentEnd.getDate() + plan.days);
+        currentEnd.setDate(currentEnd.getDate() + (plan.days || 30));
         const formattedDate = currentEnd.toISOString().slice(0, 19).replace('T', ' ');
 
         await db.run(
             'UPDATE users SET subscription_plan = ?, subscription_end = ? WHERE id = ?',
-            [plan.id, formattedDate, userId]
+            [plan.plan_key, formattedDate, userId]
         );
-
     }
 }
 

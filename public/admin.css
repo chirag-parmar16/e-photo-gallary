@@ -25,6 +25,11 @@
     --adm-table-padding: 1rem 1.5rem;
 }
 
+/* Global DataTables Overrides - Hide Search Bar */
+.dataTables_filter {
+    display: none !important;
+}
+
 /* Dark Theme Variables */
 [data-theme="dark"] {
     --adm-bg-color: #0c111d;
@@ -95,6 +100,7 @@
     display: flex;
     flex-direction: column;
     box-shadow: var(--adm-shadow);
+    position: relative;
 }
 
 .pricing-card:hover {
@@ -1993,9 +1999,106 @@ footer {
 }
 
 /* Recent Activity List View */
-.activity-list-item {
+
+/* Premium Pricing Cards */
+#dynamic-pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    padding: 1rem 0;
+}
+
+.pricing-card {
+    background: var(--adm-card-bg);
+    border: 1px solid var(--adm-border-color);
+    border-radius: 24px;
+    padding: 2.5rem 2rem;
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+}
+
+.pricing-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+    border-color: var(--adm-accent-color);
+}
+
+.pricing-card.popular {
+    transform: scale(1.03);
+    border-color: var(--adm-accent-color);
+    box-shadow: 0 15px 35px rgba(255, 77, 109, 0.12);
+}
+
+.pricing-card.popular:hover {
+    transform: translateY(-8px) scale(1.03);
+}
+
+.popular-tag {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--adm-accent-color);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 4px 15px;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    letter-spacing: 1px;
+}
+
+.plan-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 1rem;
+    width: fit-content;
+    background: rgba(0,0,0,0.05);
+}
+
+.plan-pro { background: rgba(255, 77, 109, 0.1); color: var(--adm-accent-color); }
+.plan-basic { background: rgba(14, 165, 233, 0.1); color: #0ea5e9; }
+.plan-free { background: rgba(148, 163, 184, 0.1); color: #64748b; }
+
+.pricing-card ul li i {
+    font-size: 1rem;
+    filter: drop-shadow(0 2px 4px rgba(16, 185, 129, 0.2));
+}
+
+/* Dashboard Table Contrast */
+.data-table-container table td div[style*="font-weight: 700"] {
+    color: #0f172a !important; /* Force darker text for album names */
+}
+
+[data-theme="dark"] .data-table-container table td div[style*="font-weight: 700"] {
+    color: #f8fafc !important;
+}
+
+.activity-icon-container {
+    box-shadow: 0 4px 10px rgba(255, 77, 109, 0.15);
+}
+
+/* Modal Enhancements */
+.modal-content {
+    border: none;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    background: var(--adm-card-bg);
+}
+
+.form-control:focus {
+    border-color: var(--adm-accent-color);
+    box-shadow: 0 0 0 3px rgba(255, 77, 109, 0.1);
+}
+.activity-list-item {
     padding: 12px 16px;
     border-bottom: 1px solid var(--adm-border-color);
     gap: 15px;
