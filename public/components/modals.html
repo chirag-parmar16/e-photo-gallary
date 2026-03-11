@@ -31,6 +31,10 @@
         <h3 style="margin-bottom: 1.5rem;">Create New Album</h3>
         <form id="createBookForm">
             <div class="form-group">
+                <label>Recipient's Name</label>
+                <input type="text" id="newRecipientName" class="form-control" required placeholder="e.g. Rahul Sharma" style="border: 1px solid var(--adm-accent-color); font-weight: 600;">
+            </div>
+            <div class="form-group">
                 <label>Album Name (Internal)</label>
                 <input type="text" id="newBookTitle" class="form-control" required placeholder="e.g. Wedding 2024">
             </div>
@@ -54,6 +58,23 @@
             </div>
             <button type="submit" class="btn-primary" style="width: 100%;">Create Album</button>
         </form>
+    </div>
+</div>
+
+<!-- Creation Confirmation Modal -->
+<div id="confirmCreateBookModal" class="modal">
+    <div class="modal-content" style="max-width: 450px; border-radius: 20px; padding: 2rem; text-align: center;">
+        <div style="font-size: 3rem; color: var(--adm-accent-color); margin-bottom: 1rem;"><i class="fas fa-check-circle"></i></div>
+        <h3>Confirm Album Creation</h3>
+        <p style="color: var(--adm-text-muted); margin-bottom: 1.5rem;">The Recipient Name <strong>cannot be edited</strong> after creation. Is this correct?</p>
+        <div style="background: rgba(255, 77, 109, 0.05); padding: 1rem; border-radius: 12px; margin-bottom: 2rem;">
+            <span style="display: block; font-size: 0.8rem; color: var(--adm-text-muted); text-transform: uppercase; letter-spacing: 1px;">Recipient Name</span>
+            <span id="confirmRecipientName" style="font-size: 1.4rem; font-weight: 700; color: var(--adm-accent-color);"></span>
+        </div>
+        <div style="display: flex; gap: 12px;">
+            <button class="btn-primary secondary close-modal" data-modal="confirmCreateBookModal" style="flex: 1; background: #eee; color: #333;">Edit Name</button>
+            <button id="finalCreateBookBtn" class="btn-primary" style="flex: 1;">Yes, Create Album</button>
+        </div>
     </div>
 </div>
 

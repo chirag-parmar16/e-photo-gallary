@@ -1344,41 +1344,69 @@ function bindUserDashboardEvents() {
     if (bookForm && !bookForm.dataset.bound) {
         bookForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const title = document.getElementById('newBookTitle').value;
-            const template_type = document.getElementById('newBookTemplate').value;
-            const border_style = document.getElementById('newBookBorder').value;
-
-            const btn = e.submitter || e.target.querySelector('button[type="submit"]');
-            window.toggleButtonLoader(btn, true);
-
-            try {
-                const res = await fetch('/api/books', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-                    },
-                    body: JSON.stringify({ title, template_type, border_style })
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    document.getElementById('createBookModal').classList.remove('active');
-                    document.getElementById('createBookForm').reset();
-                    iziToast.success({ title: 'Success', message: 'Album created!' });
-                    navigateTo('/book/' + data.uuid);
-                } else {
-                    const data = await res.json();
-                    iziToast.error({ title: 'Limit Reached', message: data.error || 'Failed to create album' });
-                }
-            } catch (err) {
-                console.error(err);
-                iziToast.error({ title: 'Error', message: 'Something went wrong.' });
-            } finally {
-                window.toggleButtonLoader(btn, false);
+            const recipientName = document.getElementById('newRecipientName').value;
+            const confirmNameSpan = document.getElementById('confirmRecipientName');
+            
+            if (confirmNameSpan) confirmNameSpan.textContent = recipientName;
+            
+            // Show confirmation modal instead of creating directly
+            const confirmModal = document.getElementById('confirmCreateBookModal');
+            if (confirmModal) {
+                confirmModal.classList.add('active');
+            } else {
+                // Fallback if modal not found
+                submitCreateBook();
             }
         });
+
+        // Handle final confirmation
+        const finalBtn = document.getElementById('finalCreateBookBtn');
+        if (finalBtn) {
+            finalBtn.addEventListener('click', () => {
+                submitCreateBook();
+            });
+        }
+        
         bookForm.dataset.bound = "true";
+    }
+}
+
+async function submitCreateBook() {
+    const bookForm = document.getElementById('createBookForm');
+    const finalBtn = document.getElementById('finalCreateBookBtn');
+    const title = document.getElementById('newBookTitle').value;
+    const recipient_name = document.getElementById('newRecipientName').value;
+    const template_type = document.getElementById('newBookTemplate').value;
+    const border_style = document.getElementById('newBookBorder').value;
+
+    window.toggleButtonLoader(finalBtn, true);
+
+    try {
+        const res = await fetch('/api/books', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+            },
+            body: JSON.stringify({ title, recipient_name, template_type, border_style })
+        });
+        if (res.ok) {
+            const data = await res.json();
+            document.getElementById('confirmCreateBookModal').classList.remove('active');
+            document.getElementById('createBookModal').classList.remove('active');
+            bookForm.reset();
+            iziToast.success({ title: 'Success', message: 'Album created!' });
+            navigateTo('/book/' + data.uuid);
+        } else {
+            const data = await res.json();
+            iziToast.error({ title: 'Limit Reached', message: data.error || 'Failed to create album' });
+        }
+    } catch (err) {
+        console.error(err);
+        iziToast.error({ title: 'Error', message: 'Something went wrong.' });
+    } finally {
+        window.toggleButtonLoader(finalBtn, false);
     }
 }
 

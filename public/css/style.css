@@ -86,6 +86,8 @@ body {
 
 .page-content {
     position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     padding: 20px; /* Reduced padding for more space */
@@ -113,6 +115,83 @@ body {
     background: linear-gradient(135deg, var(--accent-color), var(--warm-accent)) !important;
     color: white !important;
     justify-content: center !important;
+    position: absolute;
+    overflow: hidden;
+}
+
+.cover-glow {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.15) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.cover-design-element-top, .cover-design-element-bottom {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    border: 2px solid rgba(255,255,255,0.2);
+    z-index: 1;
+}
+
+.cover-design-element-top {
+    top: 20px;
+    left: 20px;
+    border-right: none;
+    border-bottom: none;
+}
+
+.cover-design-element-bottom {
+    bottom: 20px;
+    right: 20px;
+    border-left: none;
+    border-top: none;
+}
+
+.cover-content {
+    position: relative;
+    z-index: 2;
+    padding: 40px;
+    width: 100%;
+}
+
+.cover-pre-title {
+    display: block;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    margin-bottom: 10px;
+    font-weight: 300;
+    opacity: 0.9;
+}
+
+.recipient-display-name {
+    font-size: 4rem !important;
+    line-height: 1.1;
+    margin-bottom: 20px !important;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    text-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.cover-divider {
+    width: 60px;
+    height: 3px;
+    background: white;
+    margin: 20px auto;
+    border-radius: 2px;
+}
+
+.cover-tagline {
+    font-size: 1.4rem !important;
+    font-style: italic;
+    opacity: 0.95;
+    max-width: 80%;
+    margin: 0 auto !important;
 }
 
 .cover-front h1 {
@@ -654,29 +733,29 @@ body {
 /* --- BORDER STYLES --- */
 .page-content.border-style-solid-primary {
     border: 4px solid var(--primary-color) !important;
-    box-sizing: border-box; margin: 15px; height: calc(100% - 30px); width: calc(100% - 30px);
+    box-sizing: border-box; top: 15px; left: 15px; height: calc(100% - 30px); width: calc(100% - 30px);
 }
 .page-content.border-style-dashed-primary {
     border: 4px dashed var(--primary-color) !important;
-    box-sizing: border-box; margin: 15px; height: calc(100% - 30px); width: calc(100% - 30px);
+    box-sizing: border-box; top: 15px; left: 15px; height: calc(100% - 30px); width: calc(100% - 30px);
 }
 .page-content.border-style-double-primary {
     border: 8px double var(--primary-color) !important;
-    box-sizing: border-box; margin: 15px; height: calc(100% - 30px); width: calc(100% - 30px);
+    box-sizing: border-box; top: 15px; left: 15px; height: calc(100% - 30px); width: calc(100% - 30px);
 }
 .page-content.border-style-floral {
     border: 20px solid transparent !important;
     border-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30"><circle cx="15" cy="15" r="10" fill="%23ff4d6d" opacity="0.5"/></svg>') 10 round !important;
-    box-sizing: border-box; margin: 15px; height: calc(100% - 30px); width: calc(100% - 30px);
+    box-sizing: border-box; top: 15px; left: 15px; height: calc(100% - 30px); width: calc(100% - 30px);
 }
 .page-content.border-style-classic {
     border: 12px double #8a6d3b !important;
     outline: 2px solid #8a6d3b !important;
     outline-offset: -20px;
-    box-sizing: border-box; margin: 15px; height: calc(100% - 30px); width: calc(100% - 30px);
+    box-sizing: border-box; top: 15px; left: 15px; height: calc(100% - 30px); width: calc(100% - 30px);
 }
 .page-content.border-style-modern {
     border: 1px solid rgba(0,0,0,0.1) !important;
     box-shadow: inset 0 0 40px rgba(0,0,0,0.02) !important;
-    box-sizing: border-box; margin: 20px; height: calc(100% - 40px); width: calc(100% - 40px);
+    box-sizing: border-box; top: 20px; left: 20px; height: calc(100% - 40px); width: calc(100% - 40px);
 }

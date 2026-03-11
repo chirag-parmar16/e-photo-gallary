@@ -112,6 +112,9 @@ async function initDb() {
     try {
         await db.exec('ALTER TABLE books ADD COLUMN border_style VARCHAR(50) DEFAULT "none"');
     } catch (err) { }
+    try {
+        await db.exec('ALTER TABLE books ADD COLUMN recipient_name VARCHAR(255)');
+    } catch (err) { }
 
     // 3. Pages
     await db.exec(`

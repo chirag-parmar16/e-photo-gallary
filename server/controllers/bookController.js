@@ -11,7 +11,7 @@ const getBooks = async (req, res, db) => {
 
 const createBook = async (req, res, db) => {
     try {
-        let { title, cover_title, cover_subtitle, instruction_text, end_title, template_type, color_schema, border_style } = req.body;
+        let { title, recipient_name, cover_title, cover_subtitle, instruction_text, end_title, template_type, color_schema, border_style } = req.body;
         const uuid = crypto.randomUUID();
 
         // --- SUBSCRIPTION ENFORCEMENT ---
@@ -47,11 +47,12 @@ const createBook = async (req, res, db) => {
         template_type = template_type || 'default';
 
         const result = await db.run(
-            `INSERT INTO books (user_id, title, cover_title, cover_subtitle, instruction_text, end_title, uuid, template_type, color_schema, border_style)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO books (user_id, title, recipient_name, cover_title, cover_subtitle, instruction_text, end_title, uuid, template_type, color_schema, border_style)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 req.user.id,
                 title || 'Untitled Album',
+                recipient_name || '',
                 cover_title || 'Our Journey',
                 cover_subtitle || 'A collection of memories, frozen in time.',
                 instruction_text || 'Tap to open',

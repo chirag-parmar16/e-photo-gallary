@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.pages) {
                 originalPages = data.pages;
                 if (data.book) {
+                    settings.recipient_name = data.book.recipient_name;
                     settings.cover_title = data.book.cover_title;
                     settings.cover_subtitle = data.book.cover_subtitle;
                     settings.instruction_text = data.book.instruction_text;
@@ -121,7 +122,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         document.body.className = 'template-' + (settings.template_type || 'default');
 
-        const coverTitle = settings.cover_title || 'Our Timeless Journey';
+        const recipientName = settings.recipient_name || 'Someone Special';
+        const coverTitle = settings.cover_title || 'A Memory Book For';
         const coverSubtitle = settings.cover_subtitle || 'A collection of memories, frozen in time.';
         const instructionText = settings.instruction_text || 'Tap to open';
         const endTitle = settings.end_title || 'THE END';
@@ -132,9 +134,16 @@ document.addEventListener('DOMContentLoaded', () => {
         coverSheet.style.zIndex = data.length + 10;
         coverSheet.innerHTML = `
             <div class="page-content front cover-front">
-                <h1>${coverTitle}</h1>
-                <p>${coverSubtitle}</p>
-                <div class="instruction">${instructionText}</div>
+                <div class="cover-glow"></div>
+                <div class="cover-design-element-top"></div>
+                <div class="cover-content">
+                    <span class="cover-pre-title">A Memory Book For</span>
+                    <h1 class="recipient-display-name">${recipientName}</h1>
+                    <div class="cover-divider"></div>
+                    <p class="cover-tagline">${coverSubtitle}</p>
+                    <div class="instruction">${instructionText}</div>
+                </div>
+                <div class="cover-design-element-bottom"></div>
             </div>
             ${createPageContent(data[0], 'back', settings)}
         `;
