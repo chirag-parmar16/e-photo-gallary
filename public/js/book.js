@@ -116,9 +116,14 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPage = 0;
 
         // Apply Global Themes
-        if (settings.color_schema && !settings.template_type) {
+        if (settings.color_schema) {
             document.documentElement.style.setProperty('--primary-color', settings.color_schema);
             document.documentElement.style.setProperty('--accent-color', settings.color_schema);
+            document.documentElement.style.setProperty('--warm-accent', settings.color_schema);
+            
+            document.body.style.setProperty('--primary-color', settings.color_schema);
+            document.body.style.setProperty('--accent-color', settings.color_schema);
+            document.body.style.setProperty('--warm-accent', settings.color_schema);
         }
         document.body.className = 'template-' + (settings.template_type || 'default');
 
@@ -137,7 +142,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="cover-glow"></div>
                 <div class="cover-design-element-top"></div>
                 <div class="cover-content">
-                    <span class="cover-pre-title">A Memory Book For</span>
+                    <div class="cover-pre-title-wrapper">
+                        <span class="cover-pre-title">A Memory Book For</span>
+                    </div>
                     <h1 class="recipient-display-name">${recipientName}</h1>
                     <div class="cover-divider"></div>
                     <p class="cover-tagline">${coverSubtitle}</p>
