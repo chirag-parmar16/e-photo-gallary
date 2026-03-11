@@ -968,6 +968,12 @@ footer {
         transition: all 0.2s;
     }
 
+    [data-theme="dark"] .mobile-toggle {
+        background: rgba(255, 77, 109, 0.15);
+        border-color: rgba(255, 77, 109, 0.2);
+        color: #ff758f;
+    }
+
     .mobile-toggle:active {
         background: var(--adm-accent-color);
         color: white;
@@ -1575,8 +1581,8 @@ footer {
     border: 1px solid var(--adm-border-color);
     box-shadow: var(--adm-shadow);
     height: fit-content;
-    position: sticky;
-    top: calc(var(--adm-navbar-height) + 2rem);
+    position: relative;
+    top: 0;
 }
 
 .profile-content-area {
@@ -1810,6 +1816,8 @@ footer {
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     padding: 0;
+    flex-shrink: 0;
+    aspect-ratio: 1/1;
 }
 
 .circle-btn:hover {
