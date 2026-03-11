@@ -9,6 +9,37 @@
     --paper-color: #ffffff;
     --shadow-color: rgba(192, 0, 0, 0.15);
 }
+body.template-default {
+    --bg-color: #fff0f3;
+    --primary-color: #ff4d6d;
+    --accent-color: #ff758f;
+    --soft-highlight: #ffb3c1;
+    --gradient-cover: linear-gradient(135deg, #ff4d6d, #ff758f, #ffb3c1);
+}
+
+body.template-birthday {
+    --bg-color: #fff6d6;
+    --primary-color: #ffc107;
+    --accent-color: #ff7b00;
+    --soft-highlight: #ff3d68;
+    --gradient-cover: linear-gradient(135deg, #ffc107, #ff7b00, #ff3d68);
+}
+
+body.template-wedding {
+    --bg-color: #fff5f4;
+    --primary-color: #b76e79;
+    --accent-color: #d4a5a5;
+    --soft-highlight: #f7d1cd;
+    --gradient-cover: linear-gradient(135deg, #b76e79, #d4a5a5, #f7d1cd);
+}
+
+body.template-anniversary {
+    --bg-color: #fff0f6;
+    --primary-color: #e83e8c;
+    --accent-color: #ff4d6d;
+    --soft-highlight: #ff8fab;
+    --gradient-cover: linear-gradient(135deg, #e83e8c, #ff4d6d, #ff8fab);
+}
 
 * {
     margin: 0;

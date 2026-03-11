@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPage = 0;
 
         // Apply Global Themes
-        if (settings.color_schema) {
+        if (settings.color_schema && !settings.template_type) {
             document.documentElement.style.setProperty('--primary-color', settings.color_schema);
             document.documentElement.style.setProperty('--accent-color', settings.color_schema);
         }
@@ -413,8 +413,8 @@ document.addEventListener('DOMContentLoaded', () => {
             particle.classList.add(...classes);
 
             if (templateType === 'birthday') {
-                const colors = ['#ff4d4d', '#4dff4d', '#4d4dff', '#ffff4d', '#ff4dff'];
-                particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            const colors = ['#ff3d68', '#ffc107', '#00c2ff', '#7b61ff'];
+            particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
                 particle.style.width = `${Math.random() * 10 + 10}px`;
                 particle.style.height = `${Math.random() * 5 + 5}px`;
                 particle.style.animationDuration = `${Math.random() * 3 + 3}s`;
