@@ -118,8 +118,23 @@ const updateSettings = async (req, res, db) => {
     }
 };
 
+const getPayments = async (req, res, db) => {
+    try {
+        const payments = await db.all(`
+            SELECT p.*, u.email as user_email 
+            FROM payments p 
+            JOIN users u ON p.user_id = u.id 
+            ORDER BY p.created_at DESC
+        `);
+        res.json(payments);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
 module.exports = {
     getSettings,
     getStats,
-    updateSettings
+    updateSettings,
+    getPayments
 };

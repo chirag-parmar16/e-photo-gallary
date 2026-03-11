@@ -12,8 +12,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
-
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"></script>
+    <!-- Removed Razorpay Script for Simulation -->
 </head>
 <body>
     <div id="app-container" style="display: none;">
@@ -24,29 +25,11 @@
 <div class="view-container active reveal-up">
     <!-- Admin Subscription View -->
     <div id="admin-subscription-view" style="display: none;">
-        <div class="view-header">
-            <div>
-                <h2><i class="fas fa-clock" style="color:var(--adm-accent-color); margin-right:12px;"></i> Service Requests</h2>
-                <p style="color:var(--adm-text-muted);">Audit and authorize pending premium tier transitions.</p>
-            </div>
-        </div>
 
-        <!-- Tier Request Status -->
-        <div style="background: var(--adm-main-bg); padding: 4rem 2rem; border-radius: 24px; text-align: center; border: 1px solid var(--adm-border-color); margin-top: 2rem; box-shadow: var(--adm-shadow-sm);" class="premium-card-hover">
-            <div style="width: 90px; height: 90px; background: rgba(255, 77, 109, 0.05); border-radius: 22px; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem; transform: rotate(-5deg); border: 1px solid rgba(255, 77, 109, 0.1);">
-                <i class="fas fa-file-invoice-dollar" style="font-size: 2.5rem; color: var(--adm-accent-color);"></i>
-            </div>
-            <h3 style="color: var(--adm-text-color); margin-bottom: 0.8rem; font-family: 'Playfair Display', serif; font-size: 1.8rem;">Synchronized Logs</h3>
-            <p style="color: var(--adm-text-muted); max-width: 480px; margin: 0 auto 2rem; line-height: 1.6;">Your enterprise archive is currently up to date. Pending manual verifications or payment audits will materialize here as they are submitted by members.</p>
-            <div style="display: flex; gap: 15px; justify-content: center;">
-                <button class="btn-primary" onclick="navigateTo('/users')"><i class="fas fa-users-cog"></i> Audit Member Registry</button>
-                <button class="btn-outline" style="opacity: 0.7; cursor: not-allowed;"><i class="fas fa-plug"></i> Gateway Settings</button>
-            </div>
-        </div>
 
-        <div style="margin-top: 4.5rem;">
-            <div class="view-header" style="margin-bottom: 1.5rem;">
-                <h3>Archived Transaction Logs</h3>
+        <div style="margin-top: 2rem;">
+            <div class="view-header" style="margin-bottom: 2rem;">
+                <h2><i class="fas fa-clipboard-list" style="color:var(--adm-accent-color); margin-right:12px;"></i> Service Audit Logs</h2>
             </div>
             <div class="data-table shadow-sm" style="border: 1px solid var(--adm-border-color); border-radius: 16px; overflow: hidden;">
                 <div class="table-row table-header" style="grid-template-columns: 140px 1.5fr 120px 120px 120px; background: rgba(0,0,0,0.02); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-size: 0.75rem;">
@@ -56,12 +39,7 @@
                     <div>Amount (INR)</div>
                     <div>Status</div>
                 </div>
-                <div class="table-row" style="grid-template-columns: 140px 1.5fr 120px 120px 120px; opacity: 0.7; padding: 20px;">
-                    <div style="font-size: 0.85rem; font-weight: 600;">Mar 10, 2026</div>
-                    <div style="font-weight: 700; color: var(--adm-text-color);">demo@enterprise.memoria</div>
-                    <div><span class="badge pro">PRO ERP</span></div>
-                    <div style="font-weight: 600;">₹599.00</div>
-                    <div><span style="display: inline-flex; align-items: center; gap: 6px; color: #10b981; font-weight: 800; font-size: 0.8rem;"><i class="fas fa-check-circle"></i> VERIFIED</span></div>
+                <div id="auditLogList">
                 </div>
             </div>
         </div>
@@ -116,23 +94,32 @@
                     <ul style="list-style: none; margin-bottom: 2.5rem; flex-grow: 1; display: flex; flex-direction: column; gap: 12px; padding: 0;">
                         <li><i class="fas fa-check-circle" style="color: #10b981;"></i> 1 Live Album</li>
                         <li><i class="fas fa-check-circle" style="color: #10b981;"></i> 100 Photos/Video</li>
-                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> Standard Security</li>
                     </ul>
-                    <button class="btn-outline" disabled style="opacity: 0.6; width: 100%;">Your Current Tier</button>
+                    <button class="btn-outline current-tier-btn" disabled style="opacity: 0.6; width: 100%;">Current Plan</button>
+                </div>
+
+                <div class="pricing-card">
+                    <div class="plan-badge plan-basic" style="background: rgba(6, 182, 212, 0.1); color: #06b6d4;">Basic Tier</div>
+                    <div style="font-size: 2.5rem; font-weight: 800; margin: 1.5rem 0 0.5rem 0; font-family: 'Playfair Display', serif; color: var(--adm-text-color);">₹500<span style="font-size: 1rem; color: #888;">/mo</span></div>
+                    <p style="color: var(--adm-text-muted); margin-bottom: 2rem; font-size: 0.95rem;">Enhanced features for small teams.</p>
+                    <ul style="list-style: none; margin-bottom: 2.5rem; flex-grow: 1; display: flex; flex-direction: column; gap: 12px; padding: 0;">
+                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> 5 Live Albums</li>
+                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> 500 Photos/Video</li>
+                    </ul>
+                    <button id="btn-pay-basic" class="btn-primary upgrade-btn" style="width: 100%; background: #06b6d4;" onclick="initiateRazorpayPayment('basic')">Upgrade Basic</button>
                 </div>
                 
                 <div class="pricing-card popular">
                     <div class="popular-tag">MOST SECURE</div>
                     <div class="plan-badge plan-pro">Professional ERP</div>
-                    <div style="font-size: 2.5rem; font-weight: 800; margin: 1.5rem 0 0.5rem 0; font-family: 'Playfair Display', serif; color: var(--adm-accent-color);">$12<span style="font-size: 1rem; color: #888;">/mo</span></div>
+                    <div style="font-size: 2.5rem; font-weight: 800; margin: 1.5rem 0 0.5rem 0; font-family: 'Playfair Display', serif; color: var(--adm-accent-color);">₹1200<span style="font-size: 1rem; color: #888;">/mo</span></div>
                     <p style="color: var(--adm-text-muted); margin-bottom: 2rem; font-size: 0.95rem;">Unleash the full potential of your digital archive.</p>
                     <ul style="list-style: none; margin-bottom: 2.5rem; flex-grow: 1; display: flex; flex-direction: column; gap: 12px; padding: 0;">
                         <li><i class="fas fa-check-circle" style="color: #10b981;"></i> Unlimited Albums</li>
                         <li><i class="fas fa-check-circle" style="color: #10b981;"></i> Premium Layouts</li>
                         <li><i class="fas fa-check-circle" style="color: #10b981;"></i> Priority Architecture</li>
-                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> 24/7 Service Support</li>
                     </ul>
-                    <button class="btn-primary" style="width: 100%;" onclick="iziToast.info({title: 'Integrations', message: 'Corporate payment gateway connecting...'})">Upgrade Service</button>
+                    <button id="btn-pay-pro" class="btn-primary upgrade-btn" style="width: 100%;" onclick="initiateRazorpayPayment('pro')">Upgrade Professional</button>
                 </div>
             </div>
         </div>
@@ -145,10 +132,235 @@
             </footer>
         </main>
     </div>
-    <div id="modals-container"></div>
     <div id="modal-container"></div>
+
+    <!-- PREMIUM SIMULATED PAYMENT MODAL -->
+    <div id="payment-gateway-modal" class="custom-gateway-overlay" style="display: none;">
+        <div class="custom-gateway-card">
+            <div class="gateway-header">
+                <div class="gateway-logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Memoria Secure Pay</span>
+                </div>
+                <button class="gateway-close" onclick="closePaymentModal()">&times;</button>
+            </div>
+            
+            <div class="gateway-body">
+                <div id="payment-step-1">
+                    <div class="plan-summary">
+                        <div class="plan-info">
+                            <span id="buy-plan-name">Pro Plan</span>
+                            <small>Subscription Upgrade</small>
+                        </div>
+                        <div id="buy-plan-amount" class="plan-price">₹1,200</div>
+                    </div>
+
+                    <div class="payment-methods">
+                        <label>Select Payment Method</label>
+                        <div class="method-options">
+                            <div class="method-item active">
+                                <i class="fas fa-credit-card"></i>
+                                <span>Card</span>
+                            </div>
+                            <div class="method-item">
+                                <i class="fab fa-google-pay"></i>
+                                <span>UPI</span>
+                            </div>
+                            <div class="method-item">
+                                <i class="fas fa-university"></i>
+                                <span>NetBank</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-details-mock">
+                        <div class="mock-input">
+                            <label>Card Number</label>
+                            <input type="text" value="XXXX XXXX XXXX 4242" disabled>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <div class="mock-input" style="flex:1">
+                                <label>Expiry</label>
+                                <input type="text" value="12/28" disabled>
+                            </div>
+                            <div class="mock-input" style="flex:1">
+                                <label>CVV</label>
+                                <input type="password" value="***" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="gateway-pay-btn" onclick="startPaymentSimulation()">
+                        Complete Payment
+                    </button>
+                </div>
+
+                <div id="payment-step-processing" style="display: none; text-align: center; padding: 3rem 0;">
+                    <div class="gateway-spinner"></div>
+                    <h3 style="margin-top: 1.5rem; color: #fff;">Processing Payment...</h3>
+                    <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">Please do not refresh or close this window.</p>
+                </div>
+
+                <div id="payment-step-success" style="display: none; text-align: center; padding: 2rem 0;">
+                    <div class="success-checkmark">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <h2 style="margin-top: 1.5rem; color: #fff; font-family: 'Playfair Display', serif;">Payment Success!</h2>
+                    <p style="color: rgba(255,255,255,0.6); margin-bottom: 2rem;">Your subscription has been upgraded.</p>
+                    <button class="gateway-pay-btn" style="background: #10b981;" onclick="finishPaymentFlow()">
+                        View Dashboard
+                    </button>
+                </div>
+            </div>
+            
+            <div class="gateway-footer">
+                <i class="fas fa-lock"></i> SSL Encrypted Simulation
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .custom-gateway-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center; z-index: 10000;
+        }
+        .custom-gateway-card {
+            background: #1a1a1a; width: 100%; max-width: 440px;
+            border-radius: 24px; border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            animation: modalAppear 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes modalAppear { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        
+        .gateway-header { padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .gateway-logo { display: flex; align-items: center; gap: 10px; color: #ff4d6d; font-weight: 700; font-size: 1.1rem; }
+        .gateway-close { background: none; border: none; color: #888; font-size: 2rem; cursor: pointer; }
+        
+        .gateway-body { padding: 2rem; }
+        .plan-summary { background: rgba(255,255,255,0.03); padding: 1.2rem; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .plan-info { display: flex; flex-direction: column; }
+        #buy-plan-name { color: #fff; font-weight: 600; font-size: 1.1rem; }
+        .plan-info small { color: #888; }
+        .plan-price { font-size: 1.3rem; font-weight: 800; color: #fff; }
+        
+        .payment-methods label { display: block; color: #888; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.8rem; letter-spacing: 1px; }
+        .method-options { display: flex; gap: 10px; margin-bottom: 1.5rem; }
+        .method-item { flex: 1; padding: 1rem; border-radius: 12px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); text-align: center; cursor: pointer; transition: 0.2s; }
+        .method-item i { display: block; font-size: 1.2rem; margin-bottom: 5px; color: #888; }
+        .method-item span { font-size: 0.75rem; color: #888; }
+        .method-item.active { background: rgba(255, 77, 109, 0.1); border-color: #ff4d6d; }
+        .method-item.active i, .method-item.active span { color: #ff4d6d; }
+        
+        .card-details-mock { display: flex; flex-direction: column; gap: 12px; margin-bottom: 2rem; }
+        .mock-input label { font-size: 0.75rem; color: #666; display: block; margin-bottom: 4px; }
+        .mock-input input { width: 100%; background: #222; border: 1px solid #333; border-radius: 8px; padding: 10px; color: #666; font-size: 0.9rem; }
+        
+        .gateway-pay-btn { width: 100%; background: #ff4d6d; color: #fff; border: none; padding: 1.1rem; border-radius: 14px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 15px -3px rgba(255, 77, 109, 0.3); }
+        .gateway-footer { padding: 1rem; text-align: center; color: #555; font-size: 0.75rem; background: rgba(0,0,0,0.1); }
+        
+        .gateway-spinner { width: 60px; height: 60px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #ff4d6d; border-radius: 50%; margin: 0 auto; animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        .success-checkmark { width: 80px; height: 80px; background: #10b981; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: #fff; box-shadow: 0 0 30px rgba(16, 185, 129, 0.4); animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes scaleIn { from { transform: scale(0); } to { transform: scale(1); } }
+    </style>
     <script>
         window.currentViewName = 'subscriptions';
+        let activeTransactionId = null;
+
+        async function initiateRazorpayPayment(planId) {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) return navigateTo('/login');
+
+                iziToast.info({ message: 'Initializing simulated gateway...', timeout: 1500 });
+
+                // 1. Create session on backend
+                const res = await fetch('/api/payments/initiate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ planId })
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to initiate payment');
+
+                activeTransactionId = data.transactionId;
+
+                // 2. Setup and open our custom Simulation Modal
+                document.getElementById('buy-plan-name').innerText = data.planName;
+                document.getElementById('buy-plan-amount').innerText = `₹${(data.amount).toLocaleString()}`;
+                
+                openPaymentModal();
+
+            } catch (err) {
+                console.error(err);
+                iziToast.error({ title: 'Error', message: err.message });
+            }
+        }
+
+        function openPaymentModal() {
+            const modal = document.getElementById('payment-gateway-modal');
+            document.getElementById('payment-step-1').style.display = 'block';
+            document.getElementById('payment-step-processing').style.display = 'none';
+            document.getElementById('payment-step-success').style.display = 'none';
+            modal.style.display = 'flex';
+        }
+
+        function closePaymentModal() {
+            document.getElementById('payment-gateway-modal').style.display = 'none';
+        }
+
+        function startPaymentSimulation() {
+            // Animation sequence
+            document.getElementById('payment-step-1').style.display = 'none';
+            document.getElementById('payment-step-processing').style.display = 'block';
+
+            // Simulate the 2s delay
+            setTimeout(() => {
+                document.getElementById('payment-step-processing').style.display = 'none';
+                document.getElementById('payment-step-success').style.display = 'block';
+                
+                // Trigger backend verification in the background
+                verifySimulatedPayment();
+            }, 2500);
+        }
+
+        async function verifySimulatedPayment() {
+            try {
+                const token = localStorage.getItem('token');
+                
+                const res = await fetch('/api/payments/verify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ 
+                        transactionId: activeTransactionId,
+                        mockPaymentId: `pay_sim_${Date.now()}`
+                    })
+                });
+
+                if (!res.ok) throw new Error('Simulation verification failed');
+                
+            } catch (err) {
+                console.error('Sim Background Sync Failed:', err);
+            }
+        }
+
+        function finishPaymentFlow() {
+            iziToast.success({ 
+                title: 'Plan Activated', 
+                message: 'Welcome to Memoria Premium!',
+                onClosing: () => window.location.reload()
+            });
+            closePaymentModal();
+        }
     </script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 

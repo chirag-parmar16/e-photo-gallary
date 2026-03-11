@@ -9,6 +9,7 @@ const authRoutes = require('./routes/authRoutes');
 const bookRoutes = require('./routes/bookRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const apiRoutes = require('./routes/apiRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -36,6 +37,7 @@ initDb().then(db => {
     app.use('/api/auth', authRoutes(db));
     app.use('/api/books', bookRoutes(db));
     app.use('/api/admin', adminRoutes(db));
+    app.use('/api/payments', paymentRoutes(db));
     app.use('/api', apiRoutes(db));
 
     // View Routes (Multi-Page Application)

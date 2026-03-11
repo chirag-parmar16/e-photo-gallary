@@ -83,6 +83,7 @@ module.exports = (db) => {
     });
 
     router.get('/stats', adminAuth, (req, res) => adminController.getStats(req, res, db));
+    router.get('/payments', adminAuth, (req, res) => adminController.getPayments(req, res, db));
     router.put('/settings', adminAuth, (req, res) => adminController.updateSettings(req, res, db));
 
     return router;

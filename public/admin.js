@@ -1,4 +1,4 @@
-﻿console.log('Admin JS Loaded - v8');
+console.log('Admin JS Loaded - v8');
 // State Management
 let currentUser = null;
 let currentRole = localStorage.getItem('role');
@@ -272,6 +272,7 @@ function initView() {
         if (currentRole === 'admin') {
             if (adminSubView) adminSubView.style.display = 'block';
             if (userSubView) userSubView.style.display = 'none';
+            fetchAuditLogs();
         } else {
             if (adminSubView) adminSubView.style.display = 'none';
             if (userSubView) userSubView.style.display = 'block';
@@ -1870,3 +1871,56 @@ function updatePricingButtons() {
 document.addEventListener('DOMContentLoaded', () => {
     initApp();
 });
+async function fetchAuditLogs() {
+    const logList = document.getElementById('auditLogList');
+    if (!logList) return;
+
+    try {
+        const res = await fetch('/api/admin/payments', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+        });
+        const payments = await res.json();
+        renderAuditLogs(payments);
+    } catch (err) {
+        console.error('Audit Fetch Error:', err);
+    }
+}
+
+function renderAuditLogs(payments) {
+    const logList = document.getElementById('auditLogList');
+    if (!logList) return;
+
+    if (!payments.length) {
+        logList.innerHTML = `
+            <div style="padding: 40px; text-align: center; color: var(--adm-text-muted);">
+                <i class="fas fa-history" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                <p>No transaction history found.</p>
+            </div>
+        `;
+        return;
+    }
+
+    logList.innerHTML = payments.map(p => {
+        const date = new Date(p.created_at).toLocaleDateString(undefined, { 
+            month: 'short', day: 'numeric', year: 'numeric' 
+        });
+        const statusClass = p.status === 'success' ? 'verified' : (p.status === 'failed' ? 'failed' : 'pending');
+        const statusLabel = p.status === 'success' ? 'VERIFIED' : p.status.toUpperCase();
+        const statusIcon = p.status === 'success' ? 'fa-check-circle' : (p.status === 'failed' ? 'fa-times-circle' : 'fa-clock');
+        const statusColor = p.status === 'success' ? '#10b981' : (p.status === 'failed' ? '#ef4444' : '#f59e0b');
+
+        return `
+            <div class="table-row" style="grid-template-columns: 140px 1.5fr 120px 120px 120px; padding: 20px; border-bottom: 1px solid var(--adm-border-color);">
+                <div style="font-size: 0.85rem; font-weight: 600;">${date}</div>
+                <div style="font-weight: 700; color: var(--adm-text-color);">${p.user_email}</div>
+                <div><span class="badge ${p.plan_id}">${p.plan_id.toUpperCase()}</span></div>
+                <div style="font-weight: 600;">₹${(p.amount).toLocaleString()}</div>
+                <div>
+                    <span style="display: inline-flex; align-items: center; gap: 6px; color: ${statusColor}; font-weight: 800; font-size: 0.8rem;">
+                        <i class="fas ${statusIcon}"></i> ${statusLabel}
+                    </span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}

@@ -127,7 +127,7 @@ async function initDb() {
         )
     `);
 
-    // 5. Transactions (Revenue Tracking)
+    // 5. Transactions (Legacy Revenue Tracking)
     await db.exec(`
         CREATE TABLE IF NOT EXISTS transactions (
             id          INT AUTO_INCREMENT PRIMARY KEY,
@@ -136,6 +136,27 @@ async function initDb() {
             amount      DECIMAL(10, 2) NOT NULL,
             status      VARCHAR(20) DEFAULT 'completed',
             created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    `);
+
+    // 6. Payments (Modular Gateway Implementation)
+    await db.exec(`
+        CREATE TABLE IF NOT EXISTS payments (
+            id                 INT AUTO_INCREMENT PRIMARY KEY,
+            user_id            INT NOT NULL,
+            plan_id            VARCHAR(50) NOT NULL,
+            gateway            VARCHAR(50) DEFAULT 'razorpay',
+            razorpay_order_id  VARCHAR(255) UNIQUE,
+            razorpay_payment_id VARCHAR(255) UNIQUE,
+            razorpay_signature VARCHAR(255),
+            amount             INT NOT NULL, -- In paise
+            currency           VARCHAR(10) DEFAULT 'INR',
+            status             VARCHAR(20) DEFAULT 'pending', -- pending, success, failed
+            error_reason       TEXT,
+            notes              JSON,
+            created_at         DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at         DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
     `);
