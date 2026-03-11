@@ -229,6 +229,8 @@ function initView() {
                         if (navUn) navUn.textContent = newName || 'User';
                         const profDisp = document.getElementById('profile-display-name');
                         if (profDisp) profDisp.textContent = newName || 'User';
+                        const sideUn = document.getElementById('sidebarUsername');
+                        if (sideUn) sideUn.textContent = newName || 'User';
                     } else {
                         const data = await res.json();
                         iziToast.error({ title: 'Error', message: data.error || 'Failed to update profile' });
@@ -463,6 +465,7 @@ function bindLoginEvents() {
 
     registerForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
+        const name = document.getElementById('registerName').value;
         const email = document.getElementById('registerEmail').value;
         const password = document.getElementById('registerPassword').value;
         const errorEl = document.getElementById('registerError');
@@ -475,7 +478,7 @@ function bindLoginEvents() {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ name, email, password, display_name: name })
             });
 
             const data = await res.json();

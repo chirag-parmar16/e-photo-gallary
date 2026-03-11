@@ -38,7 +38,7 @@ const login = async (req, res, db) => {
 };
 
 const register = async (req, res, db) => {
-    const { email, password } = req.body;
+    const { email, password, display_name } = req.body;
     try {
         const existing = await db.get('SELECT id FROM users WHERE email = ?', email);
         if (existing) return res.status(400).json({ error: 'Email already registered' });
@@ -46,13 +46,13 @@ const register = async (req, res, db) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         // First user created logic handled by initDb for admin, but let's just make sure others are 'user'
         const result = await db.run(
-            'INSERT INTO users (email, password, role) VALUES (?, ?, ?)',
-            [email, hashedPassword, 'user']
+            'INSERT INTO users (email, password, role, display_name) VALUES (?, ?, ?, ?)',
+            [email, hashedPassword, 'user', display_name]
         );
 
         // Auto login after registration
         const token = jwt.sign(
-            { id: result.lastID, email, role: 'user' },
+            { id: result.lastID, email, role: 'user', display_name },
             JWT_SECRET,
             { expiresIn: '24h' }
         );
