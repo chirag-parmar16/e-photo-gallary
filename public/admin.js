@@ -2209,12 +2209,12 @@ function renderPlanManagementTable(plans) {
                 <td style="text-align: center; vertical-align: middle;">${plan.max_books === 9999 ? 'UNLIMITED' : plan.max_books}</td>
                 <td style="text-align: center; vertical-align: middle;">${statusBadge}</td>
                 <td style="text-align: center; vertical-align: middle;">
-                    <div style="display: flex; gap: 8px; justify-content: center;">
-                        <button class="btn-icon edit-plan-btn" data-plan='${JSON.stringify(plan).replace(/'/g, "&apos;")}' title="Edit Plan">
-                            <i class="fa-solid fa-pen-to-square" style="color: var(--adm-accent-color);"></i>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button class="action-btn-premium edit-btn edit-plan-btn" data-plan='${JSON.stringify(plan).replace(/'/g, "&apos;")}' title="Edit Plan">
+                            <i class="fa-solid fa-pen-to-square"></i>
                         </button>
-                        <button class="btn-icon" style="color:#ef4444;" onclick="deleteSubscriptionPlan(${plan.id})" title="Delete Plan">
-                            <i class="fa-solid fa-trash-can"></i>
+                        <button class="action-btn-premium delete-btn" onclick="deleteSubscriptionPlan(${plan.id})" title="Delete Plan">
+                            <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
                 </td>

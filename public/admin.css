@@ -23,6 +23,12 @@
     --adm-table-head-bg: #f9fafb;
     --adm-table-row-hover: #fff9fa;
     --adm-table-padding: 1rem 1.5rem;
+
+    /* Action Colors */
+    --adm-blue-soft: #3b82f6;
+    --adm-blue-bg: rgba(59, 130, 246, 0.1);
+    --adm-red-soft: #ef4444;
+    --adm-red-bg: rgba(239, 68, 68, 0.1);
 }
 
 /* Global DataTables Overrides - Hide Search Bar */
@@ -99,6 +105,47 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
+}
+
+/* Professional Action Buttons (ERP Style) */
+.action-btn-premium {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--adm-bg-color);
+    border: 1px solid var(--adm-border-color);
+    font-size: 0.9rem;
+    padding: 0;
+}
+
+.action-btn-premium.edit-btn {
+    color: var(--adm-blue-soft);
+}
+
+.action-btn-premium.edit-btn:hover {
+    background: var(--adm-blue-bg);
+    border-color: var(--adm-blue-soft);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.action-btn-premium.delete-btn {
+    color: var(--adm-red-soft);
+}
+
+.action-btn-premium.delete-btn:hover {
+    background: var(--adm-red-bg);
+    border-color: var(--adm-red-soft);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+[data-theme="dark"] .action-btn-premium {
+    background: var(--adm-main-bg);
+    border-color: var(--adm-border-color);
 }
 
 .badge.free, .plan-free { background: #f1f5f9; color: #64748b; }
