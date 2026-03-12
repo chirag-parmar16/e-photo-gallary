@@ -5,6 +5,25 @@ let currentRole = localStorage.getItem('role');
 let currentBookId = null;
 let allAdminUsers = [];
 
+// Determine current view from URL if not already set
+if (!window.currentViewName) {
+    const path = window.location.pathname;
+    if (path.includes('/dashboard')) window.currentViewName = 'dashboard';
+    else if (path.includes('/albums')) window.currentViewName = 'albums';
+    else if (path.includes('/subscriptions')) window.currentViewName = 'subscriptions';
+    else if (path.includes('/subscription_plans')) window.currentViewName = 'subscription_plans';
+    else if (path.includes('/users')) window.currentViewName = 'users';
+    else if (path.includes('/profile')) window.currentViewName = 'profile';
+    else if (path.includes('/book/')) window.currentViewName = 'editor';
+    else if (path.includes('/login')) window.currentViewName = 'login';
+}
+
+// Standardized Date Formatter
+function formatDate(date) {
+    if (!date) return '';
+    return new Date(date).toLocaleDateString('en-GB');
+}
+
 // Ensure $ is globally defined for inline scripts
 if (typeof jQuery !== 'undefined' && typeof $ === 'undefined') {
     window.$ = jQuery;
@@ -164,7 +183,7 @@ function initView() {
             if (userDash) userDash.style.display = 'block';
             const subEl = document.getElementById('user-subscription-end');
             if (subEl) {
-                subEl.textContent = currentUser?.subscription_end ? new Date(currentUser.subscription_end).toLocaleDateString() : 'Lifetime / Auto';
+                subEl.textContent = currentUser?.subscription_end ? formatDate(currentUser.subscription_end) : 'Lifetime / Auto';
             }
             fetchUserBooks();
             bindUserDashboardEvents();
@@ -287,6 +306,10 @@ function initView() {
                 if (adminSubView) adminSubView.style.display = 'none';
                 if (userSubView) userSubView.style.display = 'block';
             }
+        }
+        // Always attempt to fetch usage details on this page if it's a user
+        if (currentRole !== 'admin') {
+            fetchProfileDetails();
         }
     } else if (window.currentViewName === 'subscription_plans') {
         if (typeof onSubscriptionPlansPageReady === 'function') {
@@ -623,7 +646,7 @@ async function fetchProfileDetails() {
     }
 
     const subDateStr = currentUser.subscription_end
-        ? new Date(currentUser.subscription_end).toLocaleDateString()
+        ? formatDate(currentUser.subscription_end)
         : 'Lifetime Access';
 
     if (subEndValEl) subEndValEl.textContent = subDateStr;
@@ -635,27 +658,46 @@ async function fetchProfileDetails() {
 
     // Fetch books to calculate usage
     try {
-        const res = await fetch('/api/books', {
-            credentials: 'same-origin',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
-        });
-        const books = await res.json();
+        const [booksRes, plansRes] = await Promise.all([
+            fetch('/api/books', {
+                credentials: 'same-origin',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+            }),
+            fetch('/api/plans', {
+                credentials: 'same-origin',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+            })
+        ]);
+
+        const books = await booksRes.json();
+        const plans = await plansRes.json();
         const count = Array.isArray(books) ? books.length : 0;
 
-        const plan = currentUser.subscription_plan || 'free';
-        let limit = 1;
-        if (plan === 'basic') limit = 5;
-        if (plan === 'pro') limit = Infinity;
+        const currentPlanNameOrKey = (currentUser.subscription_plan || 'free').toLowerCase();
+        let limit = 1; // Default to free tier limit
+
+        if (Array.isArray(plans)) {
+            const myPlan = plans.find(p => 
+                (p.plan_key || '').toLowerCase() === currentPlanNameOrKey || 
+                (p.name || '').toLowerCase() === currentPlanNameOrKey
+            );
+            if (myPlan) {
+                limit = myPlan.max_books;
+            } else if (currentPlanNameOrKey === 'free') {
+                limit = 1;
+            }
+        }
 
         if (usageText) {
-            usageText.textContent = `${count} / ${limit === Infinity ? 'âˆž' : limit} used`;
+            usageText.textContent = `${count} / ${limit === 9999 || limit === Infinity ? '∞' : limit} used`;
         }
 
         if (usageFill) {
-            const percent = limit === Infinity ? 100 : Math.min((count / limit) * 100, 100);
+            const maxVal = (limit === 9999 || limit === Infinity) ? count || 1 : limit;
+            const percent = Math.min((count / maxVal) * 100, 100);
             usageFill.style.width = percent + '%';
         }
-    } catch (err) { console.error('Error fetching books for profile usage:', err); }
+    } catch (err) { console.error('Error fetching dynamic usage data:', err); }
 }
 
 // --- ADMIN LOGIC ---
@@ -818,7 +860,7 @@ async function fetchUsers() {
 
         users.forEach((user, idx) => {
             const tr = document.createElement('tr');
-            const subEndDisplay = user.subscription_end ? new Date(user.subscription_end).toLocaleDateString() : 'Active Access';
+            const subEndDisplay = user.subscription_end ? formatDate(user.subscription_end) : 'Active Access';
             const subEndRaw = user.subscription_end || '';
             const roleClass = user.role === 'admin' ? 'pro' : 'basic';
 
@@ -828,7 +870,7 @@ async function fetchUsers() {
                     <div class="user-email-text">${user.email || 'hidden'}</div>
                 </td>
                 <td class="col-role"><span class="badge ${roleClass}">${user.role}</span></td>
-                <td class="col-date">${new Date(user.created_at).toLocaleDateString()}</td>
+                <td class="col-date">${formatDate(user.created_at)}</td>
                 <td class="col-expiry">${subEndDisplay}</td>
                 <td class="col-actions">
                     <div class="action-btns">
@@ -1070,7 +1112,7 @@ function renderAdminUserRows(users) {
     container.innerHTML = '';
     users.forEach((user, idx) => {
         const tr = document.createElement('tr');
-        const subEnd = user.subscription_end ? new Date(user.subscription_end).toLocaleDateString() : 'Lifetime Access';
+        const subEnd = user.subscription_end ? formatDate(user.subscription_end) : 'Lifetime Access';
         const subEndRaw = user.subscription_end || '';
         const plan = user.subscription_plan || 'free';
         const roleClass = user.role === 'admin' ? 'pro' : 'basic';
@@ -1238,7 +1280,7 @@ function renderBooks(books) {
             <div class="album-card-title">${book.title}</div>
             <div style="font-size: 0.85rem; color: var(--adm-accent-color); font-weight: 600; margin-bottom: 8px;"><i class="fa-solid fa-user-tag" style="font-size:0.75rem; margin-right:4px;"></i> For: ${book.recipient_name || 'Someone Special'}</div>
             <div class="album-card-meta">
-                <i class="far fa-calendar-alt"></i> Created: ${new Date(book.created_at).toLocaleDateString()}
+                <i class="far fa-calendar-alt"></i> Created: ${formatDate(book.created_at)}
             </div>
             <div class="album-card-actions">
                 <button class="btn-primary" style="flex: 1;" onclick="navigateTo('/book/${book.uuid}')">
@@ -1280,7 +1322,7 @@ function renderRecentActivity(books) {
         tr.style.cursor = 'pointer';
         tr.onclick = () => navigateTo('/book/' + book.uuid);
 
-        const dateStr = new Date(book.created_at).toLocaleDateString();
+        const dateStr = formatDate(book.created_at);
 
         tr.innerHTML = `
             <td>
@@ -2098,9 +2140,7 @@ function renderAuditLogs(payments) {
 
     if (hasData) {
         logList.innerHTML = payments.map((p, idx) => {
-            const date = new Date(p.created_at).toLocaleDateString(undefined, {
-                month: 'short', day: 'numeric', year: 'numeric'
-            });
+            const date = formatDate(p.created_at);
             const statusColor = p.status === 'success' ? '#10b981' : (p.status === 'failed' ? '#ef4444' : '#f59e0b');
             const statusIcon = p.status === 'success' ? 'fa-check-circle' : (p.status === 'failed' ? 'fa-times-circle' : 'fa-clock');
             const statusLabel = p.status === 'success' ? 'VERIFIED' : p.status.toUpperCase();

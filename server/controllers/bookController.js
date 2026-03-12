@@ -117,6 +117,20 @@ const getBook = async (req, res, db) => {
 const updateBook = async (req, res, db) => {
     try {
         const { title, recipient_name, cover_title, cover_subtitle, instruction_text, end_title, template_type, color_schema, border_style } = req.body;
+        const params = [
+            title !== undefined ? title : null,
+            recipient_name !== undefined ? recipient_name : null,
+            cover_title !== undefined ? cover_title : null,
+            cover_subtitle !== undefined ? cover_subtitle : null,
+            instruction_text !== undefined ? instruction_text : null,
+            end_title !== undefined ? end_title : null,
+            template_type !== undefined ? template_type : null,
+            color_schema !== undefined ? color_schema : null,
+            border_style !== undefined ? border_style : null,
+            req.params.id,
+            req.user.id
+        ];
+
         const result = await db.run(
             `UPDATE books SET
                 title = COALESCE(?, title),
@@ -129,7 +143,7 @@ const updateBook = async (req, res, db) => {
                 color_schema = COALESCE(?, color_schema),
                 border_style = COALESCE(?, border_style)
              WHERE uuid = ? AND user_id = ?`,
-            [title, recipient_name, cover_title, cover_subtitle, instruction_text, end_title, template_type, color_schema, border_style, req.params.id, req.user.id]
+            params
         );
         if (result.changes === 0) return res.status(404).json({ error: 'Book not found' });
         res.json({ success: true });

@@ -385,7 +385,7 @@
                 const planEl = document.getElementById('profile-plan-val');
                 const subEndEl = document.getElementById('profile-sub-end-val');
                 if (planEl) planEl.textContent = (user.subscription_plan || 'free').toUpperCase();
-                if (subEndEl) subEndEl.textContent = user.subscription_end ? new Date(user.subscription_end).toLocaleDateString() : 'Never (Free)';
+                if (subEndEl) subEndEl.textContent = user.subscription_end ? new Date(user.subscription_end).toLocaleDateString('en-GB') : 'Never (Free)';
 
                 // Load dynamic plan cards
                 await loadSubscriptionPlans(user.subscription_plan || 'free');
