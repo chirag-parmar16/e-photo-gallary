@@ -88,6 +88,7 @@ async function initDb() {
             id               INT AUTO_INCREMENT PRIMARY KEY,
             user_id          INT NOT NULL,
             title            VARCHAR(255) DEFAULT 'Untitled Album',
+            recipient_name   VARCHAR(255) DEFAULT '',
             cover_title      TEXT DEFAULT 'Our Timeless Journey',
             cover_subtitle   TEXT DEFAULT 'A collection of memories, frozen in time.',
             instruction_text TEXT DEFAULT 'Tap to open',
@@ -100,6 +101,7 @@ async function initDb() {
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
     `);
+    try { await db.exec('ALTER TABLE books ADD COLUMN recipient_name VARCHAR(255) DEFAULT ""'); } catch (err) { }
 
     // 3. Pages
     await db.exec(`

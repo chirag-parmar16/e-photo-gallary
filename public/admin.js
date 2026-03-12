@@ -138,7 +138,8 @@ window.navigateTo = function (path) {
         '/editor': 'Album Designer',
         '/profile': 'Account Settings',
         '/users': 'User Management',
-        '/subscriptions': 'Service Plans'
+        '/subscriptions': 'Service Plans',
+        '/subscription_plans': 'Manage Subscription Tiers'
     };
     const titleElement = document.getElementById('current-view-title');
     if (titleElement) {
@@ -272,8 +273,8 @@ function initView() {
 
     } else if (window.currentViewName === 'subscriptions') {
         // Delegate to the page's onSubscriptionsPageReady callback with user context
-        if (typeof window.onSubscriptionsPageReady === 'function') {
-            window.onSubscriptionsPageReady(currentUser);
+        if (typeof onSubscriptionsPageReady === 'function') {
+            onSubscriptionsPageReady(currentUser);
         } else {
             // Fallback: show admin vs user view
             const adminSubView = document.getElementById('admin-subscription-view');
@@ -286,6 +287,10 @@ function initView() {
                 if (adminSubView) adminSubView.style.display = 'none';
                 if (userSubView) userSubView.style.display = 'block';
             }
+        }
+    } else if (window.currentViewName === 'subscription_plans') {
+        if (typeof onSubscriptionPlansPageReady === 'function') {
+            onSubscriptionPlansPageReady(currentUser);
         }
     }
 }
@@ -395,7 +400,8 @@ async function loadComponents() {
             'editor': 'Album Designer',
             'profile': 'Account Settings',
             'users': 'User Management',
-            'subscriptions': 'Service Plans'
+            'subscriptions': 'Service Audits',
+            'subscription_plans': 'Manage Subscription Tiers'
         };
         const titleElement = document.getElementById('current-view-title');
         if (titleElement && window.currentViewName) {
@@ -562,6 +568,7 @@ function setupSidebar() {
         <li><a href="/dashboard" class="nav-dashboard"><i class="fas fa-chart-line"></i> System Overview</a></li>
         <li><a href="/users" class="nav-users"><i class="fas fa-users-cog"></i> Member Registry</a></li>
         <li><a href="/subscriptions" class="nav-subscriptions"><i class="fas fa-shield-alt"></i> Service Audits</a></li>
+        <li><a href="/subscription_plans" class="nav-subscription_plans"><i class="fas fa-cubes-stacked"></i> Manage Plans</a></li>
         <li><a href="/profile" class="nav-profile"><i class="fas fa-cog"></i> System Settings</a></li>
     `;
 
@@ -818,16 +825,16 @@ async function fetchUsers() {
             tr.innerHTML = `
                 <td class="col-id">#${idx + 1}</td>
                 <td class="col-email">
-                    <div style="font-weight: 700; color: var(--adm-text-color); font-size: 0.95rem;">${user.email || 'hidden'}</div>
+                    <div class="user-email-text">${user.email || 'hidden'}</div>
                 </td>
                 <td class="col-role"><span class="badge ${roleClass}">${user.role}</span></td>
-                <td class="col-date" style="color: var(--adm-text-muted); font-size: 0.85rem; font-weight: 500;">${new Date(user.created_at).toLocaleDateString()}</td>
-                <td class="col-expiry" style="font-size: 0.9rem; font-weight: 700; color: var(--adm-accent-color);">${subEndDisplay}</td>
+                <td class="col-date">${new Date(user.created_at).toLocaleDateString()}</td>
+                <td class="col-expiry">${subEndDisplay}</td>
                 <td class="col-actions">
                     <div class="action-btns">
-                        <button class="action-btn" onclick="openEditPlanModal(${user.id}, '${user.subscription_plan}', '${subEndRaw}')" title="Edit Subscription Plan"><i class="fas fa-edit" style="color: #6366f1;"></i></button>
-                        <button class="action-btn" onclick="extendSubscription(${user.id})" title="Quick Provision 30 Days"><i class="fas fa-calendar-plus" style="color: var(--adm-accent-color);"></i></button>
-                        ${user.role !== 'admin' ? `<button class="action-btn delete-btn" onclick="deleteUser(${user.id})" title="Terminate Account"><i class="fas fa-trash-alt"></i></button>` : ''}
+                        <button class="action-btn" onclick="openEditPlanModal(${user.id}, '${user.subscription_plan}', '${subEndRaw}')" title="Edit Subscription Plan"><i class="fa-solid fa-pen-to-square" style="color: var(--adm-accent-color);"></i></button>
+                        <button class="action-btn" onclick="extendSubscription(${user.id})" title="Quick Provision 30 Days"><i class="fa-solid fa-clock-rotate-left" style="color: #6366f1;"></i></button>
+                        ${user.role !== 'admin' ? `<button class="action-btn delete-btn" onclick="deleteUser(${user.id})" title="Terminate Account"><i class="fa-solid fa-trash-can"></i></button>` : ''}
                     </div>
                 </td>
             `;
@@ -1071,21 +1078,21 @@ function renderAdminUserRows(users) {
         tr.innerHTML = `
                 <td class="col-id">${idx + 1}</td>
                 <td class="col-email">
-                    <div style="font-weight: 700; color: var(--adm-text-color); font-size: 0.95rem;">${user.email}</div>
+                    <div class="user-email-text">${user.email}</div>
                 </td>
                 <td class="col-role"><span class="badge ${roleClass}">${user.role}</span></td>
                 <td class="col-role"><span class="badge ${plan}">${plan}</span></td>
-                <td class="col-expiry" style="color: var(--adm-accent-color); font-weight: 700; font-size: 0.9rem;">${subEnd}</td>
+                <td class="col-expiry">${subEnd}</td>
                 <td class="col-actions">
                     <div class="action-btns">
                         <button class="action-btn" onclick="openEditPlanModal(${user.id}, '${plan}', '${subEndRaw}')" title="Edit Subscription Plan">
-                            <i class="fas fa-edit" style="color:#6366f1;"></i>
+                            <i class="fa-solid fa-pen-to-square" style="color:var(--adm-accent-color);"></i>
                         </button>
                         <button class="action-btn" onclick="extendSubscription(${user.id})" title="Quick Provision 30 Days">
-                            <i class="fas fa-calendar-plus" style="color:var(--adm-accent-color);"></i>
+                            <i class="fa-solid fa-clock-rotate-left" style="color:#6366f1;"></i>
                         </button>
                         ${user.role !== 'admin' ?
-                `<button class="action-btn delete-btn" onclick="deleteUser(${user.id})" title="Terminate Account"><i class="fas fa-trash-alt"></i></button>` : ''}
+                `<button class="action-btn delete-btn" onclick="deleteUser(${user.id})" title="Terminate Account"><i class="fa-solid fa-trash-can"></i></button>` : ''}
                     </div>
                 </td>
             `;
@@ -1229,6 +1236,7 @@ function renderBooks(books) {
         card.className = 'album-card reveal-up active';
         card.innerHTML = `
             <div class="album-card-title">${book.title}</div>
+            <div style="font-size: 0.85rem; color: var(--adm-accent-color); font-weight: 600; margin-bottom: 8px;"><i class="fa-solid fa-user-tag" style="font-size:0.75rem; margin-right:4px;"></i> For: ${book.recipient_name || 'Someone Special'}</div>
             <div class="album-card-meta">
                 <i class="far fa-calendar-alt"></i> Created: ${new Date(book.created_at).toLocaleDateString()}
             </div>
@@ -1360,6 +1368,15 @@ function bindUserDashboardEvents() {
                 submitCreateBook();
             }
         });
+
+        // Handle back to edit
+        const backBtn = document.getElementById('backToEditBookBtn');
+        if (backBtn) {
+            backBtn.addEventListener('click', () => {
+                const nameInput = document.getElementById('newRecipientName');
+                if (nameInput) setTimeout(() => nameInput.focus(), 100);
+            });
+        }
 
         // Handle final confirmation
         const finalBtn = document.getElementById('finalCreateBookBtn');
@@ -2090,16 +2107,16 @@ function renderAuditLogs(payments) {
 
             return `
                 <tr>
-                    <td style="text-align: center; vertical-align: middle;"><span style="font-size: 0.85rem; font-weight: 700; color: var(--adm-text-muted);">#${idx + 1}</span></td>
-                    <td style="vertical-align: middle;">
-                        <div style="font-weight: 700; color: var(--adm-text-color);">${p.user_email}</div>
-                        <div style="font-size: 0.75rem; color: var(--adm-text-muted);">${date}</div>
+                    <td class="col-center"><span class="audit-id">#${idx + 1}</span></td>
+                    <td>
+                        <div class="user-email-text">${p.user_email}</div>
+                        <div class="audit-date">${date}</div>
                     </td>
-                    <td style="text-align: center; vertical-align: middle;"><span class="badge ${p.plan_id}">${p.plan_id.toUpperCase()}</span></td>
-                    <td style="text-align: center; vertical-align: middle;"><span style="font-weight: 600;">₹${(p.amount).toLocaleString()}</span></td>
-                    <td style="text-align: center; vertical-align: middle;">
-                        <span style="display: inline-flex; align-items: center; gap: 6px; color: ${statusColor}; font-weight: 800; font-size: 0.8rem;">
-                            <i class="fas ${statusIcon}"></i> ${statusLabel}
+                    <td class="col-center"><span class="badge ${p.plan_id}">${p.plan_id.toUpperCase()}</span></td>
+                    <td class="col-center"><span class="audit-amount">₹${(p.amount).toLocaleString()}</span></td>
+                    <td class="col-center">
+                        <span class="audit-status" style="color: ${statusColor};">
+                            <i class="fa-solid ${statusIcon}"></i> ${statusLabel}
                         </span>
                     </td>
                 </tr>
@@ -2194,10 +2211,10 @@ function renderPlanManagementTable(plans) {
                 <td style="text-align: center; vertical-align: middle;">
                     <div style="display: flex; gap: 8px; justify-content: center;">
                         <button class="btn-icon edit-plan-btn" data-plan='${JSON.stringify(plan).replace(/'/g, "&apos;")}' title="Edit Plan">
-                            <i class="fas fa-edit"></i>
+                            <i class="fa-solid fa-pen-to-square" style="color: var(--adm-accent-color);"></i>
                         </button>
                         <button class="btn-icon" style="color:#ef4444;" onclick="deleteSubscriptionPlan(${plan.id})" title="Delete Plan">
-                            <i class="fas fa-trash"></i>
+                            <i class="fa-solid fa-trash-can"></i>
                         </button>
                     </div>
                 </td>
@@ -2244,7 +2261,15 @@ window.openEditPlanEditorModal = function (plan) {
     document.getElementById('planEditDays').value = plan.days;
     document.getElementById('planEditMaxBooks').value = plan.max_books;
     document.getElementById('planEditActive').value = plan.is_active;
-    document.getElementById('planEditFeatures').value = plan.features;
+    let featuresVal = plan.features || '[]';
+    try {
+        let parsed = typeof featuresVal === 'string' ? JSON.parse(featuresVal) : featuresVal;
+        if (typeof parsed === 'string') parsed = JSON.parse(parsed); // Handle double stringify
+        featuresVal = JSON.stringify(parsed, null, 2);
+    } catch(e) {
+        console.error('Feature parse error', e);
+    }
+    document.getElementById('planEditFeatures').value = featuresVal;
     document.getElementById('planEditorModal').classList.add('active');
 };
 
@@ -2300,7 +2325,7 @@ document.addEventListener('submit', async (e) => {
 });
 
 window.deleteSubscriptionPlan = function (id) {
-    window.confirmAction('Delete Subscription Plan', 'Are you sure you want to delete this plan? This may affect users subscribed to it.', async () => {
+    window.confirmAction('Are you sure you want to delete this plan? This may affect users subscribed to it.', async () => {
         try {
             const res = await fetch(`/api/admin/plans/${id}`, {
                 method: 'DELETE',

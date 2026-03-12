@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Plans - Memoria</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/admin.css?v=4">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"></script>
+    
+    <!-- DataTables CDN -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+</head>
+<body>
+    <div id="app-container" style="display: none;">
+        <div id="sidebar-container"></div>
+        <main class="main-wrapper">
+            <div id="navbar-container"></div>
+            <div id="main-view">
+                <div class="view-container active reveal-up">
+                    <div class="view-header" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h2><i class="fa-solid fa-layer-group" style="color:var(--adm-accent-color); margin-right:12px;"></i> Manage Subscription Tiers</h2>
+                            <p style="color:var(--adm-text-muted);">Configure plans, pricing, and features visible to users.</p>
+                        </div>
+                        <button class="btn-primary" onclick="openCreatePlanModal()">
+                            <i class="fa-solid fa-circle-plus"></i> Create New Plan
+                        </button>
+                    </div>
+                    
+                    <div class="data-table-container">
+                        <table id="planManagementTable" class="display responsive nowrap" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px; text-align: center;">ID</th>
+                                    <th>Plan Name</th>
+                                    <th style="text-align: center;">Price (INR)</th>
+                                    <th style="text-align: center;">Duration (Days)</th>
+                                    <th style="text-align: center;">Max Albums</th>
+                                    <th style="text-align: center;">Status</th>
+                                    <th style="text-align: center;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="planManagementList"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Plan Editor Modal -->
+                <div id="planEditorModal" class="modal">
+                    <div class="modal-content" style="max-width: 600px;">
+                        <div class="modal-header">
+                            <h3 id="planModalTitle">Edit Plan</h3>
+                            <button class="close-btn" onclick="closePlanModal()">&times;</button>
+                        </div>
+                        <form id="planEditorForm">
+                            <input type="hidden" id="planEditId">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                                <div class="form-group">
+                                    <label>Plan Key (Unique ID)</label>
+                                    <input type="text" id="planEditKey" placeholder="e.g. basic" required class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Display Name</label>
+                                    <input type="text" id="planEditName" placeholder="e.g. Premium Tier" required class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Price (INR)</label>
+                                    <input type="number" id="planEditPrice" value="0" required class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Duration (Days)</label>
+                                    <input type="number" id="planEditDays" value="30" required class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Max Books</label>
+                                    <input type="number" id="planEditMaxBooks" value="1" required class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Status</label>
+                                    <select id="planEditActive" class="form-control">
+                                        <option value="1">Active</option>
+                                        <option value="0">Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 20px;">
+                                <label>Features (JSON Array of strings)</label>
+                                <textarea id="planEditFeatures" placeholder='["Feature 1", "Feature 2"]' class="form-control" style="min-height: 100px; padding: 12px;"></textarea>
+                            </div>
+                            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                                <button type="button" class="btn-outline" onclick="closePlanModal()">Cancel</button>
+                                <button type="submit" class="btn-primary" id="btn-save-plan">Save Plan Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <footer>
+                <p>&copy; 2026 Timeless Memories. Built with ❤️</p>
+            </footer>
+        </main>
+    </div>
+    <div id="modal-container"></div>
+    <script>
+        window.currentViewName = 'subscription_plans';
+        window.onSubscriptionPlansPageReady = async function(user) {
+            if (user?.role !== 'admin') {
+                window.location.href = '/dashboard';
+                return;
+            }
+            if (typeof fetchSubscriptionPlansAdmin === 'function') {
+                fetchSubscriptionPlansAdmin();
+            }
+        };
+    </script>
+    <script src="/admin.js?v=8"></script>
+</body>
+</html>

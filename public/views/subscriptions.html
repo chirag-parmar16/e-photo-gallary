@@ -33,37 +33,10 @@
     <div id="admin-subscription-view" style="display: none;">
 
 
-        <div style="margin-top: 2rem; display: none;">
-            <div class="view-header" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h2><i class="fas fa-cubes-stacked" style="color:var(--adm-accent-color); margin-right:12px;"></i> Manage Subscription Tiers</h2>
-                    <p style="color:var(--adm-text-muted);">Configure plans, pricing, and features visible to users.</p>
-                </div>
-                <button class="btn-primary" onclick="openCreatePlanModal()">
-                    <i class="fas fa-plus-circle"></i> Create New Plan
-                </button>
-            </div>
-            <div class="data-table-container">
-                <table id="planManagementTable" class="display responsive nowrap" style="width:100%">
-                    <thead>
-                        <tr>
-                            <th style="width: 50px; text-align: center;">ID</th>
-                            <th>Plan Name</th>
-                            <th style="text-align: center;">Price (INR)</th>
-                            <th style="text-align: center;">Duration (Days)</th>
-                            <th style="text-align: center;">Max Albums</th>
-                            <th style="text-align: center;">Status</th>
-                            <th style="text-align: center;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="planManagementList"></tbody>
-                </table>
-            </div>
-        </div>
 
         <div style="margin-top: 0;">
             <div class="view-header" style="margin-bottom: 2rem;">
-                <h2><i class="fas fa-receipt" style="color:var(--adm-accent-color); margin-right:12px;"></i> Service Audit Logs</h2>
+                <h2><i class="fa-solid fa-receipt" style="color:var(--adm-accent-color); margin-right:12px;"></i> Service Audit Logs</h2>
                 <p style="color:var(--adm-text-muted);">Historical transaction records for all users.</p>
             </div>
             <div class="data-table-container">
@@ -88,7 +61,7 @@
     <div id="user-subscription-view" style="display: none;">
         <div class="view-header">
             <div>
-                <h2><i class="fas fa-crown" style="color:var(--adm-accent-color); margin-right:12px;"></i> Manage Subscription</h2>
+                <h2><i class="fa-solid fa-crown" style="color:var(--adm-accent-color); margin-right:12px;"></i> Manage Subscription</h2>
                 <p style="color:var(--adm-text-muted);">View your current plan and explore premium upgrades.</p>
             </div>
         </div>
@@ -128,61 +101,12 @@
             <!-- Dynamic pricing cards rendered by JS -->
             <div id="dynamic-pricing-grid" class="pricing-grid">
                 <div style="text-align:center;padding:3rem;color:var(--adm-text-muted);">
-                    <i class="fas fa-spinner fa-spin" style="font-size:2rem;"></i>
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size:2rem;"></i>
                     <p style="margin-top:1rem;">Loading plans...</p>
                 </div>
             </div>
 </div>
 
-<!-- Plan Editor Modal -->
-<div id="planEditorModal" class="modal">
-    <div class="modal-content" style="max-width: 600px;">
-        <div class="modal-header">
-            <h3 id="planModalTitle">Edit Plan</h3>
-            <button class="close-btn" onclick="closePlanModal()">&times;</button>
-        </div>
-        <form id="planEditorForm">
-            <input type="hidden" id="planEditId">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                <div class="form-group">
-                    <label>Plan Key (Unique ID)</label>
-                    <input type="text" id="planEditKey" placeholder="e.g. basic" required style="width: 100%; border-radius: 8px; border: 1px solid var(--adm-border-color); padding: 10px;">
-                </div>
-                <div class="form-group">
-                    <label>Display Name</label>
-                    <input type="text" id="planEditName" placeholder="e.g. Premium Tier" required style="width: 100%; border-radius: 8px; border: 1px solid var(--adm-border-color); padding: 10px;">
-                </div>
-                <div class="form-group">
-                    <label>Price (INR)</label>
-                    <input type="number" id="planEditPrice" value="0" required style="width: 100%; border-radius: 8px; border: 1px solid var(--adm-border-color); padding: 10px;">
-                </div>
-                <div class="form-group">
-                    <label>Duration (Days)</label>
-                    <input type="number" id="planEditDays" value="30" required style="width: 100%; border-radius: 8px; border: 1px solid var(--adm-border-color); padding: 10px;">
-                </div>
-                <div class="form-group">
-                    <label>Max Books</label>
-                    <input type="number" id="planEditMaxBooks" value="1" required style="width: 100%; border-radius: 8px; border: 1px solid var(--adm-border-color); padding: 10px;">
-                </div>
-                <div class="form-group">
-                    <label>Status</label>
-                    <select id="planEditActive" style="width: 100%; border-radius: 8px; border: 1px solid var(--adm-border-color); padding: 10px;">
-                        <option value="1">Active</option>
-                        <option value="0">Inactive</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label>Features (JSON Array of strings)</label>
-                <textarea id="planEditFeatures" placeholder='["Feature 1", "Feature 2"]' style="width: 100%; border-radius: 8px; border: 1px solid var(--adm-border-color); padding: 10px; min-height: 80px;"></textarea>
-            </div>
-            <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" class="btn-outline" onclick="closePlanModal()">Cancel</button>
-                <button type="submit" class="btn-primary" id="btn-save-plan">Save Plan Changes</button>
-            </div>
-        </form>
-</div>
-</div>
 
 <!-- Payment Status Edit Modal -->
 <div id="paymentStatusModal" class="modal">
@@ -194,7 +118,7 @@
         <div class="form-group" style="margin-top: 1rem;">
             <label>Transaction Status</label>
             <input type="hidden" id="editPaymentId">
-            <select id="editPaymentStatus" class="form-control" style="width: 100%; border-radius: 8px; border: 1px solid var(--adm-border-color); padding: 10px;">
+            <select id="editPaymentStatus" class="form-control">
                 <option value="pending">Pending</option>
                 <option value="success">Paid / Success</option>
                 <option value="failed">Failed</option>
@@ -221,7 +145,7 @@
         <div class="custom-gateway-card">
             <div class="gateway-header">
                 <div class="gateway-logo">
-                    <i class="fas fa-shield-alt"></i>
+                    <i class="fa-solid fa-shield-halved"></i>
                     <span>Memoria Secure Pay</span>
                 </div>
                 <button class="gateway-close" onclick="closePaymentModal()">&times;</button>
@@ -241,7 +165,7 @@
                         <label>Select Payment Method</label>
                         <div class="method-options">
                             <div class="method-item active" onclick="switchPaymentMethod('card')">
-                                <i class="fas fa-credit-card"></i>
+                                <i class="fa-solid fa-credit-card"></i>
                                 <span>Card</span>
                             </div>
                             <div class="method-item" onclick="switchPaymentMethod('upi')">
@@ -249,7 +173,7 @@
                                 <span>UPI</span>
                             </div>
                             <div class="method-item" onclick="switchPaymentMethod('netbanking')">
-                                <i class="fas fa-university"></i>
+                                <i class="fa-solid fa-building-columns"></i>
                                 <span>NetBank</span>
                             </div>
                         </div>
@@ -295,7 +219,7 @@
                         <div class="card-details-mock">
                             <div class="mock-input">
                                 <label>Select Your Bank</label>
-                                <select id="sim-bank-name" class="form-select" style="width: 100%; background: var(--adm-bg-color); border: 1px solid var(--adm-border-color); border-radius: 10px; padding: 12px; color: var(--adm-text-color);">
+                                <select id="sim-bank-name" class="form-control">
                                     <option value="">Choose a bank...</option>
                                     <option value="SBI">State Bank of India</option>
                                     <option value="HDFC">HDFC Bank</option>
@@ -314,16 +238,16 @@
 
                 <div id="payment-step-processing" style="display: none; text-align: center; padding: 3rem 0;">
                     <div class="gateway-spinner"></div>
-                    <h3 style="margin-top: 1.5rem; color: #fff;">Processing Payment...</h3>
-                    <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">Please do not refresh or close this window.</p>
+                    <h3 style="margin-top: 1.5rem; color: var(--adm-text-color);">Processing Payment...</h3>
+                    <p style="color: var(--adm-text-muted); font-size: 0.9rem;">Please do not refresh or close this window.</p>
                 </div>
 
                 <div id="payment-step-success" style="display: none; text-align: center; padding: 2rem 0;">
                     <div class="success-checkmark">
-                        <i class="fas fa-check"></i>
+                        <i class="fa-solid fa-check"></i>
                     </div>
-                    <h2 style="margin-top: 1.5rem; color: #fff; font-family: 'Playfair Display', serif;">Payment Success!</h2>
-                    <p style="color: rgba(255,255,255,0.6); margin-bottom: 2rem;">Your subscription has been upgraded.</p>
+                    <h2 style="margin-top: 1.5rem; color: var(--adm-text-color); font-family: 'Playfair Display', serif;">Payment Success!</h2>
+                    <p style="color: var(--adm-text-muted); margin-bottom: 2rem;">Your subscription has been upgraded.</p>
                     <button class="gateway-pay-btn" style="background: #10b981;" onclick="finishPaymentFlow()">
                         View Dashboard
                     </button>
@@ -331,7 +255,7 @@
             </div>
             
             <div class="gateway-footer">
-                <i class="fas fa-lock"></i> SSL Encrypted Simulation
+                <i class="fa-solid fa-lock"></i> SSL Encrypted Simulation
             </div>
         </div>
     </div>
@@ -409,14 +333,19 @@
                         : `<div style="font-size:2.8rem;font-weight:900;margin:1.5rem 0 0.5rem;font-family:'Playfair Display',serif;color:${isPopular?'var(--adm-accent-color)':'var(--adm-text-color)'};">₹${plan.price.toLocaleString()}<span style="font-size:1rem;color:#94a3b8;font-weight:500;">/mo</span></div>`;
                     
                     let features = [];
-                    try { features = JSON.parse(plan.features) || []; } catch(e) {}
-                    const featureItems = features.map(f => `<li style="display:flex;align-items:center;gap:10px;"><i class="fas fa-circle-check" style="color:#10b981;font-size:0.9rem;"></i> <span style="font-size:0.9rem;font-weight:500;">${f}</span></li>`).join('');
+                    try { 
+                        features = typeof plan.features === 'string' ? JSON.parse(plan.features) : (plan.features || []);
+                        if (typeof features === 'string') features = JSON.parse(features); // Handle double stringify
+                        if (!Array.isArray(features)) features = [];
+                    } catch(e) { features = []; }
+                    
+                    const featureItems = (features || []).map(f => `<li style="display:flex;align-items:center;gap:10px;"><i class="fa-solid fa-circle-check" style="color:#10b981;font-size:0.9rem;"></i> <span style="font-size:0.9rem;font-weight:500;">${f}</span></li>`).join('');
 
                     const btnHtml = isCurrentPlan
-                        ? `<button class="btn-outline" disabled style="opacity:0.6;width:100%;cursor:default;border-color:#10b981;color:#10b981;"><i class="fas fa-check-double"></i> Your Active Plan</button>`
+                        ? `<button class="btn-outline" disabled style="opacity:0.6;width:100%;cursor:default;border-color:#10b981;color:#10b981;"><i class="fa-solid fa-check-double"></i> Your Active Plan</button>`
                         : (isFree
                             ? `<button class="btn-outline" disabled style="opacity:0.5;width:100%;">Plan Downgrade unavailable</button>`
-                            : `<button class="btn-primary" style="width:100%;${isPopular?'':'background:#0ea5e9;'}" onclick="initiateRazorpayPayment('${plan.plan_key}')"><i class="fas fa-bolt"></i> Upgrade to ${plan.name}</button>`);
+                            : `<button class="btn-primary" style="width:100%;${isPopular?'':'background:#0ea5e9;'}" onclick="initiateRazorpayPayment('${plan.plan_key}')"><i class="fa-solid fa-bolt"></i> Upgrade to ${plan.name}</button>`);
 
                     return `
                         <div class="pricing-card ${isPopular ? 'popular' : ''}" style="${isCurrentPlan ? 'border-color: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,0.2);' : ''}">
@@ -448,7 +377,6 @@
                 if (userView) userView.style.display = 'none';
                 // Populate audit log and plan management
                 if (typeof fetchAuditLogs === 'function') fetchAuditLogs();
-                if (typeof fetchSubscriptionPlansAdmin === 'function') fetchSubscriptionPlansAdmin();
             } else {
                 if (adminView) adminView.style.display = 'none';
                 if (userView) userView.style.display = 'block';

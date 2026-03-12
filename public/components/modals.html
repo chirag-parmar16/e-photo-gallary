@@ -32,7 +32,7 @@
         <form id="createBookForm">
             <div class="form-group">
                 <label>Recipient's Name</label>
-                <input type="text" id="newRecipientName" class="form-control" required placeholder="e.g. Rahul Sharma" style="border: 1px solid var(--adm-accent-color); font-weight: 600;">
+                <input type="text" id="newRecipientName" class="form-control" required placeholder="e.g. Rahul Sharma" style="border-color: var(--adm-accent-color); font-weight: 600;">
             </div>
             <div class="form-group">
                 <label>Album Name (Internal)</label>
@@ -63,18 +63,20 @@
 
 <!-- Creation Confirmation Modal -->
 <div id="confirmCreateBookModal" class="modal">
-    <div class="modal-content" style="max-width: 450px; border-radius: 20px; padding: 2rem; text-align: center;">
-        <div style="font-size: 3rem; color: var(--adm-accent-color); margin-bottom: 1rem;"><i class="fas fa-check-circle"></i></div>
-        <h3>Confirm Album Creation</h3>
-        <p style="color: var(--adm-text-muted); margin-bottom: 1.5rem;">The Recipient Name <strong>cannot be edited</strong> after creation. Is this correct?</p>
-        <div style="background: rgba(255, 77, 109, 0.05); padding: 1rem; border-radius: 12px; margin-bottom: 2rem;">
-            <span style="display: block; font-size: 0.8rem; color: var(--adm-text-muted); text-transform: uppercase; letter-spacing: 1px;">Recipient Name</span>
-            <span id="confirmRecipientName" style="font-size: 1.4rem; font-weight: 700; color: var(--adm-accent-color);"></span>
+    <div class="modal-content" style="max-width: 450px; border-radius: 20px; padding: 2rem; text-align: center; position: relative;">
+        <button id="backToEditBookBtn" class="close-modal" data-modal="confirmCreateBookModal" title="Edit Name" style="position: absolute; top: 20px; right: 20px; background: var(--adm-bg-color); border: 1px solid var(--adm-border-color); color: var(--adm-text-color); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 512 512">
+                <path d="M290.74 93.24l128 128L142.75 497.25l-128 32 32-128L290.74 93.24zm45.25-45.25l45.25-45.25c12.5-12.5 32.75-12.5 45.25 0l83.76 83.76c12.5 12.5 12.5 32.75 0 45.25L465 177l-129-129z"/>
+            </svg>
+        </button>
+        <div style="font-size: 3rem; color: var(--adm-accent-color); margin-bottom: 1rem;"><i class="fa-solid fa-circle-check"></i></div>
+        <h3 style="font-family: 'Playfair Display', serif; font-weight: 800; font-size: 1.5rem;">Confirm Album Creation</h3>
+        <p style="color: var(--adm-text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">The Recipient Name <strong>cannot be edited</strong> after creation. Is this correct?</p>
+        <div style="background: rgba(255, 77, 109, 0.05); padding: 1.25rem; border-radius: 16px; margin-bottom: 2rem; border: 1px dashed rgba(255, 77, 109, 0.2);">
+            <span style="display: block; font-size: 0.75rem; color: var(--adm-text-muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; font-weight: 700;">Recipient Name</span>
+            <span id="confirmRecipientName" style="font-size: 1.6rem; font-weight: 800; color: var(--adm-accent-color); font-family: 'Playfair Display', serif;"></span>
         </div>
-        <div style="display: flex; gap: 12px;">
-            <button class="btn-primary secondary close-modal" data-modal="confirmCreateBookModal" style="flex: 1; background: #eee; color: #333;">Edit Name</button>
-            <button id="finalCreateBookBtn" class="btn-primary" style="flex: 1;">Yes, Create Album</button>
-        </div>
+        <button id="finalCreateBookBtn" class="btn-primary" style="width: 100%; height: 48px; font-size: 1rem; border-radius: 12px; font-weight: 700; box-shadow: 0 4px 12px rgba(255, 77, 109, 0.2);">Yes, Create Album</button>
     </div>
 </div>
 
@@ -106,12 +108,12 @@
 <!-- Delete Confirmation Modal -->
 <div id="deleteConfirmModal" class="modal">
     <div class="modal-content" style="max-width: 400px; text-align: center; border-radius: 16px; padding: 1.5rem; position: relative;">
-        <span class="close-modal" data-modal="deleteConfirmModal" style="position: absolute; top: 12px; right: 15px; font-size: 1.2rem; cursor: pointer; color: #94a3b8;"><i class="fas fa-times"></i></span>
-        <div style="font-size: 2rem; color: #ff4d6d; margin: 0.5rem 0 1rem 0;"><i class="fas fa-trash-alt"></i></div>
+        <span class="close-modal" data-modal="deleteConfirmModal" style="position: absolute; top: 12px; right: 15px; font-size: 1.2rem; cursor: pointer; color: var(--adm-text-muted);"><i class="fa-solid fa-xmark"></i></span>
+        <div style="font-size: 2rem; color: var(--adm-accent-color); margin: 0.5rem 0 1rem 0;"><i class="fa-solid fa-trash-can"></i></div>
         <h3 id="deleteModalTitle" style="margin-bottom: 8px; font-size: 1.1rem;">Confirm Action</h3>
-        <p id="deleteModalMessage" style="color: #64748b; margin-bottom: 1.5rem; font-size: 0.85rem;">Are you sure you want to proceed?</p>
+        <p id="deleteModalMessage" style="color: var(--adm-text-muted); margin-bottom: 1.5rem; font-size: 0.85rem;">Are you sure you want to proceed?</p>
         <div style="display: flex; justify-content: center;">
-            <button id="confirmDeleteBtn" class="btn-primary" style="width: 100%; background: #ff4d6d; height: 36px; font-size: 0.85rem;">Delete</button>
+            <button id="confirmDeleteBtn" class="btn-primary" style="width: 100%; height: 36px; font-size: 0.85rem;">Delete</button>
         </div>
     </div>
 </div>
@@ -119,16 +121,16 @@
 <!-- Edit User Plan Modal -->
 <div id="editPlanModal" class="modal">
     <div class="modal-content" style="max-width: 600px; border-radius: 16px; padding: 1.5rem;">
-        <span class="close-modal" data-modal="editPlanModal" style="position: absolute; top: 12px; right: 15px; font-size: 1.2rem; cursor: pointer; color: #94a3b8;"><i class="fas fa-times"></i></span>
-        <h3 style="margin-bottom: 1.5rem; font-size: 1.1rem;"><i class="fas fa-edit" style="color: var(--adm-accent-color); margin-right: 8px;"></i> Manage User Plan</h3>
+        <span class="close-modal" data-modal="editPlanModal" style="position: absolute; top: 12px; right: 15px; font-size: 1.2rem; cursor: pointer; color: var(--adm-text-muted);"><i class="fa-solid fa-xmark"></i></span>
+        <h3 style="margin-bottom: 1.5rem; font-size: 1.1rem;"><i class="fa-solid fa-pen-to-square" style="color: var(--adm-accent-color); margin-right: 8px;"></i> Manage User Plan</h3>
         <form id="editPlanForm">
             <input type="hidden" id="editPlanUserId">
             <div class="form-group">
                 <label style="font-size: 0.85rem; font-weight: 600; color: var(--adm-text-muted);">Subscription Tier</label>
                 <select id="editUserPlanSelect" class="form-control" style="height: 40px; font-size: 0.9rem;">
-                    <option value="free" data-icon="fas fa-hand-holding-heart">Free Tier</option>
-                    <option value="basic" data-icon="fas fa-star" data-color="#0ea5e9">Basic Tier</option>
-                    <option value="pro" data-icon="fas fa-crown" data-color="#ff4d6d">Pro Tier</option>
+                    <option value="free">Free Tier</option>
+                    <option value="basic">Basic Tier</option>
+                    <option value="pro">Pro Tier</option>
                 </select>
             </div>
             <div class="form-group">
@@ -137,13 +139,13 @@
                     <input type="number" id="editPlanDays" class="form-control" value="0" min="0" style="height: 40px; font-size: 0.9rem; flex: 1;">
                     <button type="button" class="btn-primary" onclick="setLifetime()" style="width: auto; height: 40px; font-size: 0.8rem; background: var(--adm-accent-color);">Lifetime</button>
                 </div>
-                <small style="color: #94a3b8; font-size: 0.75rem; margin-top: 4px; display: block;">Add days to current expiry or set Lifetime.</small>
+                <small style="color: var(--adm-text-muted); font-size: 0.75rem; margin-top: 4px; display: block;">Add days to current expiry or set Lifetime.</small>
             </div>
-            <div style="text-align: center; margin: 10px 0; color: #94a3b8; font-size: 0.8rem; font-weight: 600;">— OR —</div>
+            <div style="text-align: center; margin: 10px 0; color: var(--adm-text-muted); font-size: 0.8rem; font-weight: 600;">— OR —</div>
             <div class="form-group">
                 <label style="font-size: 0.85rem; font-weight: 600; color: var(--adm-text-muted);">Specific Expiration Date</label>
                 <input type="date" id="editPlanDirectDate" class="form-control" style="height: 40px; font-size: 0.9rem;">
-                <small style="color: #94a3b8; font-size: 0.75rem; margin-top: 4px; display: block;">Pick a specific date to override current expiry.</small>
+                <small style="color: var(--adm-text-muted); font-size: 0.75rem; margin-top: 4px; display: block;">Pick a specific date to override current expiry.</small>
             </div>
             <button type="submit" class="btn-primary" style="width: 100%; height: 40px; margin-top: 1rem; font-size: 0.9rem;">Update Subscription</button>
         </form>

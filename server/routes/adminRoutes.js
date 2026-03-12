@@ -91,9 +91,16 @@ module.exports = (db) => {
         try {
             const { plan_key, name, price, days, max_books, features } = req.body;
             if (!plan_key || !name) return res.status(400).json({ error: 'plan_key and name are required' });
+            
+            // Avoid double-stringification if it's already a string
+            let finalFeatures = features;
+            if (typeof features !== 'string') {
+                finalFeatures = JSON.stringify(features || []);
+            }
+
             await db.run(
                 'INSERT INTO subscription_plans (plan_key, name, price, days, max_books, features) VALUES (?, ?, ?, ?, ?, ?)',
-                [plan_key, name, price || 0, days || 30, max_books || 1, JSON.stringify(features || [])]
+                [plan_key, name, price || 0, days || 30, max_books || 1, finalFeatures]
             );
             const newPlan = await db.get('SELECT * FROM subscription_plans WHERE plan_key = ?', [plan_key]);
             res.json(newPlan);
@@ -103,6 +110,12 @@ module.exports = (db) => {
     router.put('/plans/:id', adminAuth, async (req, res) => {
         try {
             const { name, price, days, max_books, features, is_active } = req.body;
+            
+            let finalFeatures = features;
+            if (features && typeof features !== 'string') {
+                finalFeatures = JSON.stringify(features);
+            }
+
             await db.run(
                 `UPDATE subscription_plans SET
                     name = COALESCE(?, name),
@@ -112,7 +125,7 @@ module.exports = (db) => {
                     features = COALESCE(?, features),
                     is_active = COALESCE(?, is_active)
                 WHERE id = ?`,
-                [name, price, days, max_books, features ? JSON.stringify(features) : null, is_active, req.params.id]
+                [name, price, days, max_books, finalFeatures, is_active, req.params.id]
             );
             const updated = await db.get('SELECT * FROM subscription_plans WHERE id = ?', [req.params.id]);
             res.json(updated);
