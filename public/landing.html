@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Memoria — Digital Photo Albums That Tell Your Story</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
     <meta
       name="description"
       content="Create stunning digital flip-book photo albums with Memoria. Preserve your memories forever."
@@ -542,18 +543,22 @@
 
       /* Unflipped (Right Side Stack) */
       .leaf-1 {
+        z-index: 5;
+        transform: translateZ(5px) rotateY(0deg);
+      }
+      .leaf-2 {
         z-index: 4;
         transform: translateZ(4px) rotateY(0deg);
       }
-      .leaf-2 {
+      .leaf-3 {
         z-index: 3;
         transform: translateZ(3px) rotateY(0deg);
       }
-      .leaf-3 {
+      .leaf-4 {
         z-index: 2;
         transform: translateZ(2px) rotateY(0deg);
       }
-      .leaf-4 {
+      .leaf-5 {
         z-index: 1;
         transform: translateZ(1px) rotateY(0deg);
       }
@@ -574,6 +579,10 @@
       .leaf-4.flipped {
         transform: translateZ(4px) rotateY(-180deg);
         z-index: 4;
+      }
+      .leaf-5.flipped {
+        transform: translateZ(5px) rotateY(-180deg);
+        z-index: 5;
       }
 
       .page {
@@ -1279,29 +1288,29 @@
       <!-- Deep Parallax Gallery Background -->
       <div class="parallax-bg" id="parallax-bg">
         <img
-          src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=300&q=80"
+          src="/assets/hero/vacation.png"
           class="p-img p-img-1"
-          alt="Bg memory"
+          alt="Vacation"
         />
         <img
-          src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=300&q=80"
+          src="/assets/hero/concert.png"
           class="p-img p-img-2"
-          alt="Bg memory"
+          alt="Concert"
         />
         <img
-          src="https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=300&q=80"
+          src="/assets/hero/friends.png"
           class="p-img p-img-3"
-          alt="Bg memory"
+          alt="Friends"
         />
         <img
-          src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=300&q=80"
+          src="/assets/hero/travel.png"
           class="p-img p-img-4"
-          alt="Bg memory"
+          alt="Travel"
         />
         <img
-          src="https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&w=300&q=80"
+          src="/assets/hero/nature.png"
           class="p-img p-img-5"
-          alt="Bg memory"
+          alt="Nature"
         />
       </div>
 
@@ -1336,7 +1345,7 @@
             <div class="flipbook" id="interactive-book">
               <div class="book-glow"></div>
 
-              <!-- Leaf 1 (Cover Front & Inside Cover) -->
+              <!-- Leaf 1 (Cover Front & Empty Left) -->
               <div class="leaf leaf-1">
                 <div class="page cover-front">
                   <i
@@ -1362,84 +1371,112 @@
                 <div class="page back inner-page"></div>
               </div>
 
-              <!-- Leaf 2 (Video Page & Page 2) -->
+              <!-- Leaf 2 (Right Page 1 & Grid 2 Left) -->
               <div class="leaf leaf-2">
                 <div class="page inner-page">
-                  <video autoplay loop muted playsinline class="page-photo">
-                    <source
-                      src="https://cdn.coverr.co/videos/coverr-a-couple-holding-hands-2451/1080p.mp4"
-                      type="video/mp4"
-                    />
-                  </video>
+                   <img
+                    src="/assets/hero/wedding.png"
+                    class="page-photo"
+                    alt="Wedding"
+                  />
                 </div>
                 <div class="page back inner-page">
-                  <img
-                    src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=400&q=80"
-                    class="page-photo"
-                    alt="Wedding Memories 2"
-                  />
+                  <!-- 2-photo layout -->
+                  <div class="photo-grid" style="grid-template-columns: 1fr; gap: 0.5rem; height: 100%; align-content: center;">
+                    <img
+                      src="/assets/hero/nature.png"
+                      class="grid-photo"
+                      style="height: 180px; object-fit: cover; width: 100%;"
+                      alt="Nature"
+                    />
+                    <img
+                      src="/assets/hero/anniversary.png"
+                      class="grid-photo"
+                      style="height: 180px; object-fit: cover; width: 100%;"
+                      alt="Anniversary"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <!-- Leaf 3 (Page 3 (4-Photo Layout) & Page 4) -->
+              <!-- Leaf 3 (Right Page 2 & Grid 3 Left) -->
               <div class="leaf leaf-3">
                 <div class="page inner-page">
+                  <img
+                    src="/assets/hero/graduation.png"
+                    class="page-photo"
+                    alt="Graduation"
+                  />
+                </div>
+                <div class="page back inner-page">
+                  <!-- 3-photo layout: 2 top, 1 bottom -->
+                  <div class="photo-grid" style="grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1.2fr; gap: 0.5rem; height: 100%;">
+                    <img
+                      src="/assets/hero/birthday.png"
+                      class="grid-photo"
+                      style="height: 120px; object-fit: cover;"
+                      alt="Birthday"
+                    />
+                    <img
+                      src="/assets/hero/pet.png"
+                      class="grid-photo"
+                      style="height: 120px; object-fit: cover;"
+                      alt="Pet"
+                    />
+                    <img
+                      src="/assets/hero/couple_sunset.png"
+                      class="grid-photo"
+                      style="grid-column: span 2; height: 220px; object-fit: cover;"
+                      alt="Sunset"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Leaf 4 (Right Page 3 & Grid 4 Left) -->
+              <div class="leaf leaf-4">
+                <div class="page inner-page">
+                   <img
+                    src="/assets/hero/family.png"
+                    class="page-photo"
+                    alt="Family"
+                  />
+                </div>
+                <div class="page back inner-page">
                   <!-- 4-photo grid layout -->
                   <div class="photo-grid">
                     <img
-                      src="https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=400&q=80"
+                      src="/assets/hero/travel.png"
                       class="grid-photo"
-                      alt="Memories 3a"
+                      alt="Travel photo"
                     />
                     <img
-                      src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=400&q=80"
+                      src="/assets/hero/baby.png"
                       class="grid-photo"
-                      alt="Memories 3b"
+                      alt="Baby photo"
                     />
                     <img
-                      src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=400&q=80"
+                      src="/assets/hero/vacation.png"
                       class="grid-photo"
-                      alt="Memories 3c"
+                      alt="Vacation photo"
                     />
                     <img
-                      src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=400&q=80"
+                      src="/assets/hero/concert.png"
                       class="grid-photo"
-                      alt="Memories 3d"
+                      alt="Concert photo"
                     />
                   </div>
-                </div>
-                <div class="page back inner-page">
-                  <img
-                    src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=400&q=80"
-                    class="page-photo"
-                    alt="Wedding Memories 4"
-                  />
                 </div>
               </div>
 
-              <!-- Leaf 4 (Inside Back Cover & Back Cover) -->
-              <div class="leaf leaf-4">
+              <!-- Leaf 5 (Final Content & Back Cover) -->
+              <div class="leaf leaf-5">
                 <div class="page inner-page">
-                  <div style="text-align: center; color: #94a3b8">
-                    <i
-                      class="fas fa-camera-retro"
-                      style="
-                        color: var(--pink-light);
-                        font-size: var(--fin-icon-size);
-                        margin-bottom: 1rem;
-                        opacity: 0.5;
-                      "
-                    ></i>
-                    <h4
-                      style="
-                        font-family: &quot;Playfair Display&quot;, serif;
-                        font-size: var(--fin-title-size);
-                        color: var(--dark);
-                      "
-                    >
-                      Fin.
-                    </h4>
-                  </div>
+                   <img
+                    src="/assets/hero/friends.png"
+                    class="page-photo"
+                    alt="Friends"
+                  />
                 </div>
                 <div class="page back cover-back">
                   <div
@@ -1452,19 +1489,22 @@
                     "
                   >
                     <i
-                      class="fas fa-heart"
-                      style="color: rgba(255, 255, 255, 0.1); font-size: 2rem"
-                    ></i>
-                    <p
+                      class="fas fa-camera-retro"
                       style="
+                        color: rgba(255, 255, 255, 0.2);
+                        font-size: 2.5rem;
+                        margin-bottom: 1rem;
+                      "
+                    ></i>
+                    <h4
+                      style="
+                        font-family: &quot;Playfair Display&quot;, serif;
+                        font-size: 1.5rem;
                         color: rgba(255, 255, 255, 0.3);
-                        font-size: 0.8rem;
-                        margin-top: 1rem;
-                        font-family: &quot;Inter&quot;, sans-serif;
                       "
                     >
-                      Memoria
-                    </p>
+                      Fin.
+                    </h4>
                   </div>
                 </div>
               </div>
