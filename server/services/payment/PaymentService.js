@@ -26,7 +26,7 @@ class PaymentService {
 
         // Store pending payment in DB
         await db.run(
-            `INSERT INTO payments (user_id, plan_id, razorpay_order_id, amount, currency, status, gateway) 
+            `INSERT INTO payments (user_id, plan_id, txn_order_id, amount, currency, status, gateway) 
              VALUES (?, ?, ?, ?, ?, 'pending', 'simulated')`,
             [userId, planId, transaction.id, plan.price, plan.currency || 'INR']
         );
@@ -44,7 +44,7 @@ class PaymentService {
      */
     async handlePaymentSuccess(db, { transactionId, mockPaymentId, paymentDetails }) {
         // 1. Check if already processed
-        const payment = await db.get('SELECT * FROM payments WHERE razorpay_order_id = ?', [transactionId]);
+        const payment = await db.get('SELECT * FROM payments WHERE txn_order_id = ?', [transactionId]);
         if (!payment) throw new Error('Transaction record not found');
         if (payment.status === 'success') return { success: true, message: 'Already processed' };
 
@@ -57,7 +57,7 @@ class PaymentService {
         await db.run(
             `UPDATE payments 
              SET status = "success", 
-                 razorpay_payment_id = ?, 
+                 txn_payment_id = ?, 
                  payment_method = ?,
                  upi_id = ?,
                  bank_name = ?,

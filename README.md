@@ -1,46 +1,120 @@
-# 🌌 Conceptual Overview: E-Photo Gallery
+# 🌌 E-Photo Gallery: The Digital E-Book Experience
 
-The **E-Photo Gallery** is not just a digital archive—it is a **Conceptual Experience** that reimagines how we interact with memories. It is designed to bridge the gap between high-performance cloud storage and the tactile, emotional feel of a **Physical Photo Album**.
+![E-Photo Gallery Banner](file:///C:/Users/chirag/.gemini/antigravity/brain/e326087a-0063-4107-a5eb-3d4a0cbc0186/e_photo_gallery_banner_1773370471980.png)
 
----
-
-## � The Core Vision: The Digital E-Book
-
-In an era of endless scrolling lists, this project introduces the concept of **"Physicality in Digital Spaces."** The central idea is to transform a standard grid of images into a **Living E-Book**. 
-
-Instead of a generic gallery, users interact with a **3D Virtual Photo Album**. Every interaction is designed to mimic real-world touch:
--   **The Page-Flip Ritual:** Navigating the gallery isn't just "nexting"—it's a high-fidelity **Page Flip Animation** that gives the visual and emotional weight of turning a real paper page.
--   **Landscape Immortality:** The experience is optimized for landscape viewing, recreating the horizontal spread of a premium physical book.
+A premium **Multi-Page Application (MPA)** that reimagines digital archiving as a **3D Virtual Photo Album**. It provides a centralized platform for users to create, organize, and experience their memories with a high-fidelity "Page-Flip" ritual, all while managing access through a robust subscription model.
 
 ---
 
-## 🏛️ Conceptual Pillars
+## 🚀 Key Features
 
-### 1. Tactile Interaction (The "Feel")
-The project uses advanced animation logic to create a sense of resistance and momentum. This **Tactile Concept** ensures that digital memories don't feel "flat"—they feel like they have volume, weight, and history.
-
-### 2. Intelligent Pipeline (The "Brain")
-To maintain the fluidity of the Page-Flip animation, the **Sharp Engine** acts as an automated curator. It optimizes every photo during ingestion so that high-resolution memories can "flip" without a single frame of lag.
-
-### 3. Hybrid Persistence Layer
--   **Metadata Presence (MySQL):** The "Brain" that knows the order and story of every page.
--   **Binary Immortality (AWS S3):** Ensuring the "Book" is stored in the global cloud, safe from hardware failure.
+-   **📖 3D Virtual Album Experience:** Every album is a living 3D book with realistic page-flip animations, transforming static grids into tactile journeys.
+-   **🖼️ Intelligent Media Pipeline:** Powered by the **Sharp Engine**, images and videos are automatically optimized during ingestion for fluid, lag-free delivery.
+-   **💳 Subscription Portal:** Secure subscription-based access model with a built-in simulated gateway for local testing.
+-   **👨‍💼 Dynamic Admin Panel:** A dedicated suite for managing users, monitoring global activity, and controlling subscription plans.
+-   **🔒 Secure Authentication:** JWT-based secure session management with Bcrypt password hashing.
+-   **📁 Local Storage Layer:** High-performance local file storage implementation for all your photos and videos.
+-   **🎨 Premium UI System:** A custom, dark-themed design system optimized for high-end visual storytelling.
 
 ---
 
-## 🌊 The Asset Journey (Concept Flow)
+## 🛠️ Technology Stack
 
-1.  **Ingestion:** A raw memory enters the gateway.
-2.  **Transformation:** The "Optimization Ritual" prepares the image for fluid, animation-ready delivery.
-3.  **Cloud Transcendence:** The asset is offloaded to S3 for permanent safety.
-4.  **Album Integration:** The image is "pasted" into the digital book's layout.
-5.  **Tactile Revelation:** The user "flips" through the album, experiencing a seamless bridge between digital tech and personal history.
-
----
-
-## 🎯 Target Audience
-This project is an ideal blueprint for developers looking to understand **Interactive 3D UI**, **Hybrid Cloud Architectures**, and the **Psychology of Digital Asset Management**.
+-   **Frontend:** Vanilla JavaScript (ES6+), HTML5, CSS3 (Custom Design System).
+-   **Backend:** [Node.js](https://nodejs.org/) & [Express.js](https://expressjs.com/).
+-   **Database:** [MySQL 8.0+](https://www.mysql.com/).
+-   **Image Engine:** [Sharp](https://sharp.pixelplumbing.com/).
+-   **Payments:** Simulated Gateway.
+-   **Authentication:** JSON Web Tokens (JWT) & Bcrypt.
 
 ---
 
-> "We don't just store pixels; we recreate the sensation of holding a memory."
+## 📥 Quick Start: Installation & Setup
+
+Follow these steps to get the system running on your local machine.
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/chirag-parmar16/e-photo-gallary.git
+cd e-photo-gallary
+```
+
+### 2. Install Dependencies
+```bash
+npm install
+```
+
+### 3. Configure Environment
+Create a `.env` file in the root directory and update your credentials:
+```env
+# Server Configuration
+PORT=3000
+NODE_ENV=development
+
+# Database (MySQL)
+DB_HOST=localhost
+DB_USER=root
+DB_PASS=your_password
+DB_NAME=photo_gallery_new
+
+# Security
+JWT_SECRET=your_super_secret_key
+
+# Providers
+STORAGE_PROVIDER=local
+PAYMENT_GATEWAY=simulated
+```
+
+### 4. Database Initialization
+1. Ensure your MySQL service is running.
+2. Manually create the database schema once:
+   ```sql
+   CREATE DATABASE photo_gallery_new;
+   ```
+3. **Automatic Table Creation:** The system will automatically initialize all tables, seed subscription plans, and create the default admin account on the first launch.
+
+### 5. Run the Application
+```bash
+# Development Mode (with auto-restart)
+npm run dev
+
+# Production Mode
+npm start
+```
+Open **[http://localhost:3000](http://localhost:3000)** to explore!
+
+---
+
+## 🏗️ System Architecture
+
+The project follows a modular **Three-Layer Architecture**:
+
+1.  **Presentation Layer**: Vanilla JS frontend serving dynamic views from `/public/views`.
+2.  **Application Layer**: Express.js REST API handling business logic and subscription validation.
+3.  **Data Layer**: MySQL 8.0 handling relational persistence for users, books, and media.
+
+### 📂 Directory Structure
+```text
+├── public/                 # Static Assets & Frontend
+│   ├── css/                # Custom Design System
+│   ├── js/                 # Page-Flip Logic & API Handlers
+│   ├── views/              # MPA Templates (Login, Dashboard, Editor)
+│   └── components/         # Reusable HTML fragments
+├── server/                 # Backend Infrastructure
+│   ├── routes/             # Auth, Admin, Book & Payment APIs
+│   ├── database.js         # Auto-initialization Logic
+│   └── index.js            # Main Express Server
+└── tests/                  # Logic Validation & Smoke Tests
+```
+
+---
+
+## 👤 Default Admin Credentials
+For testing and management purposes, use the auto-generated admin account:
+- **Email:** `admin@gmail.com`
+- **Password:** `admin`
+*(Note: The Admin account is for system management and user monitoring; it does not contain default albums.)*
+
+---
+
+> "Bridging the gap between high-performance cloud tech and the emotional weight of physical memories."

@@ -135,10 +135,10 @@ async function initDb() {
             id                 INT AUTO_INCREMENT PRIMARY KEY,
             user_id            INT NOT NULL,
             plan_id            VARCHAR(50) NOT NULL,
-            gateway            VARCHAR(50) DEFAULT 'razorpay',
-            razorpay_order_id  VARCHAR(255) UNIQUE,
-            razorpay_payment_id VARCHAR(255) UNIQUE,
-            razorpay_signature VARCHAR(255),
+            gateway            VARCHAR(50) DEFAULT 'simulated',
+            txn_order_id       VARCHAR(255) UNIQUE,
+            txn_payment_id     VARCHAR(255) UNIQUE,
+            txn_signature      VARCHAR(255),
             amount             INT NOT NULL, -- In paise
             currency           VARCHAR(10) DEFAULT 'INR',
             status             VARCHAR(20) DEFAULT 'pending', -- pending, success, failed
@@ -195,17 +195,7 @@ async function initDb() {
             'INSERT INTO users (email, password, role) VALUES (?, ?, ?)',
             [adminEmail, hashedPassword, 'admin']
         );
-        const adminId = result.lastID;
         console.log('Admin user created → admin@gmail.com / admin');
-
-        // ── Seed: Default Book for Admin ─────────────────────────────────────
-        const uuid = crypto.randomUUID();
-        await db.run(
-            `INSERT INTO books (user_id, title, cover_title, end_title, uuid)
-             VALUES (?, 'My First Photo Album', 'Our Timeless Journey', 'THE END', ?)`,
-            [adminId, uuid]
-        );
-        console.log('Default book created for Admin.');
     }
 
     console.log('Database initialized ✓');
