@@ -1857,45 +1857,8 @@
         if (!grid) return;
 
         try {
-          // Modified for Preview Purposes: Simulated JSON response since /api/plans won't run locally
-          const plans = [
-            {
-              name: "Essential",
-              plan_key: "free",
-              max_books: 1,
-              currency: "INR",
-              price: "0",
-              days: 36500,
-              features: '["1 Live Album"]',
-            },
-            {
-              name: "Basic",
-              plan_key: "basic",
-              max_books: 5,
-              currency: "INR",
-              price: "500",
-              days: 30,
-              features: '["5 Live Albums"]',
-            },
-            {
-              name: "Professional",
-              plan_key: "pro",
-              max_books: 15,
-              currency: "INR",
-              price: "1200",
-              days: 30,
-              features: '["15 Live Albums"]',
-            },
-            {
-              name: "Platinum",
-              plan_key: "plat",
-              max_books: 20,
-              currency: "INR",
-              price: "1500",
-              days: 30,
-              features: '["20 Live Albums"]',
-            },
-          ];
+          const res = await fetch("/api/plans");
+          const plans = await res.json();
 
           if (!Array.isArray(plans)) return;
 
