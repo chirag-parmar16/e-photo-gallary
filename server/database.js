@@ -177,11 +177,11 @@ async function initDb() {
     const plansExist = await db.get('SELECT id FROM subscription_plans LIMIT 1');
     if (!plansExist) {
         await db.run(`INSERT INTO subscription_plans (plan_key, name, price, days, max_books, features) VALUES (?, ?, ?, ?, ?, ?)`,
-            ['free', 'Essential', 0, 36500, 1, JSON.stringify(['1 Live Album', '100 Photos/Videos'])]);
+            ['free', 'Essential', 0, 36500, 1, JSON.stringify(['1 Live Album'])]);
         await db.run(`INSERT INTO subscription_plans (plan_key, name, price, days, max_books, features) VALUES (?, ?, ?, ?, ?, ?)`,
-            ['basic', 'Basic', 500, 30, 5, JSON.stringify(['5 Live Albums', '500 Photos/Videos', 'Email Support'])]);
+            ['basic', 'Basic', 500, 30, 5, JSON.stringify(['5 Live Albums'])]);
         await db.run(`INSERT INTO subscription_plans (plan_key, name, price, days, max_books, features) VALUES (?, ?, ?, ?, ?, ?)`,
-            ['pro', 'Professional', 1200, 30, 999, JSON.stringify(['Unlimited Albums', 'Premium Layouts', 'Priority Support', 'All Templates'])]);
+            ['pro', 'Professional', 1200, 30, 15, JSON.stringify(['15 Live Albums'])]);
         console.log('Default subscription plans seeded ✓');
     }
 
