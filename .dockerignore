@@ -1,0 +1,6 @@
+.git
+.env
+autoflow.config.json
+node_modules
+dist
+build
