@@ -22,8 +22,23 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script>
+        // Immediate Theme Application to prevent white flash
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            if (savedTheme === 'dark') {
+                document.body ? document.body.style.background = '#0c111d' : null;
+            }
+        })();
+    </script>
 </head>
 <body>
+    <!-- Global Loader -->
+    <div id="global-loader">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Loading Memoria...</div>
+    </div>
     <div id="app-container" style="display: none;">
         <div id="sidebar-container"></div>
         <main class="main-wrapper">

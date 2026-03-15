@@ -15,8 +15,23 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"></script>
+    <script>
+        // Immediate Theme Application to prevent white flash
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            if (savedTheme === 'dark') {
+                document.body ? document.body.style.background = '#0c111d' : null;
+            }
+        })();
+    </script>
 </head>
 <body>
+    <!-- Global Loader -->
+    <div id="global-loader">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Loading Memoria...</div>
+    </div>
     <div id="app-container" style="display: none;">
         <div id="sidebar-container"></div>
         <main class="main-wrapper">
