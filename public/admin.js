@@ -1644,7 +1644,7 @@ function renderPages(pages) {
         tr.dataset.id = page.id;
 
         const mediaHtml = page.media.map(m =>
-            m.type === 'video' ? `<video src="${m.media_path}" muted style="width:40px;height:40px;object-fit:cover;border-radius:4px;"></video>` : `<img src="${m.media_path}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;">`
+            m.type === 'video' ? `<video src="${m.media_path}" muted style="width:40px;height:40px;object-fit:cover;border-radius:4px;" loading="lazy"></video>` : `<img src="${m.media_path}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;" loading="lazy">`
         ).join('');
 
         const temp = document.createElement('div');
@@ -1831,8 +1831,8 @@ function renderNewMediaPreview(file, index) {
 
         const isVideo = file.type.startsWith('video/');
         const mediaHtml = isVideo
-            ? `<video src="${ev.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:8px; border: 2px solid var(--accent-color);"></video>`
-            : `<img src="${ev.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:8px; border: 2px solid var(--accent-color);">`;
+            ? `<video src="${ev.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:8px; border: 2px solid var(--accent-color);" loading="lazy"></video>`
+            : `<img src="${ev.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:8px; border: 2px solid var(--accent-color);" loading="lazy">`;
 
         item.innerHTML = `
             ${mediaHtml}
@@ -1888,8 +1888,8 @@ async function openEditPage(pageId) {
                 item.dataset.mediaId = m.id;
 
                 const mediaHtml = m.type === 'video'
-                    ? `<video src="${m.media_path}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;"></video>`
-                    : `<img src="${m.media_path}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">`;
+                    ? `<video src="${m.media_path}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;" loading="lazy"></video>`
+                    : `<img src="${m.media_path}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;" loading="lazy">`;
 
                 item.innerHTML = `
                     ${mediaHtml}

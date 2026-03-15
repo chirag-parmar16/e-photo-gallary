@@ -92,8 +92,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const mediaItems = (pageData.media || []).map(m => `
             <div class="media-item frame-${m.frame_style || 'square'}">
                 ${m.type === 'video'
-                ? `<video src="${m.media_path}" loop muted></video>`
-                : `<img src="${m.media_path}" alt="Memory">`
+                ? `<video src="${m.media_path}" loop muted preload="metadata" loading="lazy"></video>`
+                : `<img src="${m.media_path}" alt="Memory" loading="lazy">`
             }
             </div>
         `).join('');
