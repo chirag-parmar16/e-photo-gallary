@@ -37,7 +37,14 @@ async function initApp() {
     // Initial library setup after modals are loaded
     initFlatpickr();
 
-    checkAuth();
+    await checkAuth();
+
+    // Ensure loader is removed after everything is ready
+    const loader = document.getElementById('global-loader');
+    if (loader) {
+        loader.classList.add('fade-out');
+        setTimeout(() => loader.remove(), 500);
+    }
 }
 
 async function loadModals() {

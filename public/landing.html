@@ -1906,7 +1906,7 @@
             .map((plan, index) => {
               const isPopular = plan.plan_key === "basic";
               const delayClass = index === 0 ? "" : `delay-${index}`;
-              const features = JSON.parse(plan.features || "[]");
+              const features = typeof plan.features === 'string' ? JSON.parse(plan.features || "[]") : (plan.features || []);
 
               return `
                         <div class="price-card ${isPopular ? "popular" : ""} reveal-up ${delayClass}">
