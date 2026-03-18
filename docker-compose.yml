@@ -1,0 +1,10 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3002:3000"
+    volumes:
+      - ./public/uploads:/app/public/uploads
+    environment:
+      - NODE_ENV=production
+    restart: always
