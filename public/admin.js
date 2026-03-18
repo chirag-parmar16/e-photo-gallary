@@ -851,9 +851,10 @@ function renderAdminCharts(data) {
 }
 
 async function fetchUsers() {
-    const userList = document.getElementById('userList');
+    const userList = document.getElementById('userList') || document.getElementById('adminUserList');
     if (!userList) return;
     try {
+        const tableSelector = document.getElementById('saUserTable') ? '#saUserTable' : '#adminUserManagementTable';
         const res = await fetch('/api/admin/users', {
             credentials: 'same-origin',
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
@@ -861,8 +862,8 @@ async function fetchUsers() {
         const users = await res.json();
 
         // Destroy existing DataTable if it exists
-        if ($.fn.DataTable.isDataTable('#saUserTable')) {
-            $('#saUserTable').DataTable().destroy();
+        if ($.fn.DataTable.isDataTable(tableSelector)) {
+            $(tableSelector).DataTable().destroy();
         }
 
         users.forEach((user, idx) => {
@@ -891,7 +892,7 @@ async function fetchUsers() {
         });
 
         // Initialize DataTable
-        $('#saUserTable').DataTable({
+        $(tableSelector).DataTable({
             responsive: true,
             searching: false,
             pageLength: 5,
@@ -1890,6 +1891,7 @@ async function savePage() {
             body: formData
         });
         if (res.ok) {
+            iziToast.success({ title: 'Success', message: 'Page content saved successfully!' });
             document.getElementById('pageModal').classList.remove('active');
             fetchPages(currentBookId);
         } else {
