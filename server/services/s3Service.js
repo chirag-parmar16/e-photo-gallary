@@ -11,6 +11,10 @@ const s3Client = new S3Client({
     },
 });
 
+console.log('S3 Client Initialized with Region:', process.env.AWS_REGION || 'ap-south-1');
+if (!process.env.AWS_ACCESS_KEY_ID) console.error('MISSING S3 ACCESS KEY ID');
+if (!process.env.AWS_BUCKET_NAME) console.error('MISSING S3 BUCKET NAME');
+
 /**
  * Uploads a file buffer to S3
  * @param {Buffer} fileBuffer 
@@ -32,8 +36,14 @@ async function uploadToS3(fileBuffer, fileName, mimeType) {
         // Construct the public URL (assuming public-read access is enabled on the bucket)
         return `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${command.input.Key}`;
     } catch (error) {
-        console.error('Error uploading to S3:', error);
-        throw new Error('S3 upload failed');
+        console.error('S3 UPLOAD ERROR:', {
+            message: error.message,
+            code: error.code,
+            requestId: error.$metadata?.requestId,
+            bucket: bucketName,
+            region: process.env.AWS_REGION
+        });
+        throw new Error(`S3 upload failed: ${error.message}`);
     }
 }
 
