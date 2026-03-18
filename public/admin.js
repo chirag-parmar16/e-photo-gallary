@@ -1754,41 +1754,69 @@ function bindModalEvents() {
 
 // Client-side Image Compression Helper
 async function compressImage(file, maxWidth = 1200, maxHeight = 1200, quality = 0.7) {
-    if (!file.type.startsWith('image/') || file.type === 'image/gif') return file;
+    // Basic type check, with extension fallback for mobile
+    const ext = file.name.split('.').pop().toLowerCase();
+    const isImage = file.type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'heic', 'heif', 'webp'].includes(ext);
+    
+    if (!isImage || file.type === 'image/gif') {
+        console.log('Skipping compression for non-image/gif:', file.name, file.type);
+        return file;
+    }
+
+    console.log(`Compressing ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)...`);
 
     return new Promise((resolve) => {
         const reader = new FileReader();
+        reader.onerror = () => {
+            console.error('FileReader error:', reader.error);
+            resolve(file);
+        };
         reader.onload = (e) => {
             const img = new Image();
+            img.onerror = (err) => {
+                console.error('Image load error during compression:', err);
+                resolve(file);
+            };
             img.onload = () => {
-                let width = img.width;
-                let height = img.height;
+                try {
+                    let width = img.width;
+                    let height = img.height;
 
-                if (width > height) {
-                    if (width > maxWidth) {
-                        height *= maxWidth / width;
-                        width = maxWidth;
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height *= maxWidth / width;
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width *= maxHeight / height;
+                            height = maxHeight;
+                        }
                     }
-                } else {
-                    if (height > maxHeight) {
-                        width *= maxHeight / height;
-                        height = maxHeight;
-                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    canvas.toBlob((blob) => {
+                        if (!blob) {
+                            console.warn('Canvas toBlob failed, using original file.');
+                            resolve(file);
+                            return;
+                        }
+                        const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+                            type: 'image/jpeg',
+                            lastModified: Date.now(),
+                        });
+                        console.log(`Compressed ${file.name} to ${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`);
+                        resolve(compressedFile);
+                    }, 'image/jpeg', quality);
+                } catch (err) {
+                    console.error('Compression logic error:', err);
+                    resolve(file);
                 }
-
-                const canvas = document.createElement('canvas');
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-
-                canvas.toBlob((blob) => {
-                    const compressedFile = new File([blob], file.name, {
-                        type: 'image/jpeg',
-                        lastModified: Date.now(),
-                    });
-                    resolve(compressedFile);
-                }, 'image/jpeg', quality);
             };
             img.src = e.target.result;
         };
@@ -1811,15 +1839,21 @@ async function savePage() {
     for (let index = 0; index < selectedFiles.length; index++) {
         const file = selectedFiles[index];
         if (file !== null) {
-            // Compress image if it's not a video or gif
-            const finalFile = await compressImage(file);
-            formData.append('media', finalFile);
+            try {
+                // Compress image if it's not a video or gif
+                const finalFile = await compressImage(file);
+                formData.append('media', finalFile);
 
-            const item = previewGrid.querySelector(`div[data-new-file-index="${index}"]`);
-            if (item) {
-                const select = item.querySelector('.media-frame-style');
-                newMediaFrames.push(select ? select.value : 'square');
-            } else {
+                const item = previewGrid.querySelector(`div[data-new-file-index="${index}"]`);
+                if (item) {
+                    const select = item.querySelector('.media-frame-style');
+                    newMediaFrames.push(select ? select.value : 'square');
+                } else {
+                    newMediaFrames.push('square');
+                }
+            } catch (err) {
+                console.error(`Error processing file ${index}:`, err);
+                formData.append('media', file); // Fallback to original
                 newMediaFrames.push('square');
             }
         }
@@ -1859,11 +1893,14 @@ async function savePage() {
             document.getElementById('pageModal').classList.remove('active');
             fetchPages(currentBookId);
         } else {
-            iziToast.error({ title: 'Error', message: 'Upload failed. Please try again.' });
+            const errorData = await res.json().catch(() => ({}));
+            const errMsg = errorData.error || `Upload failed (Status: ${res.status})`;
+            iziToast.error({ title: 'Upload Error', message: errMsg });
+            console.error('Upload Error:', errMsg, errorData);
         }
     } catch (err) {
-        console.error(err);
-        iziToast.error({ title: 'Error', message: 'Network error during upload.' });
+        console.error('Upload Fetch Error:', err);
+        iziToast.error({ title: 'Network Error', message: 'Network error or timeout during upload.' });
     } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = originalBtnText;
