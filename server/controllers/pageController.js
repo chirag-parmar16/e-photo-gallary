@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { deleteFile } = require('../services/fileService');
 const { processAndSaveImage } = require('../services/imageService');
+const { uploadToS3, deleteFromS3 } = require('../services/s3Service');
 
 const getPages = async (req, res, db) => {
     try {
@@ -44,24 +45,33 @@ const createPage = async (req, res, db) => {
                 const type = file.mimetype.startsWith('video/') ? 'video' : 'image';
                 const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
                 const filename = unique + (type === 'video' ? path.extname(file.originalname) : '.webp');
-                const relativePath = '/uploads/' + (type === 'video' ? 'videos/' : 'images/') + filename;
-                const fullPath = path.join(__dirname, '../../public', relativePath);
+                let mediaPath;
 
-                if (type === 'image') {
-                    const input = file.path || file.buffer;
-                    await processAndSaveImage(input, fullPath);
+                if (process.env.STORAGE_PROVIDER === 's3') {
+                    const buffer = file.buffer || (file.path ? fs.readFileSync(file.path) : null);
+                    if (!buffer) throw new Error('File buffer not found');
+                    mediaPath = await uploadToS3(buffer, filename, file.mimetype);
                     if (file.path && fs.existsSync(file.path)) fs.unlinkSync(file.path);
                 } else {
-                    if (file.path) {
-                        fs.renameSync(file.path, fullPath);
+                    mediaPath = '/uploads/' + (type === 'video' ? 'videos/' : 'images/') + filename;
+                    const fullPath = path.join(__dirname, '../../public', mediaPath);
+
+                    if (type === 'image') {
+                        const input = file.path || file.buffer;
+                        await processAndSaveImage(input, fullPath);
+                        if (file.path && fs.existsSync(file.path)) fs.unlinkSync(file.path);
                     } else {
-                        fs.writeFileSync(fullPath, file.buffer);
+                        if (file.path) {
+                            fs.renameSync(file.path, fullPath);
+                        } else {
+                            fs.writeFileSync(fullPath, file.buffer);
+                        }
                     }
                 }
 
                 await db.run(
                     'INSERT INTO page_media (page_id, type, media_path, frame_style) VALUES (?, ?, ?, ?)',
-                    [pageId, type, relativePath, frameStyle]
+                    [pageId, type, mediaPath, frameStyle]
                 );
             }
         }
@@ -102,7 +112,13 @@ const updatePage = async (req, res, db) => {
             if (Array.isArray(ids) && ids.length > 0) {
                 const placeholders = ids.map(() => '?').join(',');
                 const mediaToDelete = await db.all(`SELECT media_path FROM page_media WHERE id IN (${placeholders}) AND page_id = ?`, [...ids, pageId]);
-                for (const m of mediaToDelete) { await deleteFile(m.media_path); }
+                for (const m of mediaToDelete) { 
+                    if (process.env.STORAGE_PROVIDER === 's3') {
+                        await deleteFromS3(m.media_path);
+                    } else {
+                        await deleteFile(m.media_path); 
+                    }
+                }
                 await db.run(`DELETE FROM page_media WHERE id IN (${placeholders}) AND page_id = ?`, [...ids, pageId]);
             }
         }
@@ -115,24 +131,33 @@ const updatePage = async (req, res, db) => {
                 const type = file.mimetype.startsWith('video/') ? 'video' : 'image';
                 const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
                 const filename = unique + (type === 'video' ? path.extname(file.originalname) : '.webp');
-                const relativePath = '/uploads/' + (type === 'video' ? 'videos/' : 'images/') + filename;
-                const fullPath = path.join(__dirname, '../../public', relativePath);
+                let mediaPath;
 
-                if (type === 'image') {
-                    const input = file.path || file.buffer;
-                    await processAndSaveImage(input, fullPath);
+                if (process.env.STORAGE_PROVIDER === 's3') {
+                    const buffer = file.buffer || (file.path ? fs.readFileSync(file.path) : null);
+                    if (!buffer) throw new Error('File buffer not found');
+                    mediaPath = await uploadToS3(buffer, filename, file.mimetype);
                     if (file.path && fs.existsSync(file.path)) fs.unlinkSync(file.path);
                 } else {
-                    if (file.path) {
-                        fs.renameSync(file.path, fullPath);
+                    mediaPath = '/uploads/' + (type === 'video' ? 'videos/' : 'images/') + filename;
+                    const fullPath = path.join(__dirname, '../../public', mediaPath);
+
+                    if (type === 'image') {
+                        const input = file.path || file.buffer;
+                        await processAndSaveImage(input, fullPath);
+                        if (file.path && fs.existsSync(file.path)) fs.unlinkSync(file.path);
                     } else {
-                        fs.writeFileSync(fullPath, file.buffer);
+                        if (file.path) {
+                            fs.renameSync(file.path, fullPath);
+                        } else {
+                            fs.writeFileSync(fullPath, file.buffer);
+                        }
                     }
                 }
 
                 await db.run(
                     'INSERT INTO page_media (page_id, type, media_path, frame_style) VALUES (?, ?, ?, ?)',
-                    [pageId, type, relativePath, frameStyle]
+                    [pageId, type, mediaPath, frameStyle]
                 );
             }
         }
@@ -145,7 +170,13 @@ const updatePage = async (req, res, db) => {
 const deletePage = async (req, res, db) => {
     try {
         const media = await db.all('SELECT media_path FROM page_media WHERE page_id = ?', req.params.id);
-        for (const m of media) { await deleteFile(m.media_path); }
+        for (const m of media) { 
+            if (process.env.STORAGE_PROVIDER === 's3') {
+                await deleteFromS3(m.media_path);
+            } else {
+                await deleteFile(m.media_path); 
+            }
+        }
         await db.run('DELETE FROM pages WHERE id = ?', req.params.id);
         res.json({ success: true });
     } catch (err) {
@@ -188,7 +219,11 @@ const deleteMedia = async (req, res, db) => {
 
         if (!media || media.user_id !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
 
-        await deleteFile(media.media_path);
+        if (process.env.STORAGE_PROVIDER === 's3') {
+            await deleteFromS3(media.media_path);
+        } else {
+            await deleteFile(media.media_path);
+        }
         await db.run('DELETE FROM page_media WHERE id = ?', req.params.id);
         res.json({ success: true });
     } catch (err) {

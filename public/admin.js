@@ -1650,7 +1650,7 @@ function renderPages(pages) {
 
         return `
             <tr class="page-row" data-id="${page.id}">
-                <td style="cursor: grab;" class="drag-handle"><i class="fas fa-grip-vertical" style="color: #bbb; margin-right: 5px;"></i> #${index + 1}</td>
+                <td data-order="${index + 1}" style="cursor: grab;" class="drag-handle"><i class="fas fa-grip-vertical" style="color: #bbb; margin-right: 5px;"></i> #${index + 1}</td>
                 <td style="font-size:0.9rem; color:#666;">${previewText}</td>
                 <td style="display:flex; gap:5px;">${mediaHtml}</td>
                 <td>
@@ -1669,7 +1669,8 @@ function renderPages(pages) {
         responsive: true,
         searching: false,
         paging: true,
-        pageLength: 25,
+        pageLength: 10, // Changed to 10 to ensure pagination is visible with 11 items
+        order: [], // Keep API order
         dom: '<"dt-top-row">rt<"dt-bottom-row"ilp>',
         language: {
             search: "",
@@ -1679,52 +1680,57 @@ function renderPages(pages) {
             lengthMenu: "Show _MENU_ entries"
         },
         columnDefs: [
-            { className: 'all', targets: [0, 1] } // Order and Content
+            { className: 'all', targets: [0, 1] },
+            { type: 'num', targets: 0 } // Explicitly set column 0 as numeric
         ],
         drawCallback: function() {
-            // Re-bind sortable or other logic if needed after table draw
             console.log('Table redrawn, total records:', this.api().page.info().recordsTotal);
+            // Re-initialize sortable only if we are on the first page and it's the only page
+            // Drag-and-drop becomes complex with pagination
+            initTableSortable();
         }
     });
 
+    function initTableSortable() {
+        if (window.pageSortable) {
+            window.pageSortable.destroy();
+        }
+        if (typeof Sortable !== 'undefined') {
+            window.pageSortable = new Sortable(list, {
+                handle: '.drag-handle',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                onEnd: async function (evt) {
+                    if (evt.oldIndex === evt.newIndex) return;
+                    const itemEls = list.querySelectorAll('.page-row');
+                    const orderedPageIds = Array.from(itemEls).map(el => parseInt(el.dataset.id));
 
-    // Initialize Sortable
-    if (window.pageSortable) {
-        window.pageSortable.destroy();
-    }
-    if (typeof Sortable !== 'undefined') {
-        window.pageSortable = new Sortable(list, {
-            handle: '.drag-handle',
-            animation: 150,
-            ghostClass: 'sortable-ghost',
-            onEnd: async function (evt) {
-                if (evt.oldIndex === evt.newIndex) return;
-                const itemEls = list.querySelectorAll('.page-row');
-                const orderedPageIds = Array.from(itemEls).map(el => parseInt(el.dataset.id));
-
-                try {
-                    const res = await fetch(`/api/books/${currentBookId}/reorder`, {
-                        method: 'PUT',
-                        credentials: 'same-origin',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-                        },
-                        body: JSON.stringify({ orderedPageIds })
-                    });
-                    if (res.ok) {
-                        itemEls.forEach((el, idx) => {
-                            el.querySelector('.drag-handle').innerHTML = '<i class="fas fa-grip-vertical" style="color: #bbb; margin-right: 5px;"></i> #' + (idx + 1);
+                    try {
+                        const res = await fetch(`/api/books/${currentBookId}/reorder`, {
+                            method: 'PUT',
+                            credentials: 'same-origin',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                            },
+                            body: JSON.stringify({ orderedPageIds })
                         });
-                    } else {
+                        if (res.ok) {
+                            // Update display indices
+                            itemEls.forEach((el, idx) => {
+                                el.querySelector('.drag-handle').innerHTML = '<i class="fas fa-grip-vertical" style="color: #bbb; margin-right: 5px;"></i> #' + (idx + 1);
+                                el.querySelector('.drag-handle').setAttribute('data-order', idx + 1);
+                            });
+                        } else {
+                            fetchPages(currentBookId);
+                        }
+                    } catch (err) {
+                        console.error(err);
                         fetchPages(currentBookId);
                     }
-                } catch (err) {
-                    console.error(err);
-                    fetchPages(currentBookId);
                 }
-            }
-        });
+            });
+        }
     }
 }
 
