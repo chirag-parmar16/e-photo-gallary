@@ -48,9 +48,15 @@ const createPage = async (req, res, db) => {
                 const fullPath = path.join(__dirname, '../../public', relativePath);
 
                 if (type === 'image') {
-                    await processAndSaveImage(file.buffer, fullPath);
+                    const input = file.path || file.buffer;
+                    await processAndSaveImage(input, fullPath);
+                    if (file.path && fs.existsSync(file.path)) fs.unlinkSync(file.path);
                 } else {
-                    fs.writeFileSync(fullPath, file.buffer);
+                    if (file.path) {
+                        fs.renameSync(file.path, fullPath);
+                    } else {
+                        fs.writeFileSync(fullPath, file.buffer);
+                    }
                 }
 
                 await db.run(
@@ -113,9 +119,15 @@ const updatePage = async (req, res, db) => {
                 const fullPath = path.join(__dirname, '../../public', relativePath);
 
                 if (type === 'image') {
-                    await processAndSaveImage(file.buffer, fullPath);
+                    const input = file.path || file.buffer;
+                    await processAndSaveImage(input, fullPath);
+                    if (file.path && fs.existsSync(file.path)) fs.unlinkSync(file.path);
                 } else {
-                    fs.writeFileSync(fullPath, file.buffer);
+                    if (file.path) {
+                        fs.renameSync(file.path, fullPath);
+                    } else {
+                        fs.writeFileSync(fullPath, file.buffer);
+                    }
                 }
 
                 await db.run(

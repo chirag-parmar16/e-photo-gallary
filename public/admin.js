@@ -1752,6 +1752,50 @@ function bindModalEvents() {
     }
 }
 
+// Client-side Image Compression Helper
+async function compressImage(file, maxWidth = 1200, maxHeight = 1200, quality = 0.7) {
+    if (!file.type.startsWith('image/') || file.type === 'image/gif') return file;
+
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height *= maxWidth / width;
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width *= maxHeight / height;
+                        height = maxHeight;
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    const compressedFile = new File([blob], file.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now(),
+                    });
+                    resolve(compressedFile);
+                }, 'image/jpeg', quality);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
 async function savePage() {
     const pageId = document.getElementById('editPageId').value;
     const isEdit = pageId !== '';
@@ -1764,9 +1808,13 @@ async function savePage() {
 
     // Collect new media frames
     const newMediaFrames = [];
-    selectedFiles.forEach((file, index) => {
+    for (let index = 0; index < selectedFiles.length; index++) {
+        const file = selectedFiles[index];
         if (file !== null) {
-            formData.append('media', file);
+            // Compress image if it's not a video or gif
+            const finalFile = await compressImage(file);
+            formData.append('media', finalFile);
+
             const item = previewGrid.querySelector(`div[data-new-file-index="${index}"]`);
             if (item) {
                 const select = item.querySelector('.media-frame-style');
@@ -1775,7 +1823,7 @@ async function savePage() {
                 newMediaFrames.push('square');
             }
         }
-    });
+    }
     formData.append('media_frames', JSON.stringify(newMediaFrames));
 
     // Collect existing media frames
