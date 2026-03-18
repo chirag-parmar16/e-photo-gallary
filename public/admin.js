@@ -1639,11 +1639,7 @@ function renderPages(pages) {
     }
 
     list.innerHTML = '';
-    pages.forEach((page, index) => {
-        const tr = document.createElement('tr');
-        tr.className = 'page-row';
-        tr.dataset.id = page.id;
-
+    const rows = pages.map((page, index) => {
         const mediaHtml = page.media.map(m =>
             m.type === 'video' ? `<video src="${m.media_path}" muted style="width:40px;height:40px;object-fit:cover;border-radius:4px;" loading="lazy"></video>` : `<img src="${m.media_path}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;" loading="lazy">`
         ).join('');
@@ -1652,32 +1648,43 @@ function renderPages(pages) {
         temp.innerHTML = page.text_content || '';
         const previewText = temp.textContent.substring(0, 50) + '...';
 
-        tr.innerHTML = `
-            <td style="cursor: grab;" class="drag-handle"><i class="fas fa-grip-vertical" style="color: #bbb; margin-right: 5px;"></i> #${index + 1}</td>
-            <td style="font-size:0.9rem; color:#666;">${previewText}</td>
-            <td style="display:flex; gap:5px;">${mediaHtml}</td>
-            <td>
-                <div class="action-btns">
-                    <button class="action-btn edit-btn" onclick="openEditPage(${page.id})"><i class="fas fa-edit"></i></button>
-                    <button class="action-btn delete-btn" onclick="deletePage(${page.id})"><i class="fas fa-trash"></i></button>
-                </div>
-            </td>
+        return `
+            <tr class="page-row" data-id="${page.id}">
+                <td style="cursor: grab;" class="drag-handle"><i class="fas fa-grip-vertical" style="color: #bbb; margin-right: 5px;"></i> #${index + 1}</td>
+                <td style="font-size:0.9rem; color:#666;">${previewText}</td>
+                <td style="display:flex; gap:5px;">${mediaHtml}</td>
+                <td>
+                    <div class="action-btns">
+                        <button type="button" class="action-btn edit-btn" onclick="openEditPage(${page.id})"><i class="fas fa-edit"></i></button>
+                        <button type="button" class="action-btn delete-btn" onclick="deletePage(${page.id})"><i class="fas fa-trash"></i></button>
+                    </div>
+                </td>
+            </tr>
         `;
-        list.appendChild(tr);
     });
+
+    list.innerHTML = rows.join('');
 
     $('#pageEditorTable').DataTable({
         responsive: true,
         searching: false,
+        paging: true,
         pageLength: 25,
-        dom: '<"dt-top-row">rt<"dt-bottom-row"lp>',
+        dom: '<"dt-top-row">rt<"dt-bottom-row"ilp>',
         language: {
             search: "",
-            searchPlaceholder: "Search pages..."
+            searchPlaceholder: "Search pages...",
+            info: "Showing _START_ to _END_ of _TOTAL_ entries",
+            infoEmpty: "Showing 0 to 0 of 0 entries",
+            lengthMenu: "Show _MENU_ entries"
         },
         columnDefs: [
             { className: 'all', targets: [0, 1] } // Order and Content
-        ]
+        ],
+        drawCallback: function() {
+            // Re-bind sortable or other logic if needed after table draw
+            console.log('Table redrawn, total records:', this.api().page.info().recordsTotal);
+        }
     });
 
 
