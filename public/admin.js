@@ -1365,32 +1365,53 @@ function renderGlobalBooks(books) {
         return;
     }
 
-    books.forEach(book => {
-        const card = document.createElement('div');
-        card.className = 'album-card reveal-up active';
-        card.innerHTML = `
-            <div class="owner-badge">
-                <i class="fa-solid fa-crown" style="font-size:0.7rem;"></i>
-                <span>${book.owner_email}</span>
-            </div>
-            <div class="album-card-title">${book.title}</div>
-            <div class="album-card-recipient">
-                <i class="fa-solid fa-heart" style="color:var(--adm-accent-color); font-size:0.8rem;"></i>
-                <span>Dedicated to: ${book.recipient_name || 'Someone Special'}</span>
-            </div>
-            
-            <div class="album-card-meta-row">
-                <span><i class="far fa-calendar-alt" style="margin-right:6px;"></i> ${formatDate(book.created_at)}</span>
-                <span style="margin-left:auto; opacity:0.8;"><i class="fas fa-fingerprint" style="margin-right:4px;"></i> ${book.uuid.substring(0,8)}</span>
-            </div>
+    // Group albums by owner_email
+    const groups = books.reduce((acc, book) => {
+        if (!acc[book.owner_email]) acc[book.owner_email] = [];
+        acc[book.owner_email].push(book);
+        return acc;
+    }, {});
 
-            <div class="album-card-actions" style="margin-top:1.5rem;">
-                <a href="/book.html?id=${book.uuid}" target="_blank" class="btn-primary" style="width: 100%; text-decoration: none;">
-                    <i class="fas fa-external-link-alt"></i> Launch Live Preview
-                </a>
+    // Sort users by email for consistency
+    const sortedEmails = Object.keys(groups).sort();
+
+    sortedEmails.forEach(email => {
+        const userBooks = groups[email];
+        const section = document.createElement('div');
+        section.className = 'user-explorer-section reveal-up active';
+        
+        section.innerHTML = `
+            <div class="user-explorer-header">
+                <div class="user-header-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span class="user-header-email">${email}</span>
+                </div>
+                <div class="user-album-count">${userBooks.length} ${userBooks.length === 1 ? 'Album' : 'Albums'}</div>
+            </div>
+            <div class="user-album-grid">
+                ${userBooks.map(book => `
+                    <div class="album-card active">
+                        <div class="album-card-title" style="font-size: 1.2rem; margin-bottom: 0.25rem;">${book.title}</div>
+                        <div style="font-size: 0.85rem; color: var(--adm-text-muted); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-heart" style="color:var(--adm-accent-color); font-size:0.75rem;"></i>
+                            <span>Dedicated to: ${book.recipient_name || 'Someone Special'}</span>
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; gap: 12px; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--adm-border-color); font-size: 0.75rem; color: var(--adm-text-muted);">
+                            <span><i class="far fa-calendar-alt" style="margin-right:4px;"></i> ${formatDate(book.created_at)}</span>
+                            <span style="margin-left:auto; opacity:0.6;"><i class="fas fa-fingerprint" style="margin-right:2px;"></i> ${book.uuid.substring(0,6)}</span>
+                        </div>
+
+                        <div class="album-card-actions" style="margin-top:1.25rem;">
+                            <a href="/book.html?id=${book.uuid}" target="_blank" class="btn-primary" style="width: 100%; text-decoration: none; height: 34px; font-size: 0.8rem;">
+                                <i class="fas fa-external-link-alt"></i> View Live
+                            </a>
+                        </div>
+                    </div>
+                `).join('')}
             </div>
         `;
-        list.appendChild(card);
+        list.appendChild(section);
     });
 }
 
