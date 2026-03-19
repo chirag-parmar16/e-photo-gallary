@@ -86,11 +86,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const scaleX = availableWidth / baseWidth;
             const scaleY = availableHeight / baseHeight;
             
-            // Increase base scale by 10% as requested, but cap it to avoid massive overflow
-            let scale = Math.min(scaleX, scaleY) * 1.1;
+            // Adjusted scale: Reduced by 2% from the previous 10% increase (1.1 -> 1.08)
+            let scale = Math.min(scaleX, scaleY) * 1.08;
             
-            // Ensure it's not TOO huge if screen is large, but for most mobiles this will fit better
-            scale = Math.min(scale, 1.2); 
+            // Ensure it's not TOO huge if screen is large
+            scale = Math.min(scale, 1.18); 
             
             // Center and scale
             book.style.transform = `translate(-50%, -50%) scale(${scale})`;
