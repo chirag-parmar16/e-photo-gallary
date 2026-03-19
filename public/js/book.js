@@ -51,36 +51,56 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function initBook(originalData, settings) {
-        isMobile = window.innerWidth <= 932;
-        isLandscape = window.innerWidth > window.innerHeight;
-
+        updateDimensions();
+        
+        // Remove the grid-splitting logic to preserve exact 2-page spread as requested
         let processedData = [...originalData];
-
-        // LOGIC: Shift images to next page ONLY for Mobile Landscape (Splitting grid)
-        if (isMobile && isLandscape) {
-            let newData = [];
-            originalData.forEach((memory) => {
-                if (memory.media && memory.media.length > 2) {
-                    const chunks = [];
-                    for (let i = 0; i < memory.media.length; i += 2) {
-                        chunks.push(memory.media.slice(i, i + 2));
-                    }
-                    chunks.forEach((chunk, i) => {
-                        newData.push({
-                            ...memory,
-                            media: chunk,
-                            text_content: i === 0 ? memory.text_content : ''
-                        });
-                    });
-                } else {
-                    newData.push(memory);
-                }
-            });
-            processedData = newData;
-        }
 
         setTimeout(() => createThemeParticles(settings.template_type || 'default'), 100);
         setupBookUI(processedData, settings);
+        
+        // Initial scale update
+        updateBookScale();
+    }
+
+    function updateDimensions() {
+        isMobile = window.innerWidth <= 932;
+        isLandscape = window.innerWidth > window.innerHeight;
+    }
+
+    // Dynamic Scaling Logic
+    function updateBookScale() {
+        if (!book) return;
+        
+        const isLandscape = window.innerWidth > window.innerHeight;
+        const isMobile = window.innerWidth <= 932;
+        
+        if (isMobile && isLandscape) {
+            const padding = 40; // Total padding
+            const baseWidth = 920;
+            const baseHeight = 600;
+            
+            const availableWidth = window.innerWidth - padding;
+            const availableHeight = window.innerHeight - padding - 60; // Extra room for nav
+            
+            const scaleX = availableWidth / baseWidth;
+            const scaleY = availableHeight / baseHeight;
+            
+            const scale = Math.min(scaleX, scaleY, 1); // Never scale up beyond 1
+            
+            // Center and scale
+            book.style.transform = `translate(-50%, -50%) scale(${scale})`;
+            book.style.left = '50%';
+            book.style.top = '50%';
+            book.style.position = 'absolute';
+        } else {
+            // Reset for desktop/portrait
+            book.style.transform = '';
+            book.style.left = '';
+            book.style.top = '';
+            book.style.position = '';
+            updatePageInfo(); // Use original centering logic
+        }
     }
 
     function createPageContent(pageData, side, settings) {
@@ -117,18 +137,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Apply Global Themes
         if (settings.color_schema) {
-            document.documentElement.style.setProperty('--primary-color', settings.color_schema);
-            document.documentElement.style.setProperty('--accent-color', settings.color_schema);
-            document.documentElement.style.setProperty('--warm-accent', settings.color_schema);
-            
-            document.body.style.setProperty('--primary-color', settings.color_schema);
-            document.body.style.setProperty('--accent-color', settings.color_schema);
-            document.body.style.setProperty('--warm-accent', settings.color_schema);
+            const root = document.documentElement;
+            root.style.setProperty('--primary-color', settings.color_schema);
+            root.style.setProperty('--accent-color', settings.color_schema);
+            root.style.setProperty('--warm-accent', settings.color_schema);
         }
         document.body.className = 'template-' + (settings.template_type || 'default');
 
         const recipientName = settings.recipient_name || 'Someone Special';
-        const coverTitle = settings.cover_title || 'A Memory Book For';
         const coverSubtitle = settings.cover_subtitle || 'A collection of memories, frozen in time.';
         const instructionText = settings.instruction_text || 'Tap to open';
         const endTitle = settings.end_title || 'THE END';
@@ -172,18 +188,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const allSheets = book.querySelectorAll('.page');
         const lastSheet = allSheets[allSheets.length - 1];
 
-        // If last sheet's back is empty, we turn it into the end cover
         if (lastSheet && !lastSheet.querySelector('.page-content.back:not(.empty)')) {
             const backSide = lastSheet.querySelector('.page-content.back');
             backSide.innerHTML = `
                 <h1>${endTitle}</h1>
                 <p>Thank you for being part of this story.</p>
-                <button onclick="window.location.href='book.html${bookUuid ? '?id=' + bookUuid : ''}'" class="nav-btn secondary" style="margin-top: 20px;">Replay Story</button>
+                <button onclick="window.location.reload()" class="nav-btn secondary" style="margin-top: 20px;">Replay Story</button>
             `;
             backSide.classList.remove('empty');
             backSide.classList.add('cover-back');
         } else {
-            // Otherwise add a dedicated end sheet
             const endSheet = document.createElement('div');
             endSheet.className = 'page';
             endSheet.style.zIndex = 0;
@@ -192,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="page-content back cover-back">
                     <h1>${endTitle}</h1>
                     <p>Thank you for being part of this story.</p>
-                    <button onclick="window.location.href='book.html${bookUuid ? '?id=' + bookUuid : ''}'" class="nav-btn secondary" style="margin-top: 20px;">Replay Story</button>
+                    <button onclick="window.location.reload()" class="nav-btn secondary" style="margin-top: 20px;">Replay Story</button>
                 </div>
             `;
             book.appendChild(endSheet);
@@ -201,17 +215,14 @@ document.addEventListener('DOMContentLoaded', () => {
         pages = document.querySelectorAll('.page');
         totalPages = pages.length;
 
-        // Click interaction
+        // Navigation interactions
         pages.forEach((page, index) => {
-            page.addEventListener('click', () => {
-                const isLandscape = window.innerWidth > window.innerHeight;
-                const isMobile = window.innerWidth <= 932;
-
-                if (isMobile && !isLandscape) {
-                    handleMobileVerticalClick('next');
-                    return;
-                }
-
+            page.addEventListener('click', (e) => {
+                const rect = page.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                
+                // If it's the front cover or we are at the end, behave differently?
+                // Actually the current logic works well:
                 if (index === currentPage) {
                     flipPage(currentPage, 'next');
                 } else if (index === currentPage - 1) {
@@ -220,52 +231,45 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
+        // Touch Swipe Navigation
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            if (touchStartX - touchEndX > swipeThreshold) {
+                // Swipe Left -> Next
+                if (currentPage < totalPages) flipPage(currentPage, 'next');
+            } else if (touchEndX - touchStartX > swipeThreshold) {
+                // Swipe Right -> Prev
+                if (currentPage > 0) flipPage(currentPage - 1, 'prev');
+            }
+        }
+
         animateContent(pages[0], true);
-        if (isMobile) pages.forEach(p => animateContent(p, true));
         updatePageInfo();
 
-        // 4. Auto-Fullscreen on first interaction (Mobile Landscape Only)
         const fsTrigger = () => {
             if (isMobile && isLandscape && !document.fullscreenElement) {
-                const de = document.documentElement;
-                if (de.requestFullscreen) de.requestFullscreen().catch(() => { });
-                else if (de.webkitRequestFullscreen) de.webkitRequestFullscreen().catch(() => { });
+                document.documentElement.requestFullscreen().catch(() => { });
             }
             window.removeEventListener('click', fsTrigger);
         };
         window.addEventListener('click', fsTrigger);
 
-        // Fade out preloader
         setTimeout(() => {
             const preloader = document.getElementById('preloader');
             if (preloader) preloader.classList.add('fade-out');
         }, 800);
-    }
-
-    function handleMobileVerticalClick(direction) {
-        if (direction === 'next') {
-            if (currentMobileView === 'front') {
-                if (currentPage < totalPages) {
-                    flipPage(currentPage, 'next');
-                    currentMobileView = 'back';
-                }
-            } else {
-                currentMobileView = 'front';
-                updatePageInfo();
-            }
-        } else {
-            if (currentMobileView === 'back') {
-                if (currentPage > 0) {
-                    flipPage(currentPage - 1, 'prev');
-                    currentMobileView = 'front';
-                }
-            } else {
-                if (currentPage > 0) {
-                    currentMobileView = 'back';
-                    updatePageInfo();
-                }
-            }
-        }
     }
 
     function flipPage(index, direction) {
@@ -304,11 +308,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updatePageInfo() {
-        const isLandscape = window.innerWidth > window.innerHeight;
-        const isMobileBoundary = window.innerWidth <= 932;
-
-        if (isMobileBoundary && !isLandscape) {
-            pageNumbers.textContent = `Part ${currentPage * 2 + (currentMobileView === 'back' ? 1 : 0)}`;
+        updateDimensions();
+        
+        // If scaled via JS, we don't need the translateX centering logic
+        if (isMobile && isLandscape) {
+            pageNumbers.textContent = `Spread ${currentPage} of ${totalPages - 1}`;
+            if (currentPage === 0) pageNumbers.textContent = 'Cover';
+            if (currentPage === totalPages) pageNumbers.textContent = 'The End';
+            updateBookScale();
             return;
         }
 
@@ -328,61 +335,42 @@ document.addEventListener('DOMContentLoaded', () => {
     const fsBtn = document.getElementById('fullscreenBtn');
     if (fsBtn) {
         fsBtn.addEventListener('click', () => {
-            const de = document.documentElement;
-            if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
-                if (de.requestFullscreen) de.requestFullscreen();
-                else if (de.webkitRequestFullscreen) de.webkitRequestFullscreen();
-                else if (de.mozRequestFullScreen) de.mozRequestFullScreen();
-                else if (de.msRequestFullscreen) de.msRequestFullscreen();
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
             } else {
-                if (document.exitFullscreen) document.exitFullscreen();
-                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-                else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
-                else if (document.msExitFullscreen) document.msExitFullscreen();
+                document.exitFullscreen();
             }
         });
     }
 
     const updateFsText = () => {
-        const isFS = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+        const isFS = !!document.fullscreenElement;
         if (fsBtn) fsBtn.textContent = isFS ? '✖ Exit' : '⛶ Fullscreen';
     };
 
     document.addEventListener('fullscreenchange', updateFsText);
-    document.addEventListener('webkitfullscreenchange', updateFsText);
-    document.addEventListener('mozfullscreenchange', updateFsText);
-    document.addEventListener('MSFullscreenChange', updateFsText);
 
     // Nav buttons
-    let hasAttemptedFullscreen = false;
     nextBtn.addEventListener('click', () => {
-        const isLandscape = window.innerWidth > window.innerHeight;
-        const isMobile = window.innerWidth <= 932;
-
-        if (isMobile && isLandscape && !hasAttemptedFullscreen && !document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(() => { });
-            hasAttemptedFullscreen = true;
-        }
-
-        if (isMobile && !isLandscape) handleMobileVerticalClick('next');
-        else if (currentPage < totalPages) flipPage(currentPage, 'next');
+        if (currentPage < totalPages) flipPage(currentPage, 'next');
     });
 
     prevBtn.addEventListener('click', () => {
-        const isLandscape = window.innerWidth > window.innerHeight;
-        const isMobile = window.innerWidth <= 932;
-        if (isMobile && !isLandscape) handleMobileVerticalClick('prev');
-        else if (currentPage > 0) flipPage(currentPage - 1, 'prev');
+        if (currentPage > 0) flipPage(currentPage - 1, 'prev');
     });
 
     // Resize handler
-    let lastOrientation = window.innerWidth > window.innerHeight;
     window.addEventListener('resize', () => {
-        const currentOrientation = window.innerWidth > window.innerHeight;
-        if (currentOrientation !== lastOrientation) {
-            lastOrientation = currentOrientation;
-            loadBookData(); // Re-fetch or re-init based on orientation
-        }
+        updateDimensions();
+        updateBookScale();
+    });
+
+    // Handle Orientation Change specifically
+    window.addEventListener('orientationchange', () => {
+        setTimeout(() => {
+            updateDimensions();
+            updateBookScale();
+        }, 300);
     });
 
     // Particles (Petals/Confetti)
@@ -410,7 +398,6 @@ document.addEventListener('DOMContentLoaded', () => {
             count = 35;
             classes = ['petal', 'heart'];
         } else {
-            // Default
             classes = ['petal', 'rose'];
             count = 20;
         }
@@ -420,8 +407,8 @@ document.addEventListener('DOMContentLoaded', () => {
             particle.classList.add(...classes);
 
             if (templateType === 'birthday') {
-            const colors = ['#ff3d68', '#ffc107', '#00c2ff', '#7b61ff'];
-            particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                const colors = ['#ff3d68', '#ffc107', '#00c2ff', '#7b61ff'];
+                particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
                 particle.style.width = `${Math.random() * 10 + 10}px`;
                 particle.style.height = `${Math.random() * 5 + 5}px`;
                 particle.style.animationDuration = `${Math.random() * 3 + 3}s`;

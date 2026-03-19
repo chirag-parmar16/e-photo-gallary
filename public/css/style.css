@@ -500,12 +500,14 @@ body {
         }
 
         #app {
-            padding: 40px 0 20px 0; /* Increased top spacing to prevent sticking */
             height: 100vh;
             height: 100dvh;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
         }
 
         .book-container {
@@ -513,161 +515,56 @@ body {
             height: 100vh;
             height: 100dvh;
             perspective: 2500px;
-            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         #book {
-            width: 100% !important;
-            height: 100% !important;
-            /* transform: none !important; Removed to allow JS centering */
+            /* We will let JS handle the transform scaling */
+            /* But we keep the desktop-like aspect ratio here */
+            width: 920px !important;
+            height: 600px !important;
             transform-style: preserve-3d;
-            position: relative;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(1);
+            transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
+            margin: 0 !important;
         }
 
         .page {
             position: absolute;
-            width: 50% !important;
-            height: 100% !important;
+            width: 460px !important; /* Half of 920 */
+            height: 600px !important;
             left: 50% !important;
             transform-origin: left center !important;
-            transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1);
         }
 
         .page-content {
-            padding: 15px !important;
-            border-radius: 0 10px 10px 0 !important;
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: space-between !important; /* Pin text to bottom for media pages */
-            overflow: hidden !important;
-        }
-
-        /* Center text-only pages */
-        .page-content.poem-page,
-        .page-content:not(:has(.media-grid)) {
-            justify-content: center !important;
+            padding: 30px !important;
+            border-radius: 0 5px 5px 0 !important;
         }
 
         .page-content.back {
-            border-radius: 10px 0 0 10px !important;
-        }
-
-        .media-grid {
-            gap: 10px !important;
-            margin-bottom: 5px;
-            flex-grow: 1; /* Take max space */
-            width: 100%;
-            display: flex !important;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-content: center; /* Center images vertically if small */
-            min-height: 0;
-        }
-
-        /* Expand single image to fill space */
-        .media-grid.count-1 {
-            height: 100%;
-        }
-
-        .media-grid.count-1 .media-item {
-            flex: 1;
-            max-width: 95%;
-            height: 90% !important; /* Take more height if alone */
-        }
-
-        .media-item {
-            flex: 1 1 45%;
-            max-width: 48%;
-            height: auto !important;
-            min-height: 150px;
-        }
-
-        .media-grid img, .media-grid video {
-            max-height: 100% !important; /* Allow it to fill the flex item */
-            width: 100%;
-            height: 100% !important;
-            object-fit: cover !important;
-            border-radius: 8px;
-        }
-
-        .media-grid.count-1 img, .media-grid.count-1 video {
-            max-height: 100% !important; /* Fill the expanded item */
-            object-fit: contain !important; /* Contain single image so it's not cropped */
-        }
-
-        .minimal-text {
-            font-size: 0.9rem !important;
-            line-height: 1.3 !important;
-            margin-top: 5px;
-            color: var(--text-color);
-            width: 100%;
-            text-align: center;
-            flex-shrink: 0;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 4px;
-            border-radius: 4px;
-        }
-
-        .cover-front h1, .cover-back h1 {
-            font-size: 1.8rem !important;
-            margin-bottom: 8px !important;
-        }
-
-        .cover-front p, .cover-back p {
-            font-size: 0.9rem !important;
-        }
-
-        .cover-front .instruction {
-            margin-top: 30px !important;
-            font-size: 0.8rem !important;
-        }
-
-        .cover-front .nav-btn, .cover-back .nav-btn {
-            padding: 8px 18px !important;
-            font-size: 0.85rem !important;
-            margin-top: 15px !important;
-            border-radius: 40px !important;
+            border-radius: 5px 0 0 5px !important;
         }
 
         .book-nav {
-            height: 50px;
-            margin-top: 5px;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 1000;
-        }
-
-        .nav-btn {
-            padding: 6px 12px;
-            font-size: 0.9rem;
-        }
-
-        #pageNumbers {
-            font-size: 0.9rem;
-        }
-
-        .nav-btn.secondary {
-            background: rgba(192, 0, 0, 0.05);
-            border: 1px solid var(--accent-color);
-            color: var(--accent-color);
-            margin-left: 15px;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        #fullscreenBtn {
-            display: inline-flex;
-        }
-
-        /* Ensure Nav is visible for intuitive use */
-        .book-nav #prevBtn,
-        .book-nav #nextBtn,
-        .book-nav #pageNumbers {
-            display: flex !important;
-        }
-        
-        .book-nav {
-            justify-content: center !important;
-            padding-bottom: 20px !important;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin: 0 !important;
         }
     }
 }
