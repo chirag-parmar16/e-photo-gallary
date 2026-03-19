@@ -157,11 +157,26 @@ const getUserBooks = async (req, res, db) => {
     }
 };
 
+const getAllBooks = async (req, res, db) => {
+    try {
+        const books = await db.all(`
+            SELECT b.*, u.email as owner_email 
+            FROM books b 
+            JOIN users u ON b.user_id = u.id 
+            ORDER BY b.created_at DESC
+        `);
+        res.json(books);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
 module.exports = {
     getSettings,
     getStats,
     updateSettings,
     getPayments,
     updatePaymentStatus,
-    getUserBooks
+    getUserBooks,
+    getAllBooks
 };

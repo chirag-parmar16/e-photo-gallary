@@ -77,6 +77,7 @@ module.exports = (db) => {
     router.get('/stats', adminAuth, (req, res) => adminController.getStats(req, res, db));
     router.get('/payments', adminAuth, (req, res) => adminController.getPayments(req, res, db));
     router.get('/users/:id/books', adminAuth, (req, res) => adminController.getUserBooks(req, res, db));
+    router.get('/all-books', adminAuth, (req, res) => adminController.getAllBooks(req, res, db));
     router.put('/payments/:id/status', adminAuth, (req, res) => adminController.updatePaymentStatus(req, res, db));
     router.put('/settings', adminAuth, (req, res) => adminController.updateSettings(req, res, db));
 

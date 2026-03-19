@@ -165,8 +165,8 @@ window.viewUserAlbums = function(userId, email) {
 };
 
 window.navigateTo = function (path) {
-    // Clear admin viewing flag if navigating to main admin pages
-    if (['/dashboard', '/users', '/profile', '/subscriptions', '/subscription_plans'].includes(path)) {
+    // Clear admin viewing flag if navigating to main admin pages or global explorer
+    if (['/dashboard', '/users', '/profile', '/subscriptions', '/subscription_plans', '/album_explorer'].includes(path)) {
         localStorage.removeItem('targetUserId');
         localStorage.removeItem('targetEmail');
         localStorage.removeItem('isAdminViewingOther');
@@ -237,6 +237,12 @@ function initView() {
 
         fetchUserBooks();
         bindUserDashboardEvents();
+    } else if (window.currentViewName === 'album_explorer') {
+        if (currentRole === 'admin') {
+            fetchGlobalBooks();
+        } else {
+            navigateTo('/dashboard');
+        }
     } else if (window.currentViewName === 'profile') {
         const nameInput = document.getElementById('profileName');
         const emailInput = document.getElementById('profile-email-val');
@@ -646,7 +652,7 @@ function setupSidebar() {
     const adminLinks = `
         <li><a href="/dashboard" class="nav-dashboard"><i class="fas fa-chart-line"></i> System Overview</a></li>
         <li><a href="/users" class="nav-users"><i class="fas fa-users-cog"></i> Member Registry</a></li>
-        <li><a href="/users" class="nav-album-explorer"><i class="fas fa-images"></i> Album Explorer</a></li>
+        <li><a href="/album_explorer" class="nav-album-explorer"><i class="fas fa-images"></i> Album Explorer</a></li>
         <li><a href="/subscriptions" class="nav-subscriptions"><i class="fas fa-shield-alt"></i> Service Audits</a></li>
         <li><a href="/subscription_plans" class="nav-subscription_plans"><i class="fas fa-cubes-stacked"></i> Manage Plans</a></li>
         <li><a href="/profile" class="nav-profile"><i class="fas fa-cog"></i> System Settings</a></li>
@@ -1326,6 +1332,61 @@ async function fetchUserBooks() {
         renderRecentActivity(books);
         // Chart logic removed as per user request for stat cards
     } catch (err) { console.error('Error fetching dashboard books:', err); }
+}
+
+async function fetchGlobalBooks() {
+    try {
+        const res = await fetch('/api/admin/all-books', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const books = await res.json();
+        if (res.ok) {
+            renderGlobalBooks(books);
+        } else {
+            iziToast.error({ title: 'Error', message: books.error || 'Failed to fetch global registry' });
+        }
+    } catch (err) {
+        console.error('Error fetching global books:', err);
+    }
+}
+
+function renderGlobalBooks(books) {
+    const list = document.getElementById('globalAlbumList');
+    if (!list) return;
+    list.innerHTML = '';
+    
+    if (books.length === 0) {
+        list.innerHTML = `
+            <div class="no-data-msg reveal-up active" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+                <i class="fas fa-ghost" style="font-size: 3rem; color: var(--adm-text-muted); margin-bottom: 1rem;"></i>
+                <p>No albums found across the platform registry.</p>
+            </div>
+        `;
+        return;
+    }
+
+    books.forEach(book => {
+        const card = document.createElement('div');
+        card.className = 'album-card reveal-up active';
+        card.innerHTML = `
+            <div class="album-card-title">${book.title}</div>
+            <div style="font-size: 0.85rem; color: var(--adm-accent-color); font-weight: 600; margin-bottom: 4px;">
+                <i class="fa-solid fa-user-tag" style="font-size:0.75rem; margin-right:4px;"></i> For: ${book.recipient_name || 'Someone Special'}
+            </div>
+            <div style="font-size: 0.8rem; color: var(--adm-text-muted); margin-bottom: 12px; border-bottom: 1px dashed var(--adm-border-color); padding-bottom: 8px;">
+                <i class="fa-solid fa-envelope" style="font-size:0.7rem; margin-right:4px;"></i> Owner: <span style="color:var(--adm-text-main); font-weight:500;">${book.owner_email}</span>
+            </div>
+            <div class="album-card-meta">
+                <i class="far fa-calendar-alt"></i> Created: ${formatDate(book.created_at)}
+            </div>
+            <div class="album-card-actions">
+                <a href="/book.html?id=${book.uuid}" target="_blank" class="btn-primary" style="flex: 1; text-align: center; text-decoration: none;">
+                    <i class="fas fa-external-link-alt"></i> View Live
+                </a>
+            </div>
+        `;
+        list.appendChild(card);
+    });
 }
 
 
