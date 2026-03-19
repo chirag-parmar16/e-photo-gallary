@@ -147,10 +147,21 @@ const updatePaymentStatus = async (req, res, db) => {
     }
 };
 
+const getUserBooks = async (req, res, db) => {
+    try {
+        const { id } = req.params;
+        const books = await db.all('SELECT * FROM books WHERE user_id = ? ORDER BY created_at DESC', [id]);
+        res.json(books);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
 module.exports = {
     getSettings,
     getStats,
     updateSettings,
     getPayments,
-    updatePaymentStatus
+    updatePaymentStatus,
+    getUserBooks
 };

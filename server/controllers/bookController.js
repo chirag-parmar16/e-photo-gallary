@@ -106,7 +106,12 @@ const createBook = async (req, res, db) => {
 
 const getBook = async (req, res, db) => {
     try {
-        const book = await db.get('SELECT * FROM books WHERE uuid = ? AND user_id = ?', [req.params.id, req.user.id]);
+        let book;
+        if (req.user.role === 'admin') {
+            book = await db.get('SELECT * FROM books WHERE uuid = ?', [req.params.id]);
+        } else {
+            book = await db.get('SELECT * FROM books WHERE uuid = ? AND user_id = ?', [req.params.id, req.user.id]);
+        }
         if (!book) return res.status(404).json({ error: 'Book not found' });
         res.json(book);
     } catch (err) {

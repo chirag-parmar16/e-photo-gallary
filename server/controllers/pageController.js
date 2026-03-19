@@ -6,7 +6,12 @@ const { uploadToS3, deleteFromS3 } = require('../services/s3Service');
 
 const getPages = async (req, res, db) => {
     try {
-        const book = await db.get('SELECT id FROM books WHERE uuid = ? AND user_id = ?', [req.params.id, req.user.id]);
+        let book;
+        if (req.user.role === 'admin') {
+            book = await db.get('SELECT id FROM books WHERE uuid = ?', [req.params.id]);
+        } else {
+            book = await db.get('SELECT id FROM books WHERE uuid = ? AND user_id = ?', [req.params.id, req.user.id]);
+        }
         if (!book) return res.status(403).json({ error: 'Unauthorized' });
 
         const pages = await db.all('SELECT * FROM pages WHERE book_id = ? ORDER BY page_order ASC', book.id);

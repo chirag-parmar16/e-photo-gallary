@@ -4,6 +4,7 @@ let currentUser = null;
 let currentRole = localStorage.getItem('role');
 let currentBookId = null;
 let allAdminUsers = [];
+let isAdminViewingOther = false;
 
 // Determine current view from URL if not already set
 if (!window.currentViewName) {
@@ -157,6 +158,11 @@ let superAdminDash, userDash, bookEditor;
 
 // --- MPA VIEW INITIALIZATION ---
 window.navigateTo = function (path) {
+    // Clear admin viewing flag if navigating to main admin pages
+    if (['/dashboard', '/users', '/profile', '/subscriptions', '/subscription_plans'].includes(path)) {
+        localStorage.removeItem('isAdminViewingOther');
+    }
+    
     // In an MPA, this just reloads. But for SPA-like consistency:
     const viewTitleMap = {
         '/dashboard': 'System Overview',
@@ -207,6 +213,19 @@ function initView() {
             }
         }
     } else if (window.currentViewName === 'albums') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetUserId = urlParams.get('userId');
+        const targetEmail = urlParams.get('email');
+        
+        if (targetUserId && currentRole === 'admin') {
+            isAdminViewingOther = true;
+            const titleEl = document.getElementById('current-view-title');
+            if (titleEl) titleEl.textContent = `Albums for ${targetEmail || 'User'}`;
+            // Hide "Create New Album" button
+            const createBtn = document.getElementById('openCreateBookModal');
+            if (createBtn) createBtn.style.display = 'none';
+        }
+
         fetchUserBooks();
         bindUserDashboardEvents();
     } else if (window.currentViewName === 'profile') {
@@ -275,11 +294,32 @@ function initView() {
         }
         fetchProfileDetails();
     } else if (window.currentViewName === 'editor') {
+        // Detect if we came from an admin view
+        if (localStorage.getItem('isAdminViewingOther') === 'true') {
+             isAdminViewingOther = true;
+        }
+
         const pathParts = window.location.pathname.split('/');
         currentBookId = pathParts[pathParts.length - 1];
         if (typeof initEditorView === 'function') initEditorView();
         fetchBookDetails(currentBookId);
         fetchPages(currentBookId);
+
+        if (isAdminViewingOther) {
+            setTimeout(() => {
+                const addBtn = document.getElementById('openAddModal');
+                const saveBtn = document.getElementById('saveBookSettings');
+                const settingsForm = document.getElementById('bookSettingsForm');
+                
+                if (addBtn) addBtn.style.display = 'none';
+                if (saveBtn) saveBtn.style.display = 'none';
+                if (settingsForm) {
+                    // Disable all inputs in the settings form
+                    const inputs = settingsForm.querySelectorAll('input, select, textarea');
+                    inputs.forEach(input => input.disabled = true);
+                }
+            }, 500); // Wait for view to settle
+        }
     } else if (window.currentViewName === 'users') {
         fetchAdminUserList();
         const openCreate = document.getElementById('openCreateUserModal');
@@ -597,6 +637,7 @@ function setupSidebar() {
     const adminLinks = `
         <li><a href="/dashboard" class="nav-dashboard"><i class="fas fa-chart-line"></i> System Overview</a></li>
         <li><a href="/users" class="nav-users"><i class="fas fa-users-cog"></i> Member Registry</a></li>
+        <li><a href="/users" class="nav-album-explorer"><i class="fas fa-images"></i> Album Explorer</a></li>
         <li><a href="/subscriptions" class="nav-subscriptions"><i class="fas fa-shield-alt"></i> Service Audits</a></li>
         <li><a href="/subscription_plans" class="nav-subscription_plans"><i class="fas fa-cubes-stacked"></i> Manage Plans</a></li>
         <li><a href="/profile" class="nav-profile"><i class="fas fa-cog"></i> System Settings</a></li>
@@ -1135,6 +1176,9 @@ function renderAdminUserRows(users) {
                 <td class="col-expiry">${subEnd}</td>
                 <td class="col-actions">
                     <div class="action-btns">
+                        <button class="action-btn" onclick="navigateTo('/albums?userId=${user.id}&email=${user.email}')" title="View User Albums">
+                            <i class="fa-solid fa-images" style="color:#10b981;"></i>
+                        </button>
                         <button class="action-btn" onclick="openEditPlanModal(${user.id}, '${plan}', '${subEndRaw}')" title="Edit Subscription Plan">
                             <i class="fa-solid fa-pen-to-square" style="color:var(--adm-accent-color);"></i>
                         </button>
@@ -1242,7 +1286,19 @@ function bindAdminDashboardEvents() {
 
 async function fetchUserBooks() {
     try {
-        const res = await fetch('/api/books', {
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetUserId = urlParams.get('userId');
+        
+        let url = '/api/books';
+        if (targetUserId && currentRole === 'admin') {
+            url = `/api/admin/users/${targetUserId}/books`;
+            isAdminViewingOther = true;
+            localStorage.setItem('isAdminViewingOther', 'true');
+        } else {
+            localStorage.removeItem('isAdminViewingOther');
+        }
+
+        const res = await fetch(url, {
             credentials: 'same-origin',
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
         });
@@ -1292,8 +1348,9 @@ function renderBooks(books) {
             </div>
             <div class="album-card-actions">
                 <button class="btn-primary" style="flex: 1;" onclick="navigateTo('/book/${book.uuid}')">
-                    <i class="fas fa-edit"></i> Edit Pages
+                    <i class="fas ${isAdminViewingOther ? 'fa-eye' : 'fa-edit'}"></i> ${isAdminViewingOther ? 'View Pages' : 'Edit Pages'}
                 </button>
+                ${!isAdminViewingOther ? `
                 <div style="display: flex; gap: 8px;">
                     <button class="btn-secondary" onclick="copyLink('${book.uuid}')" title="Copy Share Link">
                         <i class="fas fa-share-alt"></i>
@@ -1301,7 +1358,7 @@ function renderBooks(books) {
                     <button class="action-btn delete-btn" onclick="deleteBook('${book.uuid}')" title="Delete Album">
                         <i class="fas fa-trash-alt"></i>
                     </button>
-                </div>
+                </div>` : ''}
             </div>
         `;
         list.appendChild(card);
@@ -1650,14 +1707,17 @@ function renderPages(pages) {
 
         return `
             <tr class="page-row" data-id="${page.id}">
-                <td data-order="${index + 1}" style="cursor: grab;" class="drag-handle"><i class="fas fa-grip-vertical" style="color: #bbb; margin-right: 5px;"></i> #${index + 1}</td>
+                <td data-order="${index + 1}" style="${isAdminViewingOther ? '' : 'cursor: grab;'}" class="${isAdminViewingOther ? '' : 'drag-handle'}">
+                    ${isAdminViewingOther ? '' : '<i class="fas fa-grip-vertical" style="color: #bbb; margin-right: 5px;"></i>'} #${index + 1}
+                </td>
                 <td style="font-size:0.9rem; color:#666;">${previewText}</td>
                 <td style="display:flex; gap:5px;">${mediaHtml}</td>
                 <td>
+                    ${!isAdminViewingOther ? `
                     <div class="action-btns">
                         <button type="button" class="action-btn edit-btn" onclick="openEditPage(${page.id})"><i class="fas fa-edit"></i></button>
-                        <button type="button" class="action-btn delete-btn" onclick="deletePage(${page.id})"><i class="fas fa-trash"></i></button>
-                    </div>
+                        <button type="button" class="action-btn delete-btn" onclick="deletePage(${page.id})"><i class="fas fa-trash-alt"></i></button>
+                    </div>` : '<span style="font-size:0.8rem; color:#999;">Read Only</span>'}
                 </td>
             </tr>
         `;
