@@ -49,6 +49,7 @@ initDb().then(db => {
     app.get('/subscriptions', (req, res) => res.sendFile(path.join(__dirname, '../public/views/subscriptions.html')));
     app.get('/subscription_plans', (req, res) => res.sendFile(path.join(__dirname, '../public/views/subscription_plans.html')));
     app.get('/book/:id', (req, res) => res.sendFile(path.join(__dirname, '../public/views/editor.html')));
+    app.get('/album_explorer', (req, res) => res.sendFile(path.join(__dirname, '../public/views/album_explorer.html')));
     app.get('/profile', (req, res) => res.sendFile(path.join(__dirname, '../public/views/profile.html')));
 
     // 404 handler for non-API routes could go here
