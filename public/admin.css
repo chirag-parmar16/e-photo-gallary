@@ -2371,3 +2371,57 @@ footer {
         min-width: 150px;
     }
 }
+
+/* --- Global Album Explorer Styles --- */
+.explorer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 2rem;
+    padding: 1rem 0;
+}
+
+.owner-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: var(--adm-pink-pale);
+    color: var(--adm-accent-color);
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: 1px solid rgba(255, 77, 109, 0.15);
+    margin-bottom: 1.25rem;
+    box-shadow: 0 2px 5px rgba(255, 77, 109, 0.05);
+}
+
+[data-theme="dark"] .owner-badge {
+    background: rgba(255, 77, 109, 0.12);
+    border-color: rgba(255, 77, 109, 0.25);
+    color: #ff8fa3;
+}
+
+.album-card-recipient {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--adm-text-color);
+    margin: 0.75rem 0 0.25rem 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.album-card-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--adm-border-color);
+    font-size: 0.8rem;
+    color: var(--adm-text-muted);
+}
+
+[data-theme="dark"] .album-card-meta-row {
+    border-color: rgba(255, 255, 255, 0.05);
+}

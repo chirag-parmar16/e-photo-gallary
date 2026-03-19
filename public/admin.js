@@ -1369,19 +1369,24 @@ function renderGlobalBooks(books) {
         const card = document.createElement('div');
         card.className = 'album-card reveal-up active';
         card.innerHTML = `
+            <div class="owner-badge">
+                <i class="fa-solid fa-crown" style="font-size:0.7rem;"></i>
+                <span>${book.owner_email}</span>
+            </div>
             <div class="album-card-title">${book.title}</div>
-            <div style="font-size: 0.85rem; color: var(--adm-accent-color); font-weight: 600; margin-bottom: 4px;">
-                <i class="fa-solid fa-user-tag" style="font-size:0.75rem; margin-right:4px;"></i> For: ${book.recipient_name || 'Someone Special'}
+            <div class="album-card-recipient">
+                <i class="fa-solid fa-heart" style="color:var(--adm-accent-color); font-size:0.8rem;"></i>
+                <span>Dedicated to: ${book.recipient_name || 'Someone Special'}</span>
             </div>
-            <div style="font-size: 0.8rem; color: var(--adm-text-muted); margin-bottom: 12px; border-bottom: 1px dashed var(--adm-border-color); padding-bottom: 8px;">
-                <i class="fa-solid fa-envelope" style="font-size:0.7rem; margin-right:4px;"></i> Owner: <span style="color:var(--adm-text-main); font-weight:500;">${book.owner_email}</span>
+            
+            <div class="album-card-meta-row">
+                <span><i class="far fa-calendar-alt" style="margin-right:6px;"></i> ${formatDate(book.created_at)}</span>
+                <span style="margin-left:auto; opacity:0.8;"><i class="fas fa-fingerprint" style="margin-right:4px;"></i> ${book.uuid.substring(0,8)}</span>
             </div>
-            <div class="album-card-meta">
-                <i class="far fa-calendar-alt"></i> Created: ${formatDate(book.created_at)}
-            </div>
-            <div class="album-card-actions">
-                <a href="/book.html?id=${book.uuid}" target="_blank" class="btn-primary" style="flex: 1; text-align: center; text-decoration: none;">
-                    <i class="fas fa-external-link-alt"></i> View Live
+
+            <div class="album-card-actions" style="margin-top:1.5rem;">
+                <a href="/book.html?id=${book.uuid}" target="_blank" class="btn-primary" style="width: 100%; text-decoration: none;">
+                    <i class="fas fa-external-link-alt"></i> Launch Live Preview
                 </a>
             </div>
         `;
