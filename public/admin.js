@@ -2266,12 +2266,12 @@ const EDIT_PLAN_MODAL_HTML = `
             <label>Subscription Plan</label>
             <select id="editPlanSelect" class="form-control">
                 <option value="free">Essential (Free)</option>
-                <option value="basic">Basic – ₹500/mo</option>
-                <option value="pro">Professional – ₹1200/mo</option>
+                <option value="basic">Basic – ₹500/2mo</option>
+                <option value="pro">Professional – ₹1200/2mo</option>
             </select>
         </div>
         <div class="form-group">
-            <label>Expiry Date (leave blank for 30 days from today)</label>
+            <label>Expiry Date (leave blank for 60 days from today)</label>
             <input type="date" id="editPlanDate" class="form-control">
         </div>
         <div style="display:flex;gap:10px;margin-top:1.5rem;">
@@ -2306,7 +2306,7 @@ async function saveUserPlanEdit() {
     if (dateVal) {
         body.directDate = dateVal;
     } else {
-        body.days = 30;
+        body.days = 60;
     }
 
     try {
@@ -2548,7 +2548,7 @@ window.openCreatePlanModal = function () {
     document.getElementById('planEditKey').value = '';
     document.getElementById('planEditName').value = '';
     document.getElementById('planEditPrice').value = '0';
-    document.getElementById('planEditDays').value = '30';
+    document.getElementById('planEditDays').value = '60';
     document.getElementById('planEditMaxBooks').value = '1';
     document.getElementById('planEditActive').value = '1';
     document.getElementById('planEditFeatures').value = '[]';

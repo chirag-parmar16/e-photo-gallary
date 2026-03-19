@@ -1932,7 +1932,7 @@
                             <div class="price-amount">
                                 <span class="price-currency">${plan.currency === "INR" ? "₹" : plan.currency}</span>
                                 <span class="price-value">${plan.price}</span>
-                                <span class="price-period">/${plan.days >= 36500 ? "forever" : "month"}</span>
+                                <span class="price-period">/${plan.days >= 36500 ? "forever" : (plan.days >= 60 ? "2 months" : "month")}</span>
                             </div>
                             <ul class="price-features">
                                 ${features.map((f) => `<li><i class="fas fa-check"></i> ${f}</li>`).join("")}
