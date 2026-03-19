@@ -506,39 +506,52 @@ body {
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
+            overflow-y: auto; /* Allow overflow if scaling is large */
+            overflow-x: hidden;
             position: relative;
+            background-color: var(--bg-color);
         }
 
         .book-container {
             width: 100vw;
-            height: 100vh;
-            height: 100dvh;
+            min-height: 100vh;
             perspective: 2500px;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 40px 20px; /* Add some vertical padding for safety */
             box-sizing: border-box;
         }
 
         #book {
-            /* We will let JS handle the transform scaling */
-            /* But we keep the desktop-like aspect ratio here */
             width: 920px !important;
             height: 600px !important;
             transform-style: preserve-3d;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(1);
+            position: relative; /* Changed from absolute to allow natural vertical flow */
             transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
             margin: 0 !important;
+            box-shadow: 
+                0 20px 50px rgba(0,0,0,0.3),
+                0 10px 20px rgba(0,0,0,0.2),
+                inset 0 0 100px rgba(0,0,0,0.1);
+            border-radius: 5px;
+        }
+
+        #book::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(to right, rgba(0,0,0,0.2), transparent, rgba(0,0,0,0.2));
+            z-index: 100;
+            pointer-events: none;
         }
 
         .page {
             position: absolute;
-            width: 460px !important; /* Half of 920 */
+            width: 460px !important;
             height: 600px !important;
             left: 50% !important;
             transform-origin: left center !important;
@@ -547,24 +560,16 @@ body {
         .page-content {
             padding: 30px !important;
             border-radius: 0 5px 5px 0 !important;
+            box-shadow: inset -10px 0 20px rgba(0,0,0,0.05); /* Subtle inner shadow */
         }
 
         .page-content.back {
             border-radius: 5px 0 0 5px !important;
+            box-shadow: inset 10px 0 20px rgba(0,0,0,0.05);
         }
 
         .book-nav {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            padding: 10px 20px;
-            border-radius: 50px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            margin: 0 !important;
+            display: none !important; /* Hide navigation on mobile landscape */
         }
     }
 }

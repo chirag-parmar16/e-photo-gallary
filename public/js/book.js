@@ -76,30 +76,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const isMobile = window.innerWidth <= 932;
         
         if (isMobile && isLandscape) {
-            const padding = 40; // Total padding
+            const padding = 40; 
             const baseWidth = 920;
-            const baseHeight = 600;
             
+            // Prioritize width-based scaling for immersive feel
             const availableWidth = window.innerWidth - padding;
-            const availableHeight = window.innerHeight - padding - 60; // Extra room for nav
+            let scale = (availableWidth / baseWidth) * 1.05; // 5% boost for "large" feel
             
-            const scaleX = availableWidth / baseWidth;
-            const scaleY = availableHeight / baseHeight;
-            
-            const scale = Math.min(scaleX, scaleY, 1); // Never scale up beyond 1
-            
-            // Center and scale
-            book.style.transform = `translate(-50%, -50%) scale(${scale})`;
-            book.style.left = '50%';
-            book.style.top = '50%';
-            book.style.position = 'absolute';
+            // Allow vertical overflow instead of shrinking to fit height
+            // We apply the scale while keeping the book centered horizontally
+            book.style.transform = `scale(${scale})`;
+            book.style.transformOrigin = 'center top';
+            book.style.margin = '40px auto 100px auto';
+            book.style.left = '0';
+            book.style.top = '0';
+            book.style.position = 'relative';
         } else {
             // Reset for desktop/portrait
             book.style.transform = '';
+            book.style.transformOrigin = '';
+            book.style.margin = '';
             book.style.left = '';
             book.style.top = '';
             book.style.position = '';
-            updatePageInfo(); // Use original centering logic
+            updatePageInfo(); 
         }
     }
 
@@ -218,11 +218,25 @@ document.addEventListener('DOMContentLoaded', () => {
         // Navigation interactions
         pages.forEach((page, index) => {
             page.addEventListener('click', (e) => {
-                const rect = page.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                
-                // If it's the front cover or we are at the end, behave differently?
-                // Actually the current logic works well:
+                const isMobile = window.innerWidth <= 932;
+                const isLandscape = window.innerWidth > window.innerHeight;
+
+                if (isMobile && isLandscape) {
+                    const rect = page.getBoundingClientRect();
+                    const clickX = e.clientX; // Use viewport X for tap zones
+                    const screenWidth = window.innerWidth;
+                    
+                    // Tap Zones: Left 30% for Prev, Right 30% for Next
+                    if (clickX < screenWidth * 0.3) {
+                        if (currentPage > 0) flipPage(currentPage - 1, 'prev');
+                        return;
+                    } else if (clickX > screenWidth * 0.7) {
+                        if (currentPage < totalPages) flipPage(currentPage, 'next');
+                        return;
+                    }
+                }
+
+                // Default flip logic (center area or desktop)
                 if (index === currentPage) {
                     flipPage(currentPage, 'next');
                 } else if (index === currentPage - 1) {
@@ -310,23 +324,31 @@ document.addEventListener('DOMContentLoaded', () => {
     function updatePageInfo() {
         updateDimensions();
         
-        // If scaled via JS, we don't need the translateX centering logic
+        const isMobile = window.innerWidth <= 932;
+        const isLandscape = window.innerWidth > window.innerHeight;
+
+        // Spread text update - handle hidden element gracefully
+        if (pageNumbers) {
+            if (currentPage === 0) {
+                pageNumbers.textContent = 'Cover';
+            } else if (currentPage === totalPages) {
+                pageNumbers.textContent = 'The End';
+            } else {
+                pageNumbers.textContent = `Spread ${currentPage} of ${totalPages - 1}`;
+            }
+        }
+
         if (isMobile && isLandscape) {
-            pageNumbers.textContent = `Spread ${currentPage} of ${totalPages - 1}`;
-            if (currentPage === 0) pageNumbers.textContent = 'Cover';
-            if (currentPage === totalPages) pageNumbers.textContent = 'The End';
             updateBookScale();
             return;
         }
 
+        // Desktop individual page offset centering
         if (currentPage === 0) {
-            pageNumbers.textContent = 'Cover';
             book.style.transform = 'translateX(-25%)';
         } else if (currentPage === totalPages) {
-            pageNumbers.textContent = 'The End';
             book.style.transform = 'translateX(25%)';
         } else {
-            pageNumbers.textContent = `Spread ${currentPage} of ${totalPages - 1}`;
             book.style.transform = 'translateX(0)';
         }
     }
