@@ -157,10 +157,20 @@ const navUsername = document.getElementById('navUsername');
 let superAdminDash, userDash, bookEditor;
 
 // --- MPA VIEW INITIALIZATION ---
+window.viewUserAlbums = function(userId, email) {
+    localStorage.setItem('targetUserId', userId);
+    localStorage.setItem('targetEmail', email);
+    localStorage.setItem('isAdminViewingOther', 'true');
+    window.navigateTo('/albums');
+};
+
 window.navigateTo = function (path) {
     // Clear admin viewing flag if navigating to main admin pages
     if (['/dashboard', '/users', '/profile', '/subscriptions', '/subscription_plans'].includes(path)) {
+        localStorage.removeItem('targetUserId');
+        localStorage.removeItem('targetEmail');
         localStorage.removeItem('isAdminViewingOther');
+        isAdminViewingOther = false;
     }
     
     // In an MPA, this just reloads. But for SPA-like consistency:
@@ -213,9 +223,8 @@ function initView() {
             }
         }
     } else if (window.currentViewName === 'albums') {
-        const urlParams = new URLSearchParams(window.location.search);
-        const targetUserId = urlParams.get('userId');
-        const targetEmail = urlParams.get('email');
+        const targetUserId = localStorage.getItem('targetUserId');
+        const targetEmail = localStorage.getItem('targetEmail');
         
         if (targetUserId && currentRole === 'admin') {
             isAdminViewingOther = true;
@@ -1176,7 +1185,7 @@ function renderAdminUserRows(users) {
                 <td class="col-expiry">${subEnd}</td>
                 <td class="col-actions">
                     <div class="action-btns">
-                        <button class="action-btn" onclick="navigateTo('/albums?userId=${user.id}&email=${user.email}')" title="View User Albums">
+                        <button class="action-btn" onclick="viewUserAlbums(${user.id}, '${user.email}')" title="View User Albums">
                             <i class="fa-solid fa-images" style="color:#10b981;"></i>
                         </button>
                         <button class="action-btn" onclick="openEditPlanModal(${user.id}, '${plan}', '${subEndRaw}')" title="Edit Subscription Plan">
@@ -1286,16 +1295,12 @@ function bindAdminDashboardEvents() {
 
 async function fetchUserBooks() {
     try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const targetUserId = urlParams.get('userId');
+        const targetUserId = localStorage.getItem('targetUserId');
         
         let url = '/api/books';
         if (targetUserId && currentRole === 'admin') {
             url = `/api/admin/users/${targetUserId}/books`;
             isAdminViewingOther = true;
-            localStorage.setItem('isAdminViewingOther', 'true');
-        } else {
-            localStorage.removeItem('isAdminViewingOther');
         }
 
         const res = await fetch(url, {
@@ -1347,9 +1352,13 @@ function renderBooks(books) {
                 <i class="far fa-calendar-alt"></i> Created: ${formatDate(book.created_at)}
             </div>
             <div class="album-card-actions">
+                ${isAdminViewingOther ? `
+                <a href="/book.html?id=${book.uuid}" target="_blank" class="btn-primary" style="flex: 1; text-align: center; text-decoration: none;">
+                    <i class="fas fa-external-link-alt"></i> View Live
+                </a>` : `
                 <button class="btn-primary" style="flex: 1;" onclick="navigateTo('/book/${book.uuid}')">
-                    <i class="fas ${isAdminViewingOther ? 'fa-eye' : 'fa-edit'}"></i> ${isAdminViewingOther ? 'View Pages' : 'Edit Pages'}
-                </button>
+                    <i class="fas fa-edit"></i> Edit Pages
+                </button>`}
                 ${!isAdminViewingOther ? `
                 <div style="display: flex; gap: 8px;">
                     <button class="btn-secondary" onclick="copyLink('${book.uuid}')" title="Copy Share Link">
