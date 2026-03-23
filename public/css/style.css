@@ -276,9 +276,9 @@ body {
 }
 
 .cover-back {
-    background: var(--gradient-cover, linear-gradient(135deg, var(--warm-accent), var(--accent-color)));
-    color: white;
-    justify-content: center;
+    background: var(--gradient-cover, linear-gradient(135deg, var(--warm-accent), var(--accent-color))) !important;
+    color: white !important;
+    justify-content: center !important;
 }
 
 .cover-back h1 {
@@ -431,8 +431,8 @@ body {
 }
 
 .cover-front, .cover-back {
-    background: var(--accent-color);
-    color: white;
+    background: var(--gradient-cover, var(--accent-color)) !important;
+    color: white !important;
 }
 
 .cover-front h1, .cover-back h1 {

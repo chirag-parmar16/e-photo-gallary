@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Apply Global Themes
         if (settings.color_schema) {
-            const root = document.documentElement;
+            const root = document.body;
             const color = settings.color_schema;
             
             // Set primary
