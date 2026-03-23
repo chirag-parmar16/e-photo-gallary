@@ -73,51 +73,40 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!book) return;
         
         const isLandscape = window.innerWidth > window.innerHeight;
-        const isMobile = window.innerWidth <= 1100; // Increased threshold
+        const isMobile = window.innerWidth <= 1100;
         
-        if (isMobile && isLandscape) {
+        // Offset logic: -25% (Cover), 0 (Spread), 25% (End)
+        let xOffset = 0;
+        if (currentPage === 0) xOffset = -25;
+        else if (currentPage === totalPages) xOffset = 25;
+
+        if (isMobile) {
             const padding = 20;
             const baseWidth = 920;
             const baseHeight = 600;
             
             const availableWidth = window.innerWidth - padding;
-            const availableHeight = window.innerHeight - padding - 30;
+            const availableHeight = window.innerHeight - padding - (isLandscape ? 40 : 100);
             
             const scaleX = availableWidth / baseWidth;
             const scaleY = availableHeight / baseHeight;
             
-            let scale = Math.min(scaleX, scaleY) * 0.92;
-            scale = Math.min(scale, 1.05); 
+            let scale = Math.min(scaleX, scaleY) * 0.95;
+            scale = Math.min(scale, 1.0); 
             
-            // Re-calculate centering offsets
-            let xOffset = -50;
-            if (currentPage === 0) xOffset = -75;
-            else if (currentPage === totalPages) xOffset = -25;
-            
-            book.style.transform = `translate(${xOffset}%, -50%) scale(${scale})`;
+            book.style.position = 'absolute';
             book.style.left = '50%';
             book.style.top = '50%';
-            book.style.position = 'absolute';
+            // Use chained transforms: Center first, scale second, shift third
+            book.style.transform = `translate(-50%, -50%) scale(${scale}) translateX(${xOffset}%)`;
+            book.style.transformOrigin = 'center center';
         } else {
-            // Reset for desktop/portrait
-            book.style.transform = '';
+            // Desktop
+            book.style.position = 'relative';
             book.style.left = '';
             book.style.top = '';
-            book.style.position = '';
-            
-            // Re-apply desktop translateX if needed
-            if (!isMobile) {
-                if (currentPage === 0) book.style.transform = 'translateX(-25%)';
-                else if (currentPage === totalPages) book.style.transform = 'translateX(25%)';
-                else book.style.transform = 'translateX(0)';
-            } else {
-                // Mobile Portrait
-                if (currentPage === 0) book.style.transform = 'translateX(-25%)';
-                else if (currentPage === totalPages) book.style.transform = 'translateX(25%)';
-                else book.style.transform = 'translateX(0)';
-            }
-
-            if (typeof updatePageInfo === 'function') updatePageInfo(); 
+            book.style.transform = `translateX(${xOffset}%)`;
+            book.style.transformOrigin = 'center center';
         }
     }
 
@@ -337,27 +326,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updatePageInfo() {
-        updateDimensions();
-        
-        // If scaled via JS, we don't need the translateX centering logic
-        if (isMobile && isLandscape) {
-            pageNumbers.textContent = `Spread ${currentPage} of ${totalPages - 1}`;
-            if (currentPage === 0) pageNumbers.textContent = 'Cover';
-            if (currentPage === totalPages) pageNumbers.textContent = 'The End';
-            updateBookScale();
-            return;
-        }
-
         if (currentPage === 0) {
             pageNumbers.textContent = 'Cover';
-            book.style.transform = 'translateX(-25%)';
         } else if (currentPage === totalPages) {
             pageNumbers.textContent = 'The End';
-            book.style.transform = 'translateX(25%)';
         } else {
             pageNumbers.textContent = `Spread ${currentPage} of ${totalPages - 1}`;
-            book.style.transform = 'translateX(0)';
         }
+        
+        // Always call scale update which handles all platforms and offsets
+        updateBookScale();
     }
 
     // Fullscreen buttons
