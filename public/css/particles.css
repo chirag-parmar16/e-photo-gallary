@@ -9,6 +9,7 @@
     background-size: contain;
     background-repeat: no-repeat;
     animation: fall linear infinite, sway ease-in-out infinite alternate;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
 }
 
 /* Realistic Rose Petal (Curved, Deep Red) */

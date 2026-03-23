@@ -73,10 +73,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!book) return;
         
         const isLandscape = window.innerWidth > window.innerHeight;
-        const isMobile = window.innerWidth <= 932;
+        const isMobile = window.innerWidth <= 1100; // Increased threshold
         
         if (isMobile && isLandscape) {
-            const padding = 10;
+            const padding = 20;
             const baseWidth = 920;
             const baseHeight = 600;
             
@@ -86,13 +86,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const scaleX = availableWidth / baseWidth;
             const scaleY = availableHeight / baseHeight;
             
-            let scale = Math.min(scaleX, scaleY) * 1.08;
-            scale = Math.min(scale, 1.18); 
+            let scale = Math.min(scaleX, scaleY) * 0.92;
+            scale = Math.min(scale, 1.05); 
             
-            // Handle horizontal shift for covers on mobile landscape
+            // Re-calculate centering offsets
             let xOffset = -50;
-            if (currentPage === 0) xOffset -= 25;
-            else if (currentPage === totalPages) xOffset += 25;
+            if (currentPage === 0) xOffset = -75;
+            else if (currentPage === totalPages) xOffset = -25;
             
             book.style.transform = `translate(${xOffset}%, -50%) scale(${scale})`;
             book.style.left = '50%';
@@ -107,6 +107,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Re-apply desktop translateX if needed
             if (!isMobile) {
+                if (currentPage === 0) book.style.transform = 'translateX(-25%)';
+                else if (currentPage === totalPages) book.style.transform = 'translateX(25%)';
+                else book.style.transform = 'translateX(0)';
+            } else {
+                // Mobile Portrait
                 if (currentPage === 0) book.style.transform = 'translateX(-25%)';
                 else if (currentPage === totalPages) book.style.transform = 'translateX(25%)';
                 else book.style.transform = 'translateX(0)';

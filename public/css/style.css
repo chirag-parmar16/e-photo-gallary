@@ -26,7 +26,7 @@ body.template-birthday {
 }
 
 body.template-wedding {
-    --bg-color: #fff5f4;
+    --bg-color: #fee2e2;
     --primary-color: #b76e79;
     --accent-color: #d4a5a5;
     --soft-highlight: #f7d1cd;
@@ -740,10 +740,76 @@ body {
     padding: 45px !important;
 }
 
-.page-content.border-style-glow {
-    border: 2px solid var(--accent-color) !important;
-    box-shadow: 0 0 15px var(--accent-color), inset 0 0 15px var(--accent-color) !important;
-    border-radius: 10px !important;
+.page-content.border-style-lace {
+    border: 30px solid transparent !important;
+    border-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0c16.57 0 30 13.43 30 30S46.57 60 30 60 0 46.57 0 30 13.43 0 30 0zm0 10c11.05 0 20 8.95 20 20s-8.95 20-20 20-20-8.95-20-20 8.95-20 20-20z' fill='%23ffffff' fill-opacity='0.4'/%3E%3C/svg%3E") 30 round !important;
+    background-clip: padding-box !important;
+    padding: 40px !important;
+}
+
+.page-content.border-style-geometric {
+    border: 2px solid rgba(0,0,0,0.05) !important;
+    padding: 30px !important;
+}
+
+.page-content.border-style-geometric::before,
+.page-content.border-style-geometric::after {
+    content: '';
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--primary-color);
+}
+
+.page-content.border-style-geometric::before {
+    top: 15px;
+    left: 15px;
+    border-right: none;
+    border-bottom: none;
+}
+
+.page-content.border-style-geometric::after {
+    bottom: 15px;
+    right: 15px;
+    border-left: none;
+    border-top: none;
+}
+
+.page-content.border-style-handmade {
+    border: 3px solid var(--primary-color) !important;
+    border-radius: 255px 15px 225px 15px/15px 225px 15px 255px !important;
+    padding: 35px !important;
+    box-shadow: 2px 8px 4px -6px rgba(0,0,0,0.3) !important;
+}
+
+.page-content.border-style-artdeco {
+    border: 10px double var(--primary-color) !important;
+    padding: 35px !important;
+    background-image: 
+        linear-gradient(45deg, var(--primary-color) 25%, transparent 25%),
+        linear-gradient(-45deg, var(--primary-color) 25%, transparent 25%) !important;
+    background-size: 20px 20px !important;
+    background-position: 0 0, 10px 0 !important;
+    background-repeat: no-repeat !important; /* Only corners */
+}
+
+.page-content.border-style-dotted {
+    border: 4px dotted var(--primary-color) !important;
+    border-radius: 20px !important;
+    padding: 35px !important;
+}
+
+.page-content.border-style-double {
+    border: 1px solid var(--primary-color) !important;
+    padding: 5px !important;
+}
+
+.page-content.border-style-double::before {
+    content: '';
+    position: absolute;
+    top: 10px; left: 10px; right: 10px; bottom: 10px;
+    border: 2px solid var(--primary-color);
+    pointer-events: none;
 }
 
 @keyframes fall {
