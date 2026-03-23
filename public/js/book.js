@@ -76,24 +76,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const isMobile = window.innerWidth <= 932;
         
         if (isMobile && isLandscape) {
-            const padding = 10; // Reduced padding for maximum size
+            const padding = 10;
             const baseWidth = 920;
             const baseHeight = 600;
             
             const availableWidth = window.innerWidth - padding;
-            const availableHeight = window.innerHeight - padding - 30; // Reduced nav room
+            const availableHeight = window.innerHeight - padding - 30;
             
             const scaleX = availableWidth / baseWidth;
             const scaleY = availableHeight / baseHeight;
             
-            // Adjusted scale: Reduced by 2% from the previous 10% increase (1.1 -> 1.08)
             let scale = Math.min(scaleX, scaleY) * 1.08;
-            
-            // Ensure it's not TOO huge if screen is large
             scale = Math.min(scale, 1.18); 
             
-            // Center and scale
-            book.style.transform = `translate(-50%, -50%) scale(${scale})`;
+            // Handle horizontal shift for covers on mobile landscape
+            let xOffset = -50;
+            if (currentPage === 0) xOffset -= 25;
+            else if (currentPage === totalPages) xOffset += 25;
+            
+            book.style.transform = `translate(${xOffset}%, -50%) scale(${scale})`;
             book.style.left = '50%';
             book.style.top = '50%';
             book.style.position = 'absolute';
@@ -103,6 +104,14 @@ document.addEventListener('DOMContentLoaded', () => {
             book.style.left = '';
             book.style.top = '';
             book.style.position = '';
+            
+            // Re-apply desktop translateX if needed
+            if (!isMobile) {
+                if (currentPage === 0) book.style.transform = 'translateX(-25%)';
+                else if (currentPage === totalPages) book.style.transform = 'translateX(25%)';
+                else book.style.transform = 'translateX(0)';
+            }
+
             if (typeof updatePageInfo === 'function') updatePageInfo(); 
         }
     }
@@ -142,9 +151,20 @@ document.addEventListener('DOMContentLoaded', () => {
         // Apply Global Themes
         if (settings.color_schema) {
             const root = document.documentElement;
-            root.style.setProperty('--primary-color', settings.color_schema);
-            root.style.setProperty('--accent-color', settings.color_schema);
-            root.style.setProperty('--warm-accent', settings.color_schema);
+            const color = settings.color_schema;
+            
+            // Set primary
+            root.style.setProperty('--primary-color', color);
+            
+            // Generate variations for a premium look
+            // Simple hex to HSL adjustment (simulated for brevity or use CSS color-mix if possible)
+            // But we can just set them slightly different if the user didn't provide multiple
+            root.style.setProperty('--accent-color', color);
+            
+            // Attempt to make a "warm" version or lighter version via CSS filter or mix
+            // For now, we'll set a gradient variable that uses the color
+            root.style.setProperty('--warm-accent', color);
+            root.style.setProperty('--gradient-cover', `linear-gradient(135deg, ${color}, ${adjustColor(color, 20)})`);
         }
         document.body.className = 'template-' + (settings.template_type || 'default');
 
@@ -377,6 +397,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 300);
     });
 
+    // Helper to lighten/darken color
+    function adjustColor(hex, percent) {
+        const num = parseInt(hex.replace('#', ''), 16),
+            amt = Math.round(2.55 * percent),
+            R = (num >> 16) + amt,
+            G = (num >> 8 & 0x00FF) + amt,
+            B = (num & 0x0000FF) + amt;
+        return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 + (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 + (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+    }
+
     // Particles (Petals/Confetti)
     function createThemeParticles(templateType) {
         let container = document.getElementById('petal-container');
@@ -391,6 +421,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let count = 30;
         let classes = ['petal'];
+        let useEmoji = false;
+        let emojis = [];
 
         if (templateType === 'birthday') {
             count = 60;
@@ -401,6 +433,18 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (templateType === 'anniversary') {
             count = 35;
             classes = ['petal', 'heart'];
+        } else if (templateType === 'graduation') {
+            count = 40;
+            useEmoji = true;
+            emojis = ['🎓', '✨', '⭐'];
+        } else if (templateType === 'travel') {
+            count = 30;
+            useEmoji = true;
+            emojis = ['✈️', '🌍', '🗺️', '⭐'];
+        } else if (templateType === 'babyshower') {
+            count = 40;
+            useEmoji = true;
+            emojis = ['👶', '🍼', '🧸', '💖'];
         } else {
             classes = ['petal', 'rose'];
             count = 20;
@@ -408,7 +452,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         for (let i = 0; i < count; i++) {
             const particle = document.createElement('div');
-            particle.classList.add(...classes);
+            
+            if (useEmoji) {
+                particle.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                particle.style.position = 'absolute';
+                particle.style.fontSize = `${Math.random() * 15 + 15}px`;
+                particle.style.userSelect = 'none';
+                particle.className = 'emoji-particle';
+                // Add some basic animation styles inline if not in CSS
+                particle.style.animation = `fall ${Math.random() * 5 + 5}s linear infinite`;
+            } else {
+                particle.classList.add(...classes);
+            }
 
             if (templateType === 'birthday') {
                 const colors = ['#ff3d68', '#ffc107', '#00c2ff', '#7b61ff'];
@@ -416,7 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 particle.style.width = `${Math.random() * 10 + 10}px`;
                 particle.style.height = `${Math.random() * 5 + 5}px`;
                 particle.style.animationDuration = `${Math.random() * 3 + 3}s`;
-            } else {
+            } else if (!useEmoji) {
                 if (classes.includes('white')) {
                     particle.style.filter = 'grayscale(100%) brightness(200%)';
                 }
@@ -425,6 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             particle.style.left = `${Math.random() * 100}%`;
+            particle.style.top = '-50px';
             particle.style.animationDelay = `${Math.random() * 5}s`;
             particle.style.opacity = Math.random() * 0.5 + 0.5;
             container.appendChild(particle);

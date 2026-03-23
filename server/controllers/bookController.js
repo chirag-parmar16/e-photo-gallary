@@ -42,6 +42,15 @@ const createBook = async (req, res, db) => {
         } else if (template_type === 'anniversary') {
             cover_title = cover_title || 'Happy Anniversary';
             color_schema = color_schema || '#e83e8c'; 
+        } else if (template_type === 'graduation') {
+            cover_title = cover_title || 'Class of 2026';
+            color_schema = color_schema || '#1a237e'; 
+        } else if (template_type === 'travel') {
+            cover_title = cover_title || 'Our Adventures';
+            color_schema = color_schema || '#2e7d32'; 
+        } else if (template_type === 'babyshower') {
+            cover_title = cover_title || 'Welcome Little One';
+            color_schema = color_schema || '#f06292'; 
         } else {
             color_schema = color_schema || '#ff4d6d';
         }
@@ -84,6 +93,21 @@ const createBook = async (req, res, db) => {
             defaultPages = [
                 { content: '<h1>Happy Anniversary</h1><p>Another year of beautiful memories together.</p>', order: 0 },
                 { content: '<h1>To Many More</h1><p>Cheers to our love story.</p>', order: 1 }
+            ];
+        } else if (template_type === 'graduation') {
+            defaultPages = [
+                { content: '<h1>Congratulations!</h1><p>The world is your oyster.</p>', order: 0 },
+                { content: '<h1>New Beginnings</h1><p>Success is a journey, not a destination.</p>', order: 1 }
+            ];
+        } else if (template_type === 'travel') {
+            defaultPages = [
+                { content: '<h1>The Journey Begins</h1><p>Not all who wander are lost.</p>', order: 0 },
+                { content: '<h1>Adventure Awaits</h1><p>Collect moments, not things.</p>', order: 1 }
+            ];
+        } else if (template_type === 'babyshower') {
+            defaultPages = [
+                { content: '<h1>Welcome Home</h1><p>Ten little fingers, ten little toes.</p>', order: 0 },
+                { content: '<h1>Sweet Baby</h1><p>A gift from above.</p>', order: 1 }
             ];
         } else {
             defaultPages = [

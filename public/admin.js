@@ -1667,7 +1667,10 @@ function initEditorView() {
             'default': '#ff4d6d',
             'birthday': '#ffc107',
             'wedding': '#b76e79',
-            'anniversary': '#e83e8c'
+            'anniversary': '#e83e8c',
+            'graduation': '#1a237e',
+            'travel': '#2e7d32',
+            'babyshower': '#f06292'
         };
 
         const templateSelect = document.getElementById('editTemplateType');
