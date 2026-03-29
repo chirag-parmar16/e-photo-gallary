@@ -1,0 +1,77 @@
+{
+  "session": {
+    "id": "report-2026-03-29T05-31-29",
+    "startTime": "2026-03-29T05:32:31.398Z",
+    "endTime": "2026-03-29T05:40:13.261Z",
+    "date": "29/03/2026, 11:10:13 am",
+    "totalPages": 5,
+    "totalSteps": 8
+  },
+  "summary": {
+    "critical": 0,
+    "warnings": 0,
+    "total": 0
+  },
+  "journey": [
+    {
+      "step": 1,
+      "url": "http://e-book/",
+      "localUrl": "http://localhost:3000/",
+      "timestamp": 1774762351398,
+      "time": "11:02:31 am",
+      "duration": "2.0s",
+      "violations": [],
+      "subPages": []
+    },
+    {
+      "step": 2,
+      "url": "http://localhost:3000/dashboard",
+      "localUrl": "http://localhost:3000/dashboard",
+      "timestamp": 1774762353394,
+      "time": "11:02:33 am",
+      "duration": "13.5s",
+      "metrics": {
+        "loadTime": 736,
+        "storage": 0.5
+      },
+      "violations": [],
+      "subPages": [
+        {
+          "url": "http://e-book/dashboard",
+          "timestamp": 1774762366862,
+          "time": "11:02:46 am"
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "url": "http://e-book/albums",
+      "localUrl": "http://localhost:3000/albums",
+      "timestamp": 1774762376195,
+      "time": "11:02:56 am",
+      "duration": "1.7s",
+      "violations": [],
+      "subPages": []
+    },
+    {
+      "step": 4,
+      "url": "http://e-book/subscriptions",
+      "localUrl": "http://localhost:3000/subscriptions",
+      "timestamp": 1774762377869,
+      "time": "11:02:57 am",
+      "duration": "1.5s",
+      "violations": [],
+      "subPages": []
+    },
+    {
+      "step": 5,
+      "url": "http://e-book/profile",
+      "localUrl": "http://localhost:3000/profile",
+      "timestamp": 1774762379387,
+      "time": "11:02:59 am",
+      "duration": "—",
+      "violations": [],
+      "subPages": []
+    }
+  ]
+}

@@ -12,7 +12,7 @@ function getPool() {
             host: process.env.DB_HOST || 'localhost',
             user: process.env.DB_USER || 'root',
             password: process.env.DB_PASS || '',
-            database: process.env.DB_NAME || 'photo_gallery',
+            database: process.env.DB_NAME || 'photo_gallery_new',
             waitForConnections: true,
             connectionLimit: 10,
             multipleStatements: true
@@ -81,6 +81,8 @@ async function initDb() {
             created_at       DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `);
+    try { await db.exec('ALTER TABLE users ADD COLUMN subscription_plan VARCHAR(20) DEFAULT "free" AFTER display_name'); } catch (err) { }
+
 
     // 2. Books
     await db.exec(`

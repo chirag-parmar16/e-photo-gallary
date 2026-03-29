@@ -52,13 +52,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initBook(originalData, settings) {
         updateDimensions();
-        
+
         // Remove the grid-splitting logic to preserve exact 2-page spread as requested
         let processedData = [...originalData];
 
         setTimeout(() => createThemeParticles(settings.template_type || 'default'), 100);
         setupBookUI(processedData, settings);
-        
+
         // Initial scale update
         updateBookScale();
     }
@@ -71,10 +71,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Dynamic Scaling Logic
     function updateBookScale() {
         if (!book) return;
-        
+
         const isLandscape = window.innerWidth > window.innerHeight;
         const isMobile = window.innerWidth <= 1100;
-        
+
         // Offset logic: -25% (Cover), 0 (Spread), 25% (End)
         let xOffset = 0;
         if (currentPage === 0) xOffset = -25;
@@ -84,16 +84,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const padding = 20;
             const baseWidth = 920;
             const baseHeight = 600;
-            
+
             const availableWidth = window.innerWidth - padding;
             const availableHeight = window.innerHeight - padding - (isLandscape ? 40 : 100);
-            
+
             const scaleX = availableWidth / baseWidth;
             const scaleY = availableHeight / baseHeight;
-            
+
             let scale = Math.min(scaleX, scaleY) * 0.95;
-            scale = Math.min(scale, 1.0); 
-            
+            scale = Math.min(scale, 1.0);
+
             book.style.position = 'absolute';
             book.style.left = '50%';
             book.style.top = '50%';
@@ -146,15 +146,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (settings.color_schema) {
             const root = document.body;
             const color = settings.color_schema;
-            
+
             // Set primary
             root.style.setProperty('--primary-color', color);
-            
+
             // Generate variations for a premium look
             // Simple hex to HSL adjustment (simulated for brevity or use CSS color-mix if possible)
             // But we can just set them slightly different if the user didn't provide multiple
             root.style.setProperty('--accent-color', color);
-            
+
             // Attempt to make a "warm" version or lighter version via CSS filter or mix
             // For now, we'll set a gradient variable that uses the color
             root.style.setProperty('--warm-accent', color);
@@ -238,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
             page.addEventListener('click', (e) => {
                 const rect = page.getBoundingClientRect();
                 const clickX = e.clientX - rect.left;
-                
+
                 // If it's the front cover or we are at the end, behave differently?
                 // Actually the current logic works well:
                 if (index === currentPage) {
@@ -333,7 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             pageNumbers.textContent = `Spread ${currentPage} of ${totalPages - 1}`;
         }
-        
+
         // Always call scale update which handles all platforms and offsets
         updateBookScale();
     }
@@ -343,7 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (fsBtn) {
         fsBtn.addEventListener('click', () => {
             if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(() => {});
+                document.documentElement.requestFullscreen().catch(() => { });
             } else {
                 document.exitFullscreen();
             }
@@ -435,7 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         for (let i = 0; i < count; i++) {
             const particle = document.createElement('div');
-            
+
             if (useEmoji) {
                 particle.textContent = emojis[Math.floor(Math.random() * emojis.length)];
                 particle.style.position = 'absolute';

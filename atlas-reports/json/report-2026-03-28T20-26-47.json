@@ -1,0 +1,168 @@
+{
+  "session": {
+    "id": "report-2026-03-28T20-26-47",
+    "startTime": "2026-03-28T20:27:20.452Z",
+    "endTime": "2026-03-28T20:28:52.764Z",
+    "date": "29/03/2026, 1:58:52 am",
+    "totalPages": 7,
+    "totalSteps": 9
+  },
+  "summary": {
+    "critical": 6,
+    "warnings": 0,
+    "total": 6
+  },
+  "journey": [
+    {
+      "step": 1,
+      "url": "http://e-book/",
+      "localUrl": "http://localhost:3000/",
+      "timestamp": 1774729640452,
+      "time": "1:57:20 am",
+      "duration": "2.0s",
+      "violations": [],
+      "subPages": []
+    },
+    {
+      "step": 2,
+      "url": "http://localhost:3000/login",
+      "localUrl": "http://localhost:3000/login",
+      "timestamp": 1774729642428,
+      "time": "1:57:22 am",
+      "duration": "2.6s",
+      "metrics": {
+        "loadTime": 687,
+        "storage": 0.5
+      },
+      "violations": [],
+      "subPages": []
+    },
+    {
+      "step": 3,
+      "url": "http://e-book/dashboard",
+      "localUrl": "http://localhost:3000/dashboard",
+      "timestamp": 1774729645023,
+      "time": "1:57:25 am",
+      "duration": "7.3s",
+      "violations": [],
+      "subPages": []
+    },
+    {
+      "step": 4,
+      "url": "http://e-book/subscriptions",
+      "localUrl": "http://localhost:3000/subscriptions",
+      "timestamp": 1774729652320,
+      "time": "1:57:32 am",
+      "duration": "2.1s",
+      "violations": [],
+      "subPages": []
+    },
+    {
+      "step": 5,
+      "url": "http://e-book/albums",
+      "localUrl": "http://localhost:3000/albums",
+      "timestamp": 1774729654400,
+      "time": "1:57:34 am",
+      "duration": "24.3s",
+      "violations": [
+        {
+          "source": "Runtime",
+          "message": "Cannot read properties of undefined (reading 'writeText')",
+          "level": 2,
+          "severity": "critical",
+          "timestamp": 1774729657295,
+          "time": "1:57:37 am",
+          "resourceUrl": "http://e-book/albums",
+          "metadata": {
+            "stack": "TypeError: Cannot read properties of undefined (reading 'writeText')\n    at copyLink (http://e-book/admin.js?v=8:1543:25)\n    at onclick (http://e-book/albums:1:1)"
+          }
+        },
+        {
+          "source": "Runtime",
+          "message": "Cannot read properties of undefined (reading 'writeText')",
+          "level": 2,
+          "severity": "critical",
+          "timestamp": 1774729668900,
+          "time": "1:57:48 am",
+          "resourceUrl": "http://e-book/albums",
+          "metadata": {
+            "stack": "TypeError: Cannot read properties of undefined (reading 'writeText')\n    at copyLink (http://e-book/admin.js?v=8:1543:25)\n    at onclick (http://e-book/albums:1:1)"
+          }
+        },
+        {
+          "source": "Runtime",
+          "message": "Cannot read properties of undefined (reading 'writeText')",
+          "level": 2,
+          "severity": "critical",
+          "timestamp": 1774729670073,
+          "time": "1:57:50 am",
+          "resourceUrl": "http://e-book/albums",
+          "metadata": {
+            "stack": "TypeError: Cannot read properties of undefined (reading 'writeText')\n    at copyLink (http://e-book/admin.js?v=8:1543:25)\n    at onclick (http://e-book/albums:1:1)"
+          }
+        },
+        {
+          "source": "Runtime",
+          "message": "Cannot read properties of undefined (reading 'writeText')",
+          "level": 2,
+          "severity": "critical",
+          "timestamp": 1774729670282,
+          "time": "1:57:50 am",
+          "resourceUrl": "http://e-book/albums",
+          "metadata": {
+            "stack": "TypeError: Cannot read properties of undefined (reading 'writeText')\n    at copyLink (http://e-book/admin.js?v=8:1543:25)\n    at onclick (http://e-book/albums:1:1)"
+          }
+        },
+        {
+          "source": "Runtime",
+          "message": "Cannot read properties of undefined (reading 'writeText')",
+          "level": 2,
+          "severity": "critical",
+          "timestamp": 1774729670466,
+          "time": "1:57:50 am",
+          "resourceUrl": "http://e-book/albums",
+          "metadata": {
+            "stack": "TypeError: Cannot read properties of undefined (reading 'writeText')\n    at copyLink (http://e-book/admin.js?v=8:1543:25)\n    at onclick (http://e-book/albums:1:1)"
+          }
+        },
+        {
+          "source": "Runtime",
+          "message": "Cannot read properties of undefined (reading 'writeText')",
+          "level": 2,
+          "severity": "critical",
+          "timestamp": 1774729670689,
+          "time": "1:57:50 am",
+          "resourceUrl": "http://e-book/albums",
+          "metadata": {
+            "stack": "TypeError: Cannot read properties of undefined (reading 'writeText')\n    at copyLink (http://e-book/admin.js?v=8:1543:25)\n    at onclick (http://e-book/albums:1:1)"
+          }
+        }
+      ],
+      "subPages": []
+    },
+    {
+      "step": 6,
+      "url": "http://e-book/book/6c8c1e50-69dd-4adf-b73f-03ede1366a9e",
+      "localUrl": "http://localhost:3000/book/6c8c1e50-69dd-4adf-b73f-03ede1366a9e",
+      "timestamp": 1774729678718,
+      "time": "1:57:58 am",
+      "duration": "5.5s",
+      "violations": [],
+      "subPages": []
+    },
+    {
+      "step": 7,
+      "url": "http://e-book/book.html?id=6c8c1e50-69dd-4adf-b73f-03ede1366a9e",
+      "localUrl": "http://localhost:3000/book.html?id=6c8c1e50-69dd-4adf-b73f-03ede1366a9e",
+      "timestamp": 1774729684217,
+      "time": "1:58:04 am",
+      "duration": "—",
+      "metrics": {
+        "loadTime": 4287,
+        "storage": 0.5
+      },
+      "violations": [],
+      "subPages": []
+    }
+  ]
+}

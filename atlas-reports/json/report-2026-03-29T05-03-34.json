@@ -1,0 +1,57 @@
+{
+  "session": {
+    "id": "report-2026-03-29T05-03-34",
+    "startTime": "2026-03-29T05:04:05.986Z",
+    "endTime": "2026-03-29T05:11:08.143Z",
+    "date": "29/03/2026, 10:41:08 am",
+    "totalPages": 3,
+    "totalSteps": 4
+  },
+  "summary": {
+    "critical": 0,
+    "warnings": 0,
+    "total": 0
+  },
+  "journey": [
+    {
+      "step": 1,
+      "url": "http://e-book/",
+      "localUrl": "http://localhost:3000/",
+      "timestamp": 1774760645986,
+      "time": "10:34:05 am",
+      "duration": "74.1s",
+      "metrics": {
+        "loadTime": 715,
+        "storage": 0.5
+      },
+      "violations": [],
+      "subPages": [
+        {
+          "url": "http://localhost:3000/",
+          "timestamp": 1774760647978,
+          "time": "10:34:07 am"
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "url": "http://e-book/login",
+      "localUrl": "http://localhost:3000/login",
+      "timestamp": 1774760722123,
+      "time": "10:35:22 am",
+      "duration": "141ms",
+      "violations": [],
+      "subPages": []
+    },
+    {
+      "step": 3,
+      "url": "http://e-book/dashboard",
+      "localUrl": "http://localhost:3000/dashboard",
+      "timestamp": 1774760722264,
+      "time": "10:35:22 am",
+      "duration": "—",
+      "violations": [],
+      "subPages": []
+    }
+  ]
+}
