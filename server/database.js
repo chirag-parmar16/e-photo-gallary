@@ -159,6 +159,21 @@ async function initDb() {
         )
     `);
 
+    try { await db.exec('ALTER TABLE payments ADD COLUMN gateway VARCHAR(50) DEFAULT "simulated"'); } catch (err) {}
+    try { await db.exec('ALTER TABLE payments ADD COLUMN txn_order_id VARCHAR(255) UNIQUE'); } catch (err) {}
+    try { await db.exec('ALTER TABLE payments ADD COLUMN txn_payment_id VARCHAR(255) UNIQUE'); } catch (err) {}
+    try { await db.exec('ALTER TABLE payments ADD COLUMN txn_signature VARCHAR(255)'); } catch (err) {}
+    try { await db.exec('ALTER TABLE payments ADD COLUMN payment_method VARCHAR(20)'); } catch (err) {}
+    try { await db.exec('ALTER TABLE payments ADD COLUMN upi_id VARCHAR(255)'); } catch (err) {}
+    try { await db.exec('ALTER TABLE payments ADD COLUMN bank_name VARCHAR(255)'); } catch (err) {}
+    try { await db.exec('ALTER TABLE payments ADD COLUMN card_last4 VARCHAR(4)'); } catch (err) {}
+    try { await db.exec('ALTER TABLE payments ADD COLUMN card_expiry VARCHAR(10)'); } catch (err) {}
+    try { await db.exec('ALTER TABLE payments ADD COLUMN card_holder VARCHAR(255)'); } catch (err) {}
+    try { await db.exec('ALTER TABLE payments ADD COLUMN card_network VARCHAR(50)'); } catch (err) {}
+    try { await db.exec('ALTER TABLE payments ADD COLUMN error_reason TEXT'); } catch (err) {}
+    try { await db.exec('ALTER TABLE payments ADD COLUMN notes JSON'); } catch (err) {}
+
+
     // 7. Subscription Plans
     await db.exec(`
         CREATE TABLE IF NOT EXISTS subscription_plans (
