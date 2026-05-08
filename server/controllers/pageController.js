@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { deleteFile } = require('../services/fileService');
 const { processAndSaveImage } = require('../services/imageService');
-const { uploadToS3, deleteFromS3 } = require('../services/s3Service');
+const { uploadToCloudinary, deleteFromCloudinary } = require('../services/cloudinaryService');
 
 const getPages = async (req, res, db) => {
     try {
@@ -52,10 +52,10 @@ const createPage = async (req, res, db) => {
                 const filename = unique + (type === 'video' ? path.extname(file.originalname) : '.webp');
                 let mediaPath;
 
-                if (process.env.STORAGE_PROVIDER === 's3') {
+                if (process.env.STORAGE_PROVIDER === 'cloudinary') {
                     const buffer = file.buffer || (file.path ? fs.readFileSync(file.path) : null);
                     if (!buffer) throw new Error('File buffer not found');
-                    mediaPath = await uploadToS3(buffer, filename, file.mimetype);
+                    mediaPath = await uploadToCloudinary(buffer);
                     if (file.path && fs.existsSync(file.path)) fs.unlinkSync(file.path);
                 } else {
                     mediaPath = '/uploads/' + (type === 'video' ? 'videos/' : 'images/') + filename;
@@ -118,8 +118,8 @@ const updatePage = async (req, res, db) => {
                 const placeholders = ids.map(() => '?').join(',');
                 const mediaToDelete = await db.all(`SELECT media_path FROM page_media WHERE id IN (${placeholders}) AND page_id = ?`, [...ids, pageId]);
                 for (const m of mediaToDelete) { 
-                    if (process.env.STORAGE_PROVIDER === 's3') {
-                        await deleteFromS3(m.media_path);
+                    if (process.env.STORAGE_PROVIDER === 'cloudinary') {
+                        await deleteFromCloudinary(m.media_path);
                     } else {
                         await deleteFile(m.media_path); 
                     }
@@ -138,10 +138,10 @@ const updatePage = async (req, res, db) => {
                 const filename = unique + (type === 'video' ? path.extname(file.originalname) : '.webp');
                 let mediaPath;
 
-                if (process.env.STORAGE_PROVIDER === 's3') {
+                if (process.env.STORAGE_PROVIDER === 'cloudinary') {
                     const buffer = file.buffer || (file.path ? fs.readFileSync(file.path) : null);
                     if (!buffer) throw new Error('File buffer not found');
-                    mediaPath = await uploadToS3(buffer, filename, file.mimetype);
+                    mediaPath = await uploadToCloudinary(buffer);
                     if (file.path && fs.existsSync(file.path)) fs.unlinkSync(file.path);
                 } else {
                     mediaPath = '/uploads/' + (type === 'video' ? 'videos/' : 'images/') + filename;
@@ -176,8 +176,8 @@ const deletePage = async (req, res, db) => {
     try {
         const media = await db.all('SELECT media_path FROM page_media WHERE page_id = ?', req.params.id);
         for (const m of media) { 
-            if (process.env.STORAGE_PROVIDER === 's3') {
-                await deleteFromS3(m.media_path);
+            if (process.env.STORAGE_PROVIDER === 'cloudinary') {
+                await deleteFromCloudinary(m.media_path);
             } else {
                 await deleteFile(m.media_path); 
             }
@@ -224,8 +224,8 @@ const deleteMedia = async (req, res, db) => {
 
         if (!media || media.user_id !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
 
-        if (process.env.STORAGE_PROVIDER === 's3') {
-            await deleteFromS3(media.media_path);
+        if (process.env.STORAGE_PROVIDER === 'cloudinary') {
+            await deleteFromCloudinary(media.media_path);
         } else {
             await deleteFile(media.media_path);
         }
